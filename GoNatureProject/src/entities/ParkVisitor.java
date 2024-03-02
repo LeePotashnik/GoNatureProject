@@ -10,8 +10,8 @@ public class ParkVisitor extends SystemUser {
 	private VisitorType visitorType;
 
 	public ParkVisitor(String idNumber, String firstName, String lastName, String username, String password,
-			String emailAddress, String phoneNumber, boolean isLoggedIn, LocalTime lastLogIn, VisitorType visitorType) {
-		super(idNumber, firstName, lastName, username, password, emailAddress, phoneNumber, isLoggedIn, lastLogIn);
+			String emailAddress, String phoneNumber, boolean isLoggedIn, VisitorType visitorType) {
+		super(idNumber, firstName, lastName, username, password, emailAddress, phoneNumber, isLoggedIn);
 		this.visitorType = visitorType;
 	}
 

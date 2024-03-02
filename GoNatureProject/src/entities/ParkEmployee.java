@@ -6,8 +6,8 @@ public class ParkEmployee extends SystemUser {
 	private Park workingIn;
 
 	public ParkEmployee(String idNumber, String firstName, String lastName, String username, String password,
-			String emailAddress, String phoneNumber, boolean isLoggedIn, LocalTime lastLogIn, Park workingIn) {
-		super(idNumber, firstName, lastName, username, password, emailAddress, phoneNumber, isLoggedIn, lastLogIn);
+			String emailAddress, String phoneNumber, boolean isLoggedIn, Park workingIn) {
+		super(idNumber, firstName, lastName, username, password, emailAddress, phoneNumber, isLoggedIn);
 		this.workingIn = workingIn;
 	}
 
