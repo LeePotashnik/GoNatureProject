@@ -5,10 +5,9 @@ import java.time.LocalTime;
 public class SystemUser {
 	private String idNumber, firstName, lastName, username, password, emailAddress, phoneNumber;
 	private boolean isLoggedIn;
-	private LocalTime lastLogIn;
 	
 	public SystemUser(String idNumber, String firstName, String lastName, String username, String password,
-			String emailAddress, String phoneNumber, boolean isLoggedIn, LocalTime lastLogIn) {
+			String emailAddress, String phoneNumber, boolean isLoggedIn) {
 		this.idNumber = idNumber;
 		this.firstName = firstName;
 		this.lastName = lastName;
@@ -17,7 +16,6 @@ public class SystemUser {
 		this.emailAddress = emailAddress;
 		this.phoneNumber = phoneNumber;
 		this.isLoggedIn = isLoggedIn;
-		this.lastLogIn = lastLogIn;
 	}
 
 	public String getIdNumber() {
@@ -48,9 +46,6 @@ public class SystemUser {
 		return phoneNumber;
 	}
 	
-	public LocalTime getLastLogIn() {
-		return lastLogIn;
-	}
 
 	public boolean isLoggedIn() {
 		return isLoggedIn;
@@ -88,14 +83,11 @@ public class SystemUser {
 		this.isLoggedIn = isLoggedIn;
 	}
 	
-	public void setLastLogIn(LocalTime lastLogIn) {
-		this.lastLogIn = lastLogIn;
-	}
 
 	@Override
 	public String toString() {
 		return "SystemUser [idNumber=" + idNumber + ", firstName=" + firstName + ", lastName=" + lastName
 				+ ", username=" + username + ", password=" + password + ", emailAddress=" + emailAddress
-				+ ", phoneNumber=" + phoneNumber + ", isLoggedIn=" + isLoggedIn + ", lastLogIn=" + lastLogIn + "]";
+				+ ", phoneNumber=" + phoneNumber + ", isLoggedIn=" + isLoggedIn + "]";
 	}
 }
