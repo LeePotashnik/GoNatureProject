@@ -18,10 +18,13 @@ public class Communication implements Serializable {
 	private boolean isDelete;
 	// determines the table/s and column/s the query is going to work on
 	private ArrayList<String> tables;
-	private ArrayList<String> whereColumns;
 	private ArrayList<String> selectColumns;
 	// determines the "where" logic operators
+	private ArrayList<String> whereColumns;
+	private ArrayList<String> whereValues;
 	private ArrayList<String> whereOperators;
+
+
 
 	public String combineQuery() throws CommunicationException {
 		if (isSelect) {
@@ -111,10 +114,6 @@ public class Communication implements Serializable {
 		this.tables = new ArrayList<String>(tables);
 	}
 
-	public void setWhereColumns(List<String> whereColumns) {
-		this.whereColumns = new ArrayList<String>(whereColumns);
-	}
-
 	public void setSelectColumns(List<String> selectColumns) {
 		this.selectColumns = new ArrayList<String>(selectColumns);
 	}
@@ -122,13 +121,22 @@ public class Communication implements Serializable {
 	public void setWhereOperators(List<String> whereOperators) {
 		this.whereOperators = new ArrayList<String>(whereOperators);
 	}
+	
+	public void setWhereColumns(List<String> whereColumns) {
+		this.whereColumns = new ArrayList<String>(whereColumns);
+	}
+	
+	public void setWhereValues(List<String> whereValues) {
+		this.whereValues = new ArrayList<String>(whereValues);
+	}
 
 	public static void main(String[] args) {
 		Communication request = new Communication();
 		request.setSelect();
 		request.setTables(Arrays.asList("park", "park_manager"));
 		request.setSelectColumns(Arrays.asList("*"));
-		request.setWhereColumns(Arrays.asList("department", "'Eastern'", "age", "'25'"));
+		request.setWhereColumns(Arrays.asList("department", "age"));
+		request.setWhereValues(Arrays.asList("'Eastern'", "'25'"));
 		request.setWhereOperators(Arrays.asList("=", "AND", ">="));
 		String result = request.combineSelectQuery();
 		System.out.println(result);
