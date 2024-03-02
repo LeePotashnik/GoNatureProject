@@ -2,6 +2,12 @@ package entities;
 
 import java.time.LocalTime;
 
+/**
+ * 
+ */
+/**
+ * 
+ */
 public class ParkVisitor extends SystemUser {
 	public enum VisitorType {
 		TRAVELER, GROUPGUIDE;
@@ -15,11 +21,19 @@ public class ParkVisitor extends SystemUser {
 		this.visitorType = visitorType;
 	}
 
+	/**
+	 * @return visitor type (enum)
+	 */
 	public VisitorType getVisitorType() {
 		return visitorType;
 	}
-
+	
+	/**
+	 * @param visitorType
+	 * initialize visitor type
+	 */
 	public void setVisitorType(VisitorType visitorType) {
 		this.visitorType = visitorType;
 	}
+
 }

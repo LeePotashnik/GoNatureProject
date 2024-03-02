@@ -11,10 +11,17 @@ public class ParkManager extends ParkEmployee {
 		this.manages = manages;
 	}
 
+	/**
+	 * @return manages
+	 */
 	public Park getManages() {
 		return manages;
 	}
 
+	/**
+	 * @param manages
+	 * set the park that the manager managing
+	 */
 	public void setManages(Park manages) {
 		this.manages = manages;
 	}
