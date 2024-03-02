@@ -7,7 +7,7 @@ public class DepartmentManager extends ParkEmployee {
 	private ArrayList<Park> responsible;
 
 	public DepartmentManager(String idNumber, String firstName, String lastName, String username, String password,
-			String emailAddress, String phoneNumber, boolean isLoggedIn, LocalTime lastLogIn, Park workingIn, ArrayList<Park> responsible) {
+			String emailAddress, String phoneNumber, boolean isLoggedIn, Park workingIn, ArrayList<Park> responsible) {
 		super(idNumber, firstName, lastName, username, password, emailAddress, phoneNumber, isLoggedIn, workingIn);
 		this.responsible = responsible;
 	}
