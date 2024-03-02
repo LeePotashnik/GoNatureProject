@@ -8,7 +8,7 @@ public class GroupGuide extends ParkVisitor {
 	public GroupGuide(String idNumber, String firstName, String lastName, String username, String password,
 			String emailAddress, String phoneNumber, boolean isLoggedIn, LocalTime lastLogIn, VisitorType visitorType,
 			boolean isVerifiedGuide) {
-		super(idNumber, firstName, lastName, username, password, emailAddress, phoneNumber, isLoggedIn, lastLogIn, visitorType);
+		super(idNumber, firstName, lastName, username, password, emailAddress, phoneNumber, isLoggedIn, visitorType);
 		this.isVerifiedGuide = isVerifiedGuide;
 	}
 
