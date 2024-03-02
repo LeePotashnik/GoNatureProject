@@ -132,5 +132,6 @@ public class Communication implements Serializable {
 		request.setWhereOperators(Arrays.asList("=", "AND", ">="));
 		String result = request.combineSelectQuery();
 		System.out.println(result);
+		
 	}
 }
