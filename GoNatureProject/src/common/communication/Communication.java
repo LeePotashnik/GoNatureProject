@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -13,11 +12,31 @@ import java.util.List;
  */
 public class Communication implements Serializable {
 	private static final long serialVersionUID = 1L;
+	private String sentFrom; // holds the screen/controller class name
+
+	public enum CommunicationType {
+		QUERY_REQUEST, CLIENT_SERVER_MESSAGE;
+	}
+
+	private CommunicationType communicationType;
+
+	public Communication(CommunicationType communicationType) {
+		this.communicationType = communicationType;
+		if (communicationType == CommunicationType.QUERY_REQUEST) {
+			messageType = MessageType.NONE;
+		} else {
+			queryType = QueryType.NONE;
+		}
+	}
+
+	// --- TYPE 1 OF COMMUNICATION: SQL QUERY REQUEST ---
 	// determines the type of the SQL requested query
-	private boolean isSelect;
-	private boolean isUpdate;
-	private boolean isInsert;
-	private boolean isDelete;
+	public enum QueryType {
+		SELECT, UPDATE, INSERT, DELETE, NONE;
+	}
+
+	private QueryType queryType;
+
 	// determines the table/s and column/s the query is going to work on
 	private ArrayList<String> tables;
 	private ArrayList<String> selectColumns;
@@ -28,23 +47,119 @@ public class Communication implements Serializable {
 	// determines the columns and values for "set" and "insert"
 	private ArrayList<String> columns;
 	private ArrayList<Object> values;
+	// a container for the result set from the database, as ArrayList
+	private ArrayList<Object[]> resultList;
+	private boolean queryResult;
 
+	// --- TYPE 2 OF COMMUNICATION: CLIENT-SERVER MESSAGES
+	public enum MessageType {
+		CONNECT, DISCONNECT, NONE;
+	}
+
+	private MessageType messageType;
+
+	// ------------------------------------------------------------------ //
+
+	// returns the sentFrom property
+	public String getSentFrom() {
+		return sentFrom;
+	}
+
+	// sets the sentFrom property
+	public void setSentFrom(String sentFrom) {
+		this.sentFrom = sentFrom;
+	}
+
+	// returns the communication type
+	public CommunicationType getCommunicationType() {
+		return communicationType;
+	}
+
+	////////// --- METHODS FOR HANDLING THE FIRST TYPE OF COMMUNICAIONS ---
+
+	///// --- GETTERS ---
+	// getter for the result list (to use on the client-side)
+	public ArrayList<Object[]> getResultList() {
+		return resultList;
+	}
+
+	// getter for the query result (true = succeed, false = failed)
+	public boolean getQueryResult() {
+		return queryResult;
+	}
+
+	// this method returns the query type
+	public QueryType getQueryType() {
+		return queryType;
+	}
+
+	// a getter for returning if the communication is a query request
+	public boolean isQuery() {
+		return communicationType == CommunicationType.QUERY_REQUEST;
+	}
+
+	///// --- SETTERS ---
+	// setter for the result set (to use on the server-side)
+	public void setResultList(ArrayList<Object[]> resultList) {
+		this.resultList = resultList;
+	}
+
+	// setter for the query result (true = succeed, false = failed)
+	public void setQueryResult(boolean queryResult) {
+		this.queryResult = queryResult;
+	}
+
+	// this setter determines the type of the SQL query requested
+	public void setQueryType(QueryType queryType) throws CommunicationException {
+		if (communicationType != CommunicationType.QUERY_REQUEST) {
+			throw new CommunicationException("The communication type is not a query request");
+		}
+		this.queryType = queryType;
+	}
+
+	// the tables the query will execute on
+	public void setTables(List<String> tables) {
+		this.tables = new ArrayList<String>(tables);
+	}
+
+	// if the query is SELECT, the columns in the returened view
+	public void setSelectColumns(List<String> selectColumns) {
+		this.selectColumns = new ArrayList<String>(selectColumns);
+	}
+
+	// setter for the WHERE part of the query
+	public void setWhereConditions(List<String> whereColumns, List<String> whereOperators, List<Object> whereValues) {
+		this.whereColumns = new ArrayList<String>(whereColumns);
+		this.whereOperators = new ArrayList<String>(whereOperators);
+		this.whereValues = new ArrayList<Object>(whereValues);
+	}
+
+	// setter for the columns and values (of the INSERT and SET parts)
+	public void setColumnsAndValues(List<String> columns, List<Object> values) {
+		this.columns = new ArrayList<String>(columns);
+		this.values = new ArrayList<Object>(values);
+	}
+
+	///// --- QUERY COMBINATION METHODS ---
+	// this method redirects the query creation to the specific method
+	// according to the query type
 	public String combineQuery() throws CommunicationException {
-		if (isSelect) {
+		switch (queryType) {
+		case SELECT:
 			return combineSelectQuery();
-		} else if (isUpdate) {
+		case UPDATE:
 			return combineUpdateQuery();
-		} else if (isInsert) {
+		case INSERT:
 			return combineInsertQuery();
-		} else if (isDelete) {
+		case DELETE:
 			return combineDeleteQuery();
-		} else {
+		default: // NONE
 			throw new CommunicationException("No query type chosen");
 		}
 	}
 
+	// this method creates and returns a SELECT method
 	private String combineSelectQuery() throws CommunicationException {
-		int i, j;
 		String query = "SELECT ";
 		// adding the column/s to select from
 		if (selectColumns == null)
@@ -52,7 +167,7 @@ public class Communication implements Serializable {
 		if (selectColumns.size() == 1) { // only one column, or *
 			query += selectColumns.get(0) + " ";
 		} else { // several columns from the table/s
-			for (i = 0; i < selectColumns.size(); i++) {
+			for (int i = 0; i < selectColumns.size(); i++) {
 				if (i + 1 == selectColumns.size()) { // if this is the last column, no ',' after it
 					query += selectColumns.get(i) + " ";
 				} else {
@@ -60,6 +175,7 @@ public class Communication implements Serializable {
 				}
 			}
 		}
+
 		// adding the tables to select from
 		query += "FROM ";
 		if (tables == null)
@@ -67,7 +183,7 @@ public class Communication implements Serializable {
 		if (tables.size() == 1) { // only one column, or *
 			query += tables.get(0) + " ";
 		} else { // several columns from the table/s
-			for (i = 0; i < tables.size(); i++) {
+			for (int i = 0; i < tables.size(); i++) {
 				if (i + 1 == tables.size()) { // if this is the last column, no ',' after it
 					query += tables.get(i) + " ";
 				} else {
@@ -77,21 +193,13 @@ public class Communication implements Serializable {
 		}
 
 		// adding the where part
-		if (whereColumns != null && whereOperators != null && whereValues != null) {
-			query += "WHERE ";
-			j = 0;
-			for (i = 0; i < whereColumns.size(); i++) {
-				query += whereColumns.get(i) + " " + whereOperators.get(j++) + " ";
-				query += prepareValue(whereValues.get(i)) + (j < whereOperators.size() ? " " : "");
-				query += j < whereOperators.size() ? whereOperators.get(j++) + " " : "";
-			}
-		}
-		query += ";";
+		query += createWherePart() + ";";
+
 		return query;
 	}
 
+	// this method creates and returns an UPDATE method
 	private String combineUpdateQuery() throws CommunicationException {
-		int i, j;
 		String query = "UPDATE ";
 		// adding the table name
 		if (tables == null)
@@ -110,31 +218,19 @@ public class Communication implements Serializable {
 			throw new CommunicationException("Columns or values are missing");
 		}
 
-		for (i = 0; i < columns.size(); i++) {
+		for (int i = 0; i < columns.size(); i++) {
 			query += columns.get(i) + " = ";
-			query += values.get(i) + (i + 1 == columns.size() ? "" : ", ");
+			query += prepareValue(values.get(i)) + (i + 1 == columns.size() ? "" : ", ");
 		}
 
 		// adding the where part
-		if (whereColumns != null && whereOperators != null && whereValues != null) {
-			query += " WHERE ";
-			j = 0;
-			for (i = 0; i < whereColumns.size(); i++) {
-				query += whereColumns.get(i) + " " + whereOperators.get(j++) + " ";
-				if (whereValues.get(i) instanceof Number) {
-					query += whereValues.get(i) + (j < whereOperators.size() ? " " : "");
-				} else {
-					query += "'" + whereValues.get(i) + "'" + (j < whereOperators.size() ? " " : "");
-				}
-				query += j < whereOperators.size() ? whereOperators.get(j++) + " " : "";
-			}
-		}
-		query += ";";
+		query += createWherePart() + ";";
 		return query;
 	}
 
+	// this method creates and returns an INSERT method
 	private String combineInsertQuery() throws CommunicationException {
-		int i, j;
+		int i;
 		String query = "INSERT INTO ";
 		// adding the table name
 		if (tables == null)
@@ -154,34 +250,49 @@ public class Communication implements Serializable {
 			throw new CommunicationException("Values are not included");
 		}
 		if (values.size() != columns.size()) {
-			throw new CommunicationException("Columns or values are not matching");
+			throw new CommunicationException("Columns and values are not matching");
 		}
 		query += "VALUES (";
 		for (i = 0; i < values.size(); i++) {
-			if (values.get(i) instanceof Number) {
-				query += values.get(i) + ((i + 1 == values.size()) ? ")" : ",");
-			} else {
-				query += "'" + values.get(i) + "'" + ((i + 1 == values.size()) ? ")" : ",");
-			}
+			query += prepareValue(values.get(i)) + ((i + 1 == values.size()) ? ")" : ",");
 		}
 
 		query += ";";
 		return query;
 	}
 
-	private String combineDeleteQuery() {
-		return "";
+	// this method creates and returns a DELETE method
+	private String combineDeleteQuery() throws CommunicationException {
+		String query = "DELETE FROM ";
+		// adding the table name
+		if (tables == null)
+			throw new CommunicationException("Table is not included");
+		query += tables.get(0) + " ";
+
+		// adding the where part
+		query += createWherePart() + ";";
+		return query;
 	}
 
+	// this method gets a value object and prepares it to fit the SQL syntax
 	private String prepareValue(Object value) {
 		if (value == null)
 			return null;
 		else {
+			String ret = "";
 			if (value instanceof LocalTime) {
-				return "'" + ((LocalTime) value).getHour() + ":" + ((LocalTime) value).getMinute() + ":00'";
+				ret += "'" + (((LocalTime) value).getHour() < 10 ? "0" : "");
+				ret += ((LocalTime) value).getHour() + ":";
+				ret += (((LocalTime) value).getMinute() < 10 ? "0" : "");
+				ret += ((LocalTime) value).getMinute() + ":00'";
+				return ret;
 			} else if (value instanceof LocalDate) {
-				return "'" + ((LocalDate) value).getYear() + "-" + ((LocalDate) value).getMonthValue() + "-"
-						+ ((LocalDate) value).getDayOfMonth() + "'";
+				ret += "'" + ((LocalDate) value).getYear() + "-";
+				ret += (((LocalDate) value).getMonthValue() < 10 ? "0" : "");
+				ret += ((LocalDate) value).getMonthValue() + "-";
+				ret += (((LocalDate) value).getDayOfMonth() < 10 ? "0" : "");
+				ret += ((LocalDate) value).getDayOfMonth() + "'";
+				return ret;
 			} else if (value instanceof Number) {
 				return ((Number) value).toString();
 			} else {
@@ -190,94 +301,58 @@ public class Communication implements Serializable {
 		}
 	}
 
-	public void setSelect() {
-		isSelect = true;
-	}
-
-	public void setUpdate() {
-		isUpdate = true;
-	}
-
-	public void setInsert() {
-		isInsert = true;
-	}
-
-	public void setDelete() {
-		isDelete = true;
-	}
-
-	public void setTables(List<String> tables) {
-		this.tables = new ArrayList<String>(tables);
-	}
-
-	public void setSelectColumns(List<String> selectColumns) {
-		this.selectColumns = new ArrayList<String>(selectColumns);
-	}
-
-	public void setWhereOperators(List<String> whereOperators) {
-		this.whereOperators = new ArrayList<String>(whereOperators);
-	}
-
-	public void setWhereColumns(List<String> whereColumns) {
-		this.whereColumns = new ArrayList<String>(whereColumns);
-	}
-
-	public void setWhereValues(List<Object> whereValues) {
-		this.whereValues = new ArrayList<Object>(whereValues);
-	}
-
-	public void setColumns(List<String> columns) {
-		this.columns = new ArrayList<String>(columns);
-	}
-
-	public void setValues(List<Object> values) {
-		this.values = new ArrayList<Object>(values);
-	}
-
-	public static void main(String[] args) {
-		Communication request1 = new Communication();
-		request1.setSelect();
-		request1.setTables(Arrays.asList("park", "park_manager"));
-		request1.setSelectColumns(Arrays.asList("*"));
-		request1.setWhereColumns(Arrays.asList("department", "age", "time", "time"));
-		request1.setWhereValues(Arrays.asList("Eastern", "25", LocalTime.of(12, 0), LocalTime.of(16, 0)));
-		request1.setWhereOperators(Arrays.asList("=", "AND", ">=", "AND", ">=", "AND", "<="));
-		String result = null;
-		try {
-			result = request1.combineQuery();
-		} catch (CommunicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	// this method creates, if relevant, the where part of the query, as string
+	private String createWherePart() throws CommunicationException {
+		String where = "";
+		if (whereColumns != null && whereOperators != null && whereValues != null) {
+			if (whereValues.size() != whereColumns.size()) {
+				throw new CommunicationException("Columns and values are not matching");
+			}
+			where += "WHERE ";
+			int j = 0;
+			for (int i = 0; i < whereColumns.size(); i++) {
+				where += whereColumns.get(i) + " " + whereOperators.get(j++) + " ";
+				where += prepareValue(whereValues.get(i)) + (j < whereOperators.size() ? " " : "");
+				where += j < whereOperators.size() ? whereOperators.get(j++) + " " : "";
+			}
 		}
-		System.out.println(result);
-
-		Communication request2 = new Communication();
-		request2.setUpdate();
-		request2.setTables(Arrays.asList("acadia_park_active_booking"));
-		request2.setColumns(Arrays.asList("entryParkTime", "exitParkTime"));
-		request2.setValues(Arrays.asList(LocalTime.of(12, 30), LocalTime.of(15, 30)));
-		request2.setWhereColumns(Arrays.asList("department", "age", "time", "time"));
-		request2.setWhereValues(Arrays.asList("Eastern", "25", LocalTime.of(12, 0), LocalTime.of(16, 0)));
-		request2.setWhereOperators(Arrays.asList("=", "AND", ">=", "AND", ">=", "AND", "<="));
-		try {
-			result = request2.combineQuery();
-		} catch (CommunicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.println(result);
-
-		Communication request3 = new Communication();
-		request3.setInsert();
-		request3.setTables(Arrays.asList("acadia_park_active_booking"));
-		request3.setColumns(Arrays.asList("entryParkTime", "exitParkTime"));
-		request3.setValues(Arrays.asList(LocalTime.of(12, 30), LocalTime.of(15, 30, 00)));
-		try {
-			result = request3.combineQuery();
-		} catch (CommunicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.println(result);
+		return where;
 	}
+
+	////////// --- METHODS FOR HANDLING THE SECOND TYPE OF COMMUNICAIONS ---
+
+	// a getter for returning if the communication is a client-server message
+	public boolean isMessage() {
+		return communicationType == CommunicationType.CLIENT_SERVER_MESSAGE;
+	}
+
+	// sets the message type
+	public void setMessageType(MessageType messageType) {
+		this.messageType = messageType;
+	}
+
+	// returns the message type
+	public MessageType getMessageType() {
+		return messageType;
+	}
+
+//	public static void main(String[] args) throws CommunicationException {
+//		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
+//		request.setQueryType(QueryType.SELECT);
+//		request.setTables(Arrays.asList("olympic_park_active_booking"));
+//		request.setSelectColumns(Arrays.asList("*"));
+////		request.setWhereConditions(Arrays.asList("numberOfVisitors", "dayOfBooking"), Arrays.asList("<", "AND", ">="),
+////				Arrays.asList(10, LocalDate.of(2024, 02, 01)));
+//		GoNatureServer server = new GoNatureServer(4444);
+//		server.sendSQLRequest(request);
+//		ArrayList<Order> olympic_park_active_bookings = new ArrayList<>();
+//		for (Object[] o : request.getResultList()) {
+//			Order newOrder = new Order((String) o[0], (Date) o[1], (Time) o[2], (Date) o[3], ((String)o[4]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL,
+//					(Integer) o[5], (String) o[6], (String) o[7], (String) o[8], (String) o[9], (Integer) o[10],
+//					(Integer) o[11] != 0, (Integer) o[12] != 0, (Time) o[13], (Time) o[14], (Integer) o[15] != 0, (Time) o[16]);
+//			olympic_park_active_bookings.add(newOrder);
+//			System.out.println(newOrder);
+//		}
+//		public Order(int bookingIdNumber, int numberOfVisitors, Park parkBooked, OrderStatus status, LocalDate dayOfVisit, LocalTime timeOfVisit, LocalTime entryParkTime, LocalTime exitParkTime, VisitType visitType,	String phoneNumber, String emailAddress, float finalPrice) {
+//	}
 }
