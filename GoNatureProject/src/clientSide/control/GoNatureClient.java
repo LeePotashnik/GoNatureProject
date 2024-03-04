@@ -12,9 +12,11 @@ import ocsf.client.AbstractClient;
 
 public class GoNatureClient extends AbstractClient {
 	public static boolean awaitResponse = false;
-	// This map holds all the requests that have been sent to the server side
-	// and have not recieved a response. The mapping is by the unique id of
-	// each communication object.
+	/**
+	 * This map holds all the requests that have been sent to the server side and
+	 * have not recieved a response. The mapping is by the unique id of each
+	 * communication object.
+	 */
 	private ConcurrentHashMap<String, Communication> awaitingRequests = new ConcurrentHashMap<>();
 
 	public GoNatureClient(String host, int port) { // Constructor
@@ -22,13 +24,14 @@ public class GoNatureClient extends AbstractClient {
 	}
 
 	/**
-	 * @param host
-	 * @param port
-	 * @return - true if the connection succeed, false otherwise.
+	 * Calls the AbstractClient method for connection to the server. If the
+	 * openConnection method threw an exception, it means the port number has no
+	 * server listening on in, therefore let the user try again.
+	 * 
+	 * @param host the host address of the server
+	 * @param port the port number of the server
+	 * @return true if the connection succeed, false otherwise.
 	 */
-	// calls the PrototypeClient method for connection to the server
-	// If the openConnection method threw an exception, it means the port
-	// number has no servers listening on in, therefore let the user try again
 	public boolean connectClientToServer(String host, int port) {
 		setPort(port);
 		setHost(host);
@@ -41,8 +44,10 @@ public class GoNatureClient extends AbstractClient {
 	}
 
 	/**
-	 * Gets a Communication object from the server and returns the result to the
-	 * relevant screen controller
+	 * Gets a Communication response from the server and updates the Communication
+	 * request with the result
+	 * 
+	 * @param responseFromServer a Communication object from the server-side
 	 */
 	@Override
 	protected void handleMessageFromServer(Object responseFromServer) {
@@ -57,9 +62,10 @@ public class GoNatureClient extends AbstractClient {
 	}
 
 	/**
-	 * @param request - a Communication object from the client-side GUI
+	 * Analyses the message and sends it to the server
+	 * 
+	 * @param request a Communication object from the client-side GUI
 	 */
-	 // Analyses the message and sends it to the server
 	protected void handleMessageFromClientUI(Object requestFromClientSide) {
 		try {
 			awaitResponse = true;

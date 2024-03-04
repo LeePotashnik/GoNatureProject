@@ -2,8 +2,10 @@ package clientSide.control;
 
 import common.communication.Communication;
 
-// CONTROLLER CLASS FOR THE CLIENT LOGIC LAYER
-// BASICALLY ITS MAIN USE IS BEING A STATIC INSTANCE AT THE CLIENT UI CLASS
+/**
+ * Controller class for the client logic layer. Its main use is being a static
+ * instance in the GoNatureClientUI class.
+ */
 public class GoNatureClientController {
 	private GoNatureClient client;
 
@@ -12,17 +14,21 @@ public class GoNatureClientController {
 	}
 
 	/**
-	 * @param host
-	 * @param port
-	 * @return - true if the connection succeed, false otherwise
+	 * Calls the GoNatureClient method for connection to the server
+	 * 
+	 * @param host the host address of the server
+	 * @param port the port number of the server
+	 * @return true if the connection succeed, false otherwise.
 	 */
-	// calls the GoNatureClient method for connection to the server
 	public boolean connectClientToServer(String host, int port) {
 		return client.connectClientToServer(host, port);
 	}
 
 	/**
-	 * @param request - the Communication object from the client side
+	 * Gets a request from the client side and transfers it to the GoNatureClient
+	 * handleMessageFromClientUI method.
+	 * 
+	 * @param request the Communication object from the client side
 	 */
 	public void accept(Communication request) {
 		client.handleMessageFromClientUI(request);

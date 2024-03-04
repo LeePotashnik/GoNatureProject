@@ -1,21 +1,16 @@
 package serverSide.gui;
 
-import java.io.IOException;
-
-import common.controllers.AbstractScreenController;
-import common.controllers.ScreenChanger;
+import common.controllers.AbstractScreen;
+import common.controllers.ScreenController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
-import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
-public class ServerConnectionController extends AbstractScreenController {
+public class ServerConnectionController extends AbstractScreen {
 
 	@FXML
 	private Button connectBtn, disconnectBtn;
@@ -27,6 +22,12 @@ public class ServerConnectionController extends AbstractScreenController {
 	private TextField portTxtField;
 
 	@FXML
+	/**
+	 * This method is called after the user clicked on the "Connect to Server"
+	 * button on the server GUI.
+	 * 
+	 * @param event an event of clicking to the Connect to Server button
+	 */
 	void connectToServer(ActionEvent event) {
 		String portNumber = portTxtField.getText();
 		portTxtField.setStyle(setTextFieldToRegular());
@@ -34,17 +35,17 @@ public class ServerConnectionController extends AbstractScreenController {
 		// validating the port number
 		if (portNumber.trim().isEmpty() || !portNumber.matches("\\d+")) {
 			portTxtField.setStyle(setTextFieldToError());
-			showErrorAlert(ScreenChanger.primaryStage, "You must enter a valid digits-only port number");
+			showErrorAlert(ScreenController.getInstance().getStage(), "You must enter a valid digits-only port number");
 		} else if (!(Integer.parseInt(portNumber) >= 1024 && Integer.parseInt(portNumber) <= 65535)) {
 			portTxtField.setStyle(setTextFieldToError());
-			showErrorAlert(ScreenChanger.primaryStage, "Port number must be in range (1024-65535)");
+			showErrorAlert(ScreenController.getInstance().getStage(), "Port number must be in range (1024-65535)");
 		} else { // if the port number is valid
 			String result = GoNatureServerUI.runServer(portNumber);
 			if (result.contains("Error")) {
-				showErrorAlert(ScreenChanger.primaryStage, result);
+				showErrorAlert(ScreenController.getInstance().getStage(), result);
 				System.out.println(result);
 			} else {
-				showInformationAlert(ScreenChanger.primaryStage, result);
+				showInformationAlert(ScreenController.getInstance().getStage(), result);
 				System.out.println(result);
 				portTxtField.setDisable(true);
 				connectBtn.setVisible(false);
@@ -54,18 +55,30 @@ public class ServerConnectionController extends AbstractScreenController {
 	}
 
 	@FXML
+	/**
+	 * This method is called after the user clicked on the "Disconnect from Server"
+	 * button on the server GUI.
+	 * 
+	 * @param event an event of clicking to the Disconnect from Server button
+	 */
 	void disconnectFromServer(ActionEvent event) {
 		if (disconnect()) {
-			showInformationAlert(ScreenChanger.primaryStage, "Server is disconnected");
+			showInformationAlert(ScreenController.getInstance().getStage(), "Server is disconnected");
 			disconnectBtn.setDisable(true);
 		}
 	}
 
+	/**
+	 * This method is called when the server GUI gets a request to disconnect. Won't
+	 * disconnect until all the clients are also disconnected.
+	 * 
+	 * @return true if the disconnection succeed, false otherwise.
+	 */
 	private boolean disconnect() {
 		if (GoNatureServerUI.server == null)
 			return true;
 		if (!GoNatureServerUI.server.areAllClientsDisconnected()) {
-			showErrorAlert(ScreenChanger.primaryStage, "Not all clients are disconnected!");
+			showErrorAlert(ScreenController.getInstance().getStage(), "Not all clients are disconnected!");
 			return false;
 		} else {
 			GoNatureServerUI.disconnectServer();
@@ -73,8 +86,10 @@ public class ServerConnectionController extends AbstractScreenController {
 		}
 	}
 
-	// This method initializes the JavaFX components
 	@FXML
+	/**
+	 * This method initializes the JavaFX components
+	 */
 	public void initialize() {
 		disconnectBtn.setVisible(false);
 		portTxtField.setPromptText("Enter port number here");
@@ -82,25 +97,14 @@ public class ServerConnectionController extends AbstractScreenController {
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
 	}
 
-	// Starts the applicaiton javafx screen
-	public void start(Stage primaryStage) {
-		Pane root = null;
-		try {
-			root = FXMLLoader.load(getClass().getResource("/serverSide/fxml/ServerConnection.fxml"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		root.setStyle("-fx-background-color: white;");
-		Scene scene = new Scene(root);
-		primaryStage.setScene(scene);
-		primaryStage.setTitle("GoNature System - Server Connection");
-		primaryStage.show();
-		root.requestFocus();
-		primaryStage.setOnCloseRequest(event -> { // when closing the window
-			boolean disconnectionResult = disconnect();
-			if (!disconnectionResult)
-				event.consume();
-		});
+	@Override
+	/**
+	 * This is an override for the method from AbstractScreen
+	 */
+	public void handleCloseRequest(WindowEvent event) {
+		boolean disconnectionResult = disconnect();
+		if (!disconnectionResult)
+			event.consume();
 	}
 
 }
