@@ -12,23 +12,29 @@ import java.util.List;
  */
 public class Communication implements Serializable {
 	private static final long serialVersionUID = 1L;
-	private String sentFrom; // holds the screen/controller class name
+	private String uniqueId; // will hold a unique id for client-server identification
 
+	// the communication type
 	public enum CommunicationType {
-		QUERY_REQUEST, CLIENT_SERVER_MESSAGE;
+		QUERY_REQUEST, CLIENT_SERVER_MESSAGE, RESPONSE;
 	}
 
 	private CommunicationType communicationType;
 
-	public Communication(CommunicationType communicationType) {
+	public Communication(CommunicationType communicationType) { // Constructor
 		this.communicationType = communicationType;
-		if (communicationType == CommunicationType.QUERY_REQUEST) {
+		if (communicationType == CommunicationType.QUERY_REQUEST) { // if it's a query request
 			messageType = MessageType.NONE;
-		} else {
+		} else if (communicationType == CommunicationType.CLIENT_SERVER_MESSAGE) { // if it's a client-server message
+			queryType = QueryType.NONE;
+		} else { // if it's a response from server-side to client-side
+			messageType = MessageType.NONE;
 			queryType = QueryType.NONE;
 		}
 	}
 
+	
+	
 	// --- TYPE 1 OF COMMUNICATION: SQL QUERY REQUEST ---
 	// determines the type of the SQL requested query
 	public enum QueryType {
@@ -37,19 +43,20 @@ public class Communication implements Serializable {
 
 	private QueryType queryType;
 
-	// determines the table/s and column/s the query is going to work on
+	// determines the table/s query is going to work on
 	private ArrayList<String> tables;
+
+	// for SELECT query, determines the selected columns (can also be '*')
 	private ArrayList<String> selectColumns;
-	// determines the "where" part
+
+	// determines the "where" part conditions
 	private ArrayList<String> whereColumns;
 	private ArrayList<Object> whereValues;
 	private ArrayList<String> whereOperators;
+
 	// determines the columns and values for "set" and "insert"
 	private ArrayList<String> columns;
 	private ArrayList<Object> values;
-	// a container for the result set from the database, as ArrayList
-	private ArrayList<Object[]> resultList;
-	private boolean queryResult;
 
 	// --- TYPE 2 OF COMMUNICATION: CLIENT-SERVER MESSAGES
 	public enum MessageType {
@@ -58,58 +65,55 @@ public class Communication implements Serializable {
 
 	private MessageType messageType;
 
-	// ------------------------------------------------------------------ //
+	// --- TYPE 3 OF COMMUNICATION: RESPONSE FROM SERVER SIDE
+	private ArrayList<Object[]> resultList; // a container for the result set from the database, as ArrayList
+	private boolean queryResult; // holds the result of update/insert/delete queries
 
-	// returns the sentFrom property
-	public String getSentFrom() {
-		return sentFrom;
-	}
-
-	// sets the sentFrom property
-	public void setSentFrom(String sentFrom) {
-		this.sentFrom = sentFrom;
-	}
-
+	///// --- GENERAL METHODS --- /////
 	// returns the communication type
 	public CommunicationType getCommunicationType() {
 		return communicationType;
 	}
 
-	////////// --- METHODS FOR HANDLING THE FIRST TYPE OF COMMUNICAIONS ---
-
-	///// --- GETTERS ---
-	// getter for the result list (to use on the client-side)
-	public ArrayList<Object[]> getResultList() {
-		return resultList;
+	// returns the unique id
+	public String getUniqueId() {
+		return uniqueId;
 	}
 
-	// getter for the query result (true = succeed, false = failed)
-	public boolean getQueryResult() {
-		return queryResult;
+	// sets the unique id
+	public void setUniqueId(String uniqueId) {
+		this.uniqueId = uniqueId;
 	}
 
-	// this method returns the query type
+	
+	
+	///// --- METHODS FOR HANDLING THE FIRST TYPE OF COMMUNICAIONS --- /////
+	// --- GETTERS --- //
+	/**
+	 * This method returns the QueryType enum of the communication
+	 * 
+	 * @return the query type (an enum constant)
+	 */
 	public QueryType getQueryType() {
 		return queryType;
 	}
 
-	// a getter for returning if the communication is a query request
+	/**
+	 * This method returns if the communication is a query request
+	 * 
+	 * @return true if the CommunicationType is QUERY_REQUEST
+	 */
 	public boolean isQuery() {
 		return communicationType == CommunicationType.QUERY_REQUEST;
 	}
 
-	///// --- SETTERS ---
-	// setter for the result set (to use on the server-side)
-	public void setResultList(ArrayList<Object[]> resultList) {
-		this.resultList = resultList;
-	}
-
-	// setter for the query result (true = succeed, false = failed)
-	public void setQueryResult(boolean queryResult) {
-		this.queryResult = queryResult;
-	}
-
-	// this setter determines the type of the SQL query requested
+	// --- SETTERS --- //
+	/**
+	 * Determines the type of the SQL query requested
+	 * 
+	 * @param queryType the type of the SQL query requested
+	 * @throws CommunicationException if trying to set a QueryType where the CommunicationType is not a QUERY_REQUEST
+	 */
 	public void setQueryType(QueryType queryType) throws CommunicationException {
 		if (communicationType != CommunicationType.QUERY_REQUEST) {
 			throw new CommunicationException("The communication type is not a query request");
@@ -117,7 +121,11 @@ public class Communication implements Serializable {
 		this.queryType = queryType;
 	}
 
-	// the tables the query will execute on
+	/**
+	 * Sets the tables the SQL query will execute on
+	 * 
+	 * @param tables the tables the query will execute on
+	 */
 	public void setTables(List<String> tables) {
 		this.tables = new ArrayList<String>(tables);
 	}
@@ -140,9 +148,9 @@ public class Communication implements Serializable {
 		this.values = new ArrayList<Object>(values);
 	}
 
-	///// --- QUERY COMBINATION METHODS ---
-	// this method redirects the query creation to the specific method
-	// according to the query type
+	// --- QUERY COMBINATION METHODS --- //
+	// this method redirects the query creation to the specific method according to
+	// the query type
 	public String combineQuery() throws CommunicationException {
 		switch (queryType) {
 		case SELECT:
@@ -158,7 +166,7 @@ public class Communication implements Serializable {
 		}
 	}
 
-	// this method creates and returns a SELECT method
+	// this method creates and returns a SELECT query
 	private String combineSelectQuery() throws CommunicationException {
 		String query = "SELECT ";
 		// adding the column/s to select from
@@ -198,7 +206,7 @@ public class Communication implements Serializable {
 		return query;
 	}
 
-	// this method creates and returns an UPDATE method
+	// this method creates and returns an UPDATE query
 	private String combineUpdateQuery() throws CommunicationException {
 		String query = "UPDATE ";
 		// adding the table name
@@ -228,7 +236,7 @@ public class Communication implements Serializable {
 		return query;
 	}
 
-	// this method creates and returns an INSERT method
+	// this method creates and returns an INSERT query
 	private String combineInsertQuery() throws CommunicationException {
 		int i;
 		String query = "INSERT INTO ";
@@ -261,7 +269,7 @@ public class Communication implements Serializable {
 		return query;
 	}
 
-	// this method creates and returns a DELETE method
+	// this method creates and returns a DELETE query
 	private String combineDeleteQuery() throws CommunicationException {
 		String query = "DELETE FROM ";
 		// adding the table name
@@ -319,16 +327,11 @@ public class Communication implements Serializable {
 		return where;
 	}
 
-	////////// --- METHODS FOR HANDLING THE SECOND TYPE OF COMMUNICAIONS ---
-
+	///// --- METHODS FOR HANDLING THE SECOND TYPE OF COMMUNICAIONS --- /////
+	// --- GETTERS --- //
 	// a getter for returning if the communication is a client-server message
 	public boolean isMessage() {
 		return communicationType == CommunicationType.CLIENT_SERVER_MESSAGE;
-	}
-
-	// sets the message type
-	public void setMessageType(MessageType messageType) {
-		this.messageType = messageType;
 	}
 
 	// returns the message type
@@ -336,23 +339,34 @@ public class Communication implements Serializable {
 		return messageType;
 	}
 
-//	public static void main(String[] args) throws CommunicationException {
-//		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
-//		request.setQueryType(QueryType.SELECT);
-//		request.setTables(Arrays.asList("olympic_park_active_booking"));
-//		request.setSelectColumns(Arrays.asList("*"));
-////		request.setWhereConditions(Arrays.asList("numberOfVisitors", "dayOfBooking"), Arrays.asList("<", "AND", ">="),
-////				Arrays.asList(10, LocalDate.of(2024, 02, 01)));
-//		GoNatureServer server = new GoNatureServer(4444);
-//		server.sendSQLRequest(request);
-//		ArrayList<Order> olympic_park_active_bookings = new ArrayList<>();
-//		for (Object[] o : request.getResultList()) {
-//			Order newOrder = new Order((String) o[0], (Date) o[1], (Time) o[2], (Date) o[3], ((String)o[4]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL,
-//					(Integer) o[5], (String) o[6], (String) o[7], (String) o[8], (String) o[9], (Integer) o[10],
-//					(Integer) o[11] != 0, (Integer) o[12] != 0, (Time) o[13], (Time) o[14], (Integer) o[15] != 0, (Time) o[16]);
-//			olympic_park_active_bookings.add(newOrder);
-//			System.out.println(newOrder);
-//		}
-//		public Order(int bookingIdNumber, int numberOfVisitors, Park parkBooked, OrderStatus status, LocalDate dayOfVisit, LocalTime timeOfVisit, LocalTime entryParkTime, LocalTime exitParkTime, VisitType visitType,	String phoneNumber, String emailAddress, float finalPrice) {
-//	}
+	// --- SETTERS --- //
+	// sets the message type
+	public void setMessageType(MessageType messageType) {
+		this.messageType = messageType;
+	}
+
+
+	
+	///// --- METHODS FOR HANDLING THE THIRD TYPE OF COMMUNICATIONS --- /////
+	///// --- GETTERS --- /////
+	// getter for the result list (to use on the client-side)
+	public ArrayList<Object[]> getResultList() {
+		return resultList;
+	}
+
+	// getter for the query result (true = succeed, false = failed)
+	public boolean getQueryResult() {
+		return queryResult;
+	}
+
+	///// --- SETTERS --- /////
+	// setter for the result set (to use on the server-side)
+	public void setResultList(ArrayList<Object[]> resultList) {
+		this.resultList = resultList;
+	}
+
+	// setter for the query result (true = succeed, false = failed)
+	public void setQueryResult(boolean queryResult) {
+		this.queryResult = queryResult;
+	}
 }
