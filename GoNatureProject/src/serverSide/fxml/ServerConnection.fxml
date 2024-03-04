@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.text.Font?>
+
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="serverSide.gui.ServerConnectionController">
+   <children>
+      <ImageView fx:id="goNatureLogo" fitHeight="200.0" fitWidth="400.0" layoutX="100.0" layoutY="23.0" pickOnBounds="true" preserveRatio="true" />
+      <Label layoutX="182.0" layoutY="230.0" text="Server Connection">
+         <font>
+            <Font name="Cambria" size="30.0" />
+         </font>
+      </Label>
+      <Label layoutX="79.0" layoutY="268.0" text="Please enter the port number to connect the server to:" textAlignment="CENTER">
+         <font>
+            <Font name="Calibri Light" size="20.0" />
+         </font>
+      </Label>
+      <TextField fx:id="portTxtField" layoutX="209.0" layoutY="308.0" prefHeight="28.0" prefWidth="182.0">
+         <font>
+            <Font name="Calibri Light" size="16.0" />
+         </font>
+      </TextField>
+      <Button fx:id="connectBtn" layoutX="237.0" layoutY="345.0" mnemonicParsing="false" onAction="#connectToServer" text="Connect to Port">
+         <font>
+            <Font name="Calibri" size="16.0" />
+         </font>
+      </Button>
+      <Button fx:id="disconnectBtn" layoutX="229.0" layoutY="345.0" mnemonicParsing="false" onAction="#disconnectFromServer" text="Disconnect Server">
+         <font>
+            <Font name="Calibri" size="16.0" />
+         </font>
+      </Button>
+   </children>
+</Pane>
