@@ -100,6 +100,25 @@ public class ClientConnectionController extends AbstractScreenController {
 			JustChecking just = new JustChecking((String) o[0], (String) o[1], (Integer) o[2]);
 			System.out.println(just);
 		}
+		
+		Communication request2 = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			request2.setQueryType(QueryType.UPDATE);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		request2.setTables(Arrays.asList("acadia_park_active_booking"));
+		request2.setColumnsAndValues(Arrays.asList("numberOfVisitors"), Arrays.asList(10));
+		request2.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList("4552040587"));
+		GoNatureClientUI.client.accept(request2);
+		try {
+			System.out.println(request2.combineQuery());
+		} catch (CommunicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println(request2.getQueryResult());
+		
 
 		// starting the MainScreen
 	}

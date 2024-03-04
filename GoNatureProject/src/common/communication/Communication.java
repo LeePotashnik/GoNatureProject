@@ -193,7 +193,7 @@ public class Communication implements Serializable {
 		} else { // several columns from the table/s
 			for (int i = 0; i < tables.size(); i++) {
 				if (i + 1 == tables.size()) { // if this is the last column, no ',' after it
-					query += tables.get(i) + " ";
+					query += tables.get(i) + "";
 				} else {
 					query += tables.get(i) + ",";
 				}
@@ -275,7 +275,7 @@ public class Communication implements Serializable {
 		// adding the table name
 		if (tables == null)
 			throw new CommunicationException("Table is not included");
-		query += tables.get(0) + " ";
+		query += tables.get(0) + "";
 
 		// adding the where part
 		query += createWherePart() + ";";
@@ -316,7 +316,7 @@ public class Communication implements Serializable {
 			if (whereValues.size() != whereColumns.size()) {
 				throw new CommunicationException("Columns and values are not matching");
 			}
-			where += "WHERE ";
+			where += " WHERE ";
 			int j = 0;
 			for (int i = 0; i < whereColumns.size(); i++) {
 				where += whereColumns.get(i) + " " + whereOperators.get(j++) + " ";
