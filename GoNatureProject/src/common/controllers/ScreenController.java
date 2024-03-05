@@ -65,7 +65,7 @@ public class ScreenController {
 		}
 		Object controller = loader.getController();
 		stage.setScene(new Scene(root)); // setting the scene
-		settings.implementSetting(settings, stage); // implementing the settings of the stage
+		settings.implementSettings(settings, stage); // implementing the settings of the stage
 		stage.setOnCloseRequest(((AbstractScreen) controller)::handleCloseRequest); // handleCloseRequest method of the
 																					// controller will be called
 		root.requestFocus(); // setting the focus on the root, not on the GUI components
@@ -110,7 +110,7 @@ public class ScreenController {
 		screensMap.put(screenName, new Pair<>(root, controller)); // adding the screen to the screens map
 		screensStack.push(screenName); // pushing the screen to the screens stack
 		stage.setScene(new Scene(screensMap.get(screenName).getKey())); // setting the scene
-		settings.implementSetting(settings, stage); // implementing the settings of the stage
+		settings.implementSettings(settings, stage); // implementing the settings of the stage
 		stage.setOnCloseRequest(((AbstractScreen) controller)::handleCloseRequest); // handleCloseRequest method of the
 																					// controller will be called
 		root.requestFocus(); // setting the focus on the root, not on the GUI components
