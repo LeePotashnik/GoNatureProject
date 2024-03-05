@@ -41,7 +41,7 @@ public class StageSettings {
 	 * @param settings the StageSettings object with the relevant settings
 	 * @param stage    the stage to perform the settings implementation on
 	 */
-	public void implementSetting(StageSettings settings, Stage stage) {
+	public void implementSettings(StageSettings settings, Stage stage) {
 		stage.setTitle(settings.title);
 		stage.setResizable(settings.resizable);
 		if (settings.iconPath != null)
