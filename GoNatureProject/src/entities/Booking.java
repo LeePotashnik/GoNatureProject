@@ -14,7 +14,6 @@ public class Booking {
 	
 	private int bookingId, numberOfVisitors;
 	private Park parkBooked;
-	private OrderStatus status;
 	private LocalDate dayOfVisit, dayOfBooking;
 	private LocalTime timeOfVisit, entryParkTime, exitParkTime, reminderArrivalTime;
 	private VisitType visitType;
@@ -23,14 +22,13 @@ public class Booking {
 	private boolean paid, confirmed, isRecievedReminder;
 	
 
-	public Booking(int bookingId, int numberOfVisitors, Park parkBooked, OrderStatus status, LocalDate dayOfVisit, 
+	public Booking(int bookingId, int numberOfVisitors, Park parkBooked, LocalDate dayOfVisit, 
 			LocalDate dayOfBooking, LocalTime timeOfVisit, LocalTime entryParkTime, LocalTime exitParkTime,
 			LocalTime reminderArrivalTime, VisitType visitType, String firstName, String lastName, boolean isRecievedReminder, 
 			String phoneNumber, String emailAddress, float finalPrice, boolean paid, boolean confirmed) {
 		this.bookingId = bookingId;
 		this.numberOfVisitors = numberOfVisitors;
 		this.parkBooked = parkBooked;
-		this.status = status;
 		this.dayOfVisit = dayOfVisit;
 		this.timeOfVisit = timeOfVisit;
 		this.entryParkTime = entryParkTime;
@@ -176,13 +174,6 @@ public class Booking {
 	}
 
 	/**
-	 * @return status (can be PENDING, CANCELLED, INWAITINGLIST, DONE)
-	 */
-	public OrderStatus getStatus() {
-		return status;
-	}
-
-	/**
 	 * @return dayOfVisit
 	 */
 	public LocalDate getDayOfVisit() {
@@ -266,15 +257,6 @@ public class Booking {
 		this.parkBooked = parkBooked;
 	}
 
-
-	/**
-	 * @param status
-	 */
-	public void setStatus(OrderStatus status) {
-		this.status = status;
-	}
-
-
 	/**
 	 * @param dayOfVisit
 	 */
@@ -342,7 +324,7 @@ public class Booking {
 	@Override
 	public String toString() {
 		return "Order [bookingIdNumber=" + bookingId + ", numberOfVisitors=" + numberOfVisitors + ", parkBooked="
-				+ parkBooked + ", status=" + status + ", dayOfVisit=" + dayOfVisit + ", timeOfVisit=" + timeOfVisit
+				+ parkBooked + ", dayOfVisit=" + dayOfVisit + ", timeOfVisit=" + timeOfVisit
 				+ ", entryParkTime=" + entryParkTime + ", exitParkTime=" + exitParkTime + ", visitType=" + visitType
 				+ ", phoneNumber=" + phoneNumber + ", emailAddress=" + emailAddress + ", finalPrice=" + finalPrice
 				+ "]";
