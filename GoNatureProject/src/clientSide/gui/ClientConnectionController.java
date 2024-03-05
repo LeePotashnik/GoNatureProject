@@ -1,12 +1,5 @@
 package clientSide.gui;
 
-import java.time.LocalTime;
-import java.util.Arrays;
-
-import common.communication.Communication;
-import common.communication.Communication.CommunicationType;
-import common.communication.Communication.QueryType;
-import common.communication.CommunicationException;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenController;
 import javafx.event.ActionEvent;
@@ -90,39 +83,40 @@ public class ClientConnectionController extends AbstractScreen {
 	 * successfully. Starts the client-side Main Screen.
 	 */
 	public void runClientSide() {
-		System.out.println("Trying to print acadia_park_active_booking table:");
-		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
-		try {
-			request.setQueryType(QueryType.SELECT);
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-		request.setSelectColumns(Arrays.asList("bookingId", "firstName", "finalPrice"));
-		request.setTables(Arrays.asList("acadia_park_active_booking"));
-		GoNatureClientUI.client.accept(request);
-		for (Object[] o : request.getResultList()) {
-			JustChecking just = new JustChecking((String) o[0], (String) o[1], (Integer) o[2]);
-			System.out.println(just);
-		}
+//		System.out.println("Trying to print acadia_park_active_booking table:");
+//		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
+//		try {
+//			request.setQueryType(QueryType.SELECT);
+//		} catch (CommunicationException e) {
+//			e.printStackTrace();
+//		}
+//		request.setSelectColumns(Arrays.asList("bookingId", "firstName", "finalPrice"));
+//		request.setTables(Arrays.asList("acadia_park_active_booking"));
+//		GoNatureClientUI.client.accept(request);
+//		for (Object[] o : request.getResultList()) {
+//			JustChecking just = new JustChecking((String) o[0], (String) o[1], (Integer) o[2]);
+//			System.out.println(just);
+//		}
+//
+//		Communication request2 = new Communication(CommunicationType.QUERY_REQUEST);
+//		try {
+//			request2.setQueryType(QueryType.UPDATE);
+//		} catch (CommunicationException e) {
+//			e.printStackTrace();
+//		}
+//		request2.setTables(Arrays.asList("acadia_park_active_booking"));
+//		request2.setColumnsAndValues(Arrays.asList("numberOfVisitors", "parkEntryTime"), Arrays.asList(8, LocalTime.of(10,30,0)));
+//		request2.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList("4552040587"));
+//		GoNatureClientUI.client.accept(request2);
+//		try {
+//			System.out.println(request2.combineQuery());
+//		} catch (CommunicationException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		System.out.println(request2.getQueryResult());
 
-		Communication request2 = new Communication(CommunicationType.QUERY_REQUEST);
-		try {
-			request2.setQueryType(QueryType.UPDATE);
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-		request2.setTables(Arrays.asList("acadia_park_active_booking"));
-		request2.setColumnsAndValues(Arrays.asList("numberOfVisitors", "parkEntryTime"), Arrays.asList(8, LocalTime.of(10,30,0)));
-		request2.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList("4552040587"));
-		GoNatureClientUI.client.accept(request2);
-		try {
-			System.out.println(request2.combineQuery());
-		} catch (CommunicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.println(request2.getQueryResult());
-
+		showInformationAlert(ScreenController.getInstance().getStage(), "The Main Screen will be displayed now");
 		// starting the MainScreen
 	}
 

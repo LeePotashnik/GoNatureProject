@@ -26,7 +26,6 @@ public class DatabaseController {
 	 * 
 	 * @param dbPassword the password for the database
 	 */
-	@SuppressWarnings("deprecation")
 	protected void connectToDB(String dbPassword) {
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
