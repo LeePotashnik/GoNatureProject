@@ -10,7 +10,6 @@ import serverSide.control.GoNatureServer;
 
 public class GoNatureServerUI extends Application {
 	protected static GoNatureServer server;
-	protected static ServerConnectionController serverConnectionController;
 
 	/**
 	 * This method runs the server with the entered port number (from the text field

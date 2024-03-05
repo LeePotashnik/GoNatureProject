@@ -1,5 +1,6 @@
 package clientSide.gui;
 
+import java.time.LocalTime;
 import java.util.Arrays;
 
 import common.communication.Communication;
@@ -111,7 +112,7 @@ public class ClientConnectionController extends AbstractScreen {
 			e.printStackTrace();
 		}
 		request2.setTables(Arrays.asList("acadia_park_active_booking"));
-		request2.setColumnsAndValues(Arrays.asList("numberOfVisitors"), Arrays.asList(8));
+		request2.setColumnsAndValues(Arrays.asList("numberOfVisitors", "parkEntryTime"), Arrays.asList(8, LocalTime.of(10,30,0)));
 		request2.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList("4552040587"));
 		GoNatureClientUI.client.accept(request2);
 		try {
