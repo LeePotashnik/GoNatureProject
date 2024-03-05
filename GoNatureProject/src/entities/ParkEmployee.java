@@ -1,7 +1,5 @@
 package entities;
 
-import java.time.LocalTime;
-
 public class ParkEmployee extends SystemUser {
 	private Park workingIn;
 
