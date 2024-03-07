@@ -2,12 +2,16 @@ package clientSide.gui;
 
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenController;
+import common.controllers.ScreenException;
+import common.controllers.StageSettings;
+import common.controllers.StatefulException;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.stage.Stage;
 
 /**
  * Controller class for the Client Connection JavaFX screen
@@ -118,13 +122,31 @@ public class ClientConnectionController extends AbstractScreen {
 
 		showInformationAlert(ScreenController.getInstance().getStage(), "The Main Screen will be displayed now");
 		// starting the MainScreen
+		try {
+			ScreenController.getInstance().showScreen("cancellationReportController",
+					"/clientSide/fxml/cancellationReport.fxml", false,
+					StageSettings.defaultSettings("GoNature System -Cancellation Report"));
+		} catch (StatefulException | ScreenException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+//		try {
+//			ScreenController.getInstance().showScreen("DepartmentManagerReportsController",
+//					"/clientSide/fxml/DepartmentManagerReports.fxml", false,
+//					StageSettings.defaultSettings("GoNature System -Department Manager Reports"));
+//		} catch (StatefulException | ScreenException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+	
 	}
-
 	///// --- FXML / JAVA FX METHODS --- /////
 	@FXML
 	/**
 	 * This method initializes the JavaFX components
 	 */
+	
 	public void initialize() {
 		portTxtField.setPromptText("Enter port number");
 		hostTxtField.setPromptText("Enter host address");
