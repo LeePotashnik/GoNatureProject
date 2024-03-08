@@ -1,196 +1,113 @@
 package entities;
 
-import java.util.ArrayList;
-
 public class Park {
-	private int parkID;
-	private String parkName, parkAddress;
-	private ParkManager parkManager;
-	private ArrayList<ParkEmployee> employees;
-	private DepartmentManager departmentManager;
-	private int maximumVisitorsCapacity, maximumOrderAmount, currentCapacity;
-	private float maximumTimeLimit;
-
-	public Park(int parkID, String parkName, String parkAddress, ParkManager parkManager,
-			ArrayList<ParkEmployee> employees, DepartmentManager departmentManager, int maximumVisitorsCapacity,
-			int maximumOrderAmount, int currentCapacity, float maximumTimeLimit) {
-		this.parkID = parkID;
+	private int parkId;
+	private String parkName, parkCity, parkState, parkDepartment, parkManagerId, departmentManagerId;
+	private int maximumVisitors, maximumOrders, timeLimit, currentCapacity;
+	
+	public Park(int parkId, String parkName, String parkCity, String parkState, String parkDepartment,
+			String parkManagerId, String departmentManagerId, int maximumVisitors, int maximumOrders, int timeLimit,
+			int currentCapacity) {
+		this.parkId = parkId;
 		this.parkName = parkName;
-		this.parkAddress = parkAddress;
-		this.parkManager = parkManager;
-		this.employees = employees;
-		this.departmentManager = departmentManager;
-		this.maximumVisitorsCapacity = maximumVisitorsCapacity;
-		this.maximumOrderAmount = maximumOrderAmount;
+		this.parkCity = parkCity;
+		this.parkState = parkState;
+		this.parkDepartment = parkDepartment;
+		this.parkManagerId = parkManagerId;
+		this.departmentManagerId = departmentManagerId;
+		this.maximumVisitors = maximumVisitors;
+		this.maximumOrders = maximumOrders;
+		this.timeLimit = timeLimit;
 		this.currentCapacity = currentCapacity;
-		this.maximumTimeLimit = maximumTimeLimit;
 	}
 
-	/**
-	 * @return park id number
-	 */
-	public int getParkID() {
-		return parkID;
+	public int getParkId() {
+		return parkId;
 	}
 
-	/**
-	 * @return park name
-	 */
 	public String getParkName() {
 		return parkName;
 	}
 
-	/**
-	 * @return park address
-	 */
-	public String getParkAddress() {
-		return parkAddress;
+	public String getParkCity() {
+		return parkCity;
 	}
 
-	/**
-	 * @return park manager
-	 */
-	public ParkManager getParkManager() {
-		return parkManager;
+	public String getParkState() {
+		return parkState;
 	}
 
-	/**
-	 * @return list of the park employees
-	 */
-	public ArrayList<ParkEmployee> getEmployees() {
-		return employees;
+	public String getParkDepartment() {
+		return parkDepartment;
 	}
 
-	/**
-	 * @return park's department manager
-	 */
-	public DepartmentManager getDepartmentManager() {
-		return departmentManager;
+	public String getParkManagerId() {
+		return parkManagerId;
 	}
 
-	/**
-	 * @return the park's maximum visitor capacity
-	 */
-	public int getMaximumVisitorsCapacity() {
-		return maximumVisitorsCapacity;
+	public String getDepartmentManagerId() {
+		return departmentManagerId;
 	}
 
-	/**
-	 * @return park's maximum order amount
-	 */
-	public int getMaximumOrderAmount() {
-		return maximumOrderAmount;
+	public int getMaximumVisitors() {
+		return maximumVisitors;
 	}
 
-	/**
-	 * @return park's current capacity
-	 */
+	public int getMaximumOrders() {
+		return maximumOrders;
+	}
+
+	public int getTimeLimit() {
+		return timeLimit;
+	}
+
 	public int getCurrentCapacity() {
 		return currentCapacity;
 	}
 
-	/**
-	 * @return park's maximum time limit 
-	 */
-	public float getMaximumTimeLimit() {
-		return maximumTimeLimit;
+	public void setParkId(int parkId) {
+		this.parkId = parkId;
 	}
 
-	/**
-	 * @param parkID	 * 
-	 */
-	public void setParkID(int parkID) {
-		this.parkID = parkID;
-	}
-
-	/**
-	 * @param parkName
-	 */
 	public void setParkName(String parkName) {
 		this.parkName = parkName;
 	}
 
-	/**
-	 * @param parkAddress
-	 */
-	public void setParkAddress(String parkAddress) {
-		this.parkAddress = parkAddress;
+	public void setParkCity(String parkCity) {
+		this.parkCity = parkCity;
 	}
 
-	/**
-	 * @param parkManager
-	 */
-	public void setParkManager(ParkManager parkManager) {
-		this.parkManager = parkManager;
+	public void setParkState(String parkState) {
+		this.parkState = parkState;
 	}
 
-	/**
-	 * @param employees
-	 */
-	public void setEmployees(ArrayList<ParkEmployee> employees) {
-		this.employees = employees;
+	public void setParkDepartment(String parkDepartment) {
+		this.parkDepartment = parkDepartment;
 	}
 
-	/**
-	 * @param departmentManager
-	 */
-	public void setDepartmentManager(DepartmentManager departmentManager) {
-		this.departmentManager = departmentManager;
+	public void setParkManagerId(String parkManagerId) {
+		this.parkManagerId = parkManagerId;
 	}
 
-	/**
-	 * @param maximumVisitorsCapacity
-	 */
-	public void setMaximumVisitorsCapacity(int maximumVisitorsCapacity) {
-		this.maximumVisitorsCapacity = maximumVisitorsCapacity;
+	public void setDepartmentManagerId(String departmentManagerId) {
+		this.departmentManagerId = departmentManagerId;
 	}
 
-	/**
-	 * @param maximumOrderAmount
-	 */
-	public void setMaximumOrderAmount(int maximumOrderAmount) {
-		this.maximumOrderAmount = maximumOrderAmount;
+	public void setMaximumVisitors(int maximumVisitors) {
+		this.maximumVisitors = maximumVisitors;
 	}
 
-	/**
-	 * @param currentCapacity
-	 */
+	public void setMaximumOrders(int maximumOrders) {
+		this.maximumOrders = maximumOrders;
+	}
+
+	public void setTimeLimit(int timeLimit) {
+		this.timeLimit = timeLimit;
+	}
+
 	public void setCurrentCapacity(int currentCapacity) {
 		this.currentCapacity = currentCapacity;
 	}
-
-	/**
-	 * @param maximumTimeLimit
-	 */
-	public void setMaximumTimeLimit(float maximumTimeLimit) {
-		this.maximumTimeLimit = maximumTimeLimit;
-	}
-
-	/**
-	 * @param employeeToAdd
-	 * @return boolean if the employee added to the park
-	 */
-	public boolean addEmployeeToPark(ParkEmployee employeeToAdd) {
-		if (employees == null)
-			throw new NullPointerException();
-		return employees.add(employeeToAdd);
-	}
-
-	/**
-	 * @param employeeToDelete
-	 * @return boolean if the employee removed from the park
-	 */
-	public boolean deleteEmployeeFromPark(ParkEmployee employeeToDelete) {
-		if (employees == null)
-			throw new NullPointerException();
-		return employees.remove(employeeToDelete);
-	}
-
-	@Override
-	public String toString() {
-		return "Park [parkID=" + parkID + ", parkName=" + parkName + ", parkAddress=" + parkAddress + ", parkManager="
-				+ parkManager + ", employees=" + employees + ", departmentManager=" + departmentManager
-				+ ", maximumVisitorsCapacity=" + maximumVisitorsCapacity + ", maximumOrderAmount=" + maximumOrderAmount
-				+ ", currentCapacity=" + currentCapacity + ", maximumTimeLimit=" + maximumTimeLimit + "]";
-	}
+	
+	
 }
