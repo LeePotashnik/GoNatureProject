@@ -1,13 +1,20 @@
 package serverSide.gui;
 
 import common.controllers.AbstractScreen;
-import common.controllers.ScreenController;
+import common.controllers.ScreenManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import javafx.stage.WindowEvent;
 
 public class ServerConnectionController extends AbstractScreen {
@@ -19,35 +26,44 @@ public class ServerConnectionController extends AbstractScreen {
 	private ImageView goNatureLogo;
 
 	@FXML
-	private TextField portTxtField;
+	private TextField hostTxtField, portTxtField, databaseTxtField, rootTxtField, passwordTxtField;
+
+	@FXML
+	private TableColumn<?, ?> clientIpColumn, clientStatusColumn;
+
+	@FXML
+	private TableView<?> connectedClientsTable;
+
+	@FXML
+	private Label hostLbl, portLbl, databaseLbl, rootLbl, passwordLbl;
+	
+	@FXML
+    private Pane pane;
 
 	@FXML
 	/**
 	 * This method is called after the user clicked on the "Connect to Server"
 	 * button on the server GUI.
+	 * Validates the input and connects to the server
 	 * 
 	 * @param event an event of clicking to the Connect to Server button
 	 */
 	void connectToServer(ActionEvent event) {
-		String portNumber = portTxtField.getText();
-		portTxtField.setStyle(setTextFieldToRegular());
-
-		// validating the port number
-		if (portNumber.trim().isEmpty() || !portNumber.matches("\\d+")) {
-			portTxtField.setStyle(setTextFieldToError());
-			showErrorAlert(ScreenController.getInstance().getStage(), "You must enter a valid digits-only port number");
-		} else if (!(Integer.parseInt(portNumber) >= 1024 && Integer.parseInt(portNumber) <= 65535)) {
-			portTxtField.setStyle(setTextFieldToError());
-			showErrorAlert(ScreenController.getInstance().getStage(), "Port number must be in range (1024-65535)");
-		} else { // if the port number is valid
-			String result = GoNatureServerUI.runServer(portNumber);
+		if (validate()) {
+			String result = GoNatureServerUI.runServer(Integer.parseInt(portTxtField.getText()),
+					databaseTxtField.getText(), rootTxtField.getText(), passwordTxtField.getText());
 			if (result.contains("Error")) {
-				showErrorAlert(ScreenController.getInstance().getStage(), result);
+				showErrorAlert(ScreenManager.getInstance().getStage(), result);
 				System.out.println(result);
 			} else {
-				showInformationAlert(ScreenController.getInstance().getStage(), result);
+				showInformationAlert(ScreenManager.getInstance().getStage(), result);
 				System.out.println(result);
+				hostTxtField.setDisable(true);
 				portTxtField.setDisable(true);
+				databaseTxtField.setDisable(true);
+				rootTxtField.setDisable(true);
+				passwordTxtField.setDisable(true);
+
 				connectBtn.setVisible(false);
 				disconnectBtn.setVisible(true);
 			}
@@ -63,7 +79,7 @@ public class ServerConnectionController extends AbstractScreen {
 	 */
 	void disconnectFromServer(ActionEvent event) {
 		if (disconnect()) {
-			showInformationAlert(ScreenController.getInstance().getStage(), "Server is disconnected");
+			showInformationAlert(ScreenManager.getInstance().getStage(), "Server is disconnected");
 			disconnectBtn.setDisable(true);
 		}
 	}
@@ -78,13 +94,131 @@ public class ServerConnectionController extends AbstractScreen {
 		if (GoNatureServerUI.server == null)
 			return true;
 		if (!GoNatureServerUI.server.areAllClientsDisconnected()) {
-			showErrorAlert(ScreenController.getInstance().getStage(), "Not all clients are disconnected!");
+			showErrorAlert(ScreenManager.getInstance().getStage(), "Not all clients are disconnected!");
 			return false;
 		} else {
 			GoNatureServerUI.disconnectServer();
 			return true;
 		}
 	}
+
+	/**
+	 * This method validaes the user input from the text fields
+	 * @return true if the input is valid, false if not
+	 */
+	private boolean validate() {
+		boolean result = true;
+		String error = "";
+		hostTxtField.setStyle(setTextFieldToRegular());
+		portTxtField.setStyle(setTextFieldToRegular());
+
+		// validating host
+		String hostAddress = hostTxtField.getText();
+		// checking if the host address is a valid IPV4 address, or 'localhost'
+		if (hostAddress.trim().isEmpty() || (!hostAddress.matches(
+				"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")
+				&& !hostAddress.equals("localhost"))) {
+			hostTxtField.setStyle(setTextFieldToError());
+			result = false;
+			error += "You must enter a valid IPV4 address, or 'localhost'\n";
+		}
+		// validating port
+		String portNumber = portTxtField.getText();
+		// checking if the port number is a digit-only string
+		if (portNumber.trim().isEmpty() || !portNumber.matches("\\d+")) {
+			portTxtField.setStyle(setTextFieldToError());
+			result = false;
+			error += "You must enter a valid digits-only port number\n";
+		}
+		// checking if the port number is in the correct range
+		if (portNumber.matches("\\d+") && !(Integer.parseInt(portNumber) >= 1024 && Integer.parseInt(portNumber) <= 65535)) {
+			portTxtField.setStyle(setTextFieldToError());
+			result = false;
+			error += "Port number must be in range (1024-65535)";
+		}
+		if (!result)
+			showErrorAlert(ScreenManager.getInstance().getStage(), error);
+		return result;
+	}
+	
+	/// TEXT FIELDS TABS FLOW METHODS ///
+	@FXML
+	/**
+	 * transfers the focus from hostTxtField to portTxtField
+	 * @param event
+	 */
+    void hostTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			portTxtField.requestFocus();
+		}
+    }
+	
+	@FXML
+	/**
+	 * transfers the focus from portTxtField to databaseTxtField
+	 * @param event
+	 */
+    void portTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			databaseTxtField.requestFocus();
+		}
+    }
+	
+	@FXML
+	/**
+	 * transfers the focus from databaseTxtField to rootTxtField
+	 * @param event
+	 */
+    void databaseTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			rootTxtField.requestFocus();
+		}
+    }
+	
+    @FXML
+    /**
+	 * transfers the focus from rootTxtField to passwordTxtField
+     * @param event
+     */
+    void rootTabPressed(KeyEvent event) {
+    	if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			passwordTxtField.requestFocus();
+		}
+    }
+    
+    @FXML
+    /**
+	 * transfers the focus from passwordTxtField to connectBtn
+     * @param event
+     */
+    void passwordTabPressed(KeyEvent event) {
+    	if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			connectBtn.requestFocus();
+		}
+    }
+    
+    @FXML
+    /**
+     * sets the focus to the pane
+     * @param event
+     */
+    void paneClicked(MouseEvent event) {
+    	pane.requestFocus();
+    }
+    
+    @FXML
+    /**
+     * ignores any key pressing on the root pane
+     * @param event
+     */
+    void paneKeyPressed(KeyEvent event) {
+    	event.consume();
+    }
 
 	@FXML
 	/**
@@ -94,7 +228,13 @@ public class ServerConnectionController extends AbstractScreen {
 		disconnectBtn.setVisible(false);
 		portTxtField.setPromptText("Enter port number here");
 		// initializing the image component
-		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
+		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+		// setting alignment of the labels to right
+		hostLbl.setStyle("-fx-alignment: center-right;");
+		portLbl.setStyle("-fx-alignment: center-right;");
+		databaseLbl.setStyle("-fx-alignment: center-right;");
+		rootLbl.setStyle("-fx-alignment: center-right;");
+		passwordLbl.setStyle("-fx-alignment: center-right;");
 	}
 
 	@Override
@@ -105,6 +245,12 @@ public class ServerConnectionController extends AbstractScreen {
 		boolean disconnectionResult = disconnect();
 		if (!disconnectionResult)
 			event.consume();
+	}
+
+	@Override
+	public void loadBefore(Object information) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

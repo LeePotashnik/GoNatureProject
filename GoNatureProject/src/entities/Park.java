@@ -26,92 +26,160 @@ public class Park {
 		this.maximumTimeLimit = maximumTimeLimit;
 	}
 
+	/**
+	 * @return park id number
+	 */
 	public int getParkID() {
 		return parkID;
 	}
 
+	/**
+	 * @return park name
+	 */
 	public String getParkName() {
 		return parkName;
 	}
 
+	/**
+	 * @return park address
+	 */
 	public String getParkAddress() {
 		return parkAddress;
 	}
 
+	/**
+	 * @return park manager
+	 */
 	public ParkManager getParkManager() {
 		return parkManager;
 	}
 
+	/**
+	 * @return list of the park employees
+	 */
 	public ArrayList<ParkEmployee> getEmployees() {
 		return employees;
 	}
 
+	/**
+	 * @return park's department manager
+	 */
 	public DepartmentManager getDepartmentManager() {
 		return departmentManager;
 	}
 
+	/**
+	 * @return the park's maximum visitor capacity
+	 */
 	public int getMaximumVisitorsCapacity() {
 		return maximumVisitorsCapacity;
 	}
 
+	/**
+	 * @return park's maximum order amount
+	 */
 	public int getMaximumOrderAmount() {
 		return maximumOrderAmount;
 	}
 
+	/**
+	 * @return park's current capacity
+	 */
 	public int getCurrentCapacity() {
 		return currentCapacity;
 	}
 
+	/**
+	 * @return park's maximum time limit 
+	 */
 	public float getMaximumTimeLimit() {
 		return maximumTimeLimit;
 	}
 
+	/**
+	 * @param parkID	 * 
+	 */
 	public void setParkID(int parkID) {
 		this.parkID = parkID;
 	}
 
+	/**
+	 * @param parkName
+	 */
 	public void setParkName(String parkName) {
 		this.parkName = parkName;
 	}
 
+	/**
+	 * @param parkAddress
+	 */
 	public void setParkAddress(String parkAddress) {
 		this.parkAddress = parkAddress;
 	}
 
+	/**
+	 * @param parkManager
+	 */
 	public void setParkManager(ParkManager parkManager) {
 		this.parkManager = parkManager;
 	}
 
+	/**
+	 * @param employees
+	 */
 	public void setEmployees(ArrayList<ParkEmployee> employees) {
 		this.employees = employees;
 	}
 
+	/**
+	 * @param departmentManager
+	 */
 	public void setDepartmentManager(DepartmentManager departmentManager) {
 		this.departmentManager = departmentManager;
 	}
 
+	/**
+	 * @param maximumVisitorsCapacity
+	 */
 	public void setMaximumVisitorsCapacity(int maximumVisitorsCapacity) {
 		this.maximumVisitorsCapacity = maximumVisitorsCapacity;
 	}
 
+	/**
+	 * @param maximumOrderAmount
+	 */
 	public void setMaximumOrderAmount(int maximumOrderAmount) {
 		this.maximumOrderAmount = maximumOrderAmount;
 	}
 
+	/**
+	 * @param currentCapacity
+	 */
 	public void setCurrentCapacity(int currentCapacity) {
 		this.currentCapacity = currentCapacity;
 	}
 
+	/**
+	 * @param maximumTimeLimit
+	 */
 	public void setMaximumTimeLimit(float maximumTimeLimit) {
 		this.maximumTimeLimit = maximumTimeLimit;
 	}
 
+	/**
+	 * @param employeeToAdd
+	 * @return boolean if the employee added to the park
+	 */
 	public boolean addEmployeeToPark(ParkEmployee employeeToAdd) {
 		if (employees == null)
 			throw new NullPointerException();
 		return employees.add(employeeToAdd);
 	}
 
+	/**
+	 * @param employeeToDelete
+	 * @return boolean if the employee removed from the park
+	 */
 	public boolean deleteEmployeeFromPark(ParkEmployee employeeToDelete) {
 		if (employees == null)
 			throw new NullPointerException();

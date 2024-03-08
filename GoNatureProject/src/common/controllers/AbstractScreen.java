@@ -25,6 +25,12 @@ public abstract class AbstractScreen {
 	 * This method is called after the FXML is invoked
 	 */
 	public abstract void initialize();
+	
+	/**
+	 * This method is called if a screen has to get information before it is shown.
+	 * @param information an object with the specific information for the screen
+	 */
+	public abstract void loadBefore(Object information);
 
 	/**
 	 * This method is activated after the X is clicked on the window. The default is
@@ -38,7 +44,7 @@ public abstract class AbstractScreen {
 	 */
 	public void handleCloseRequest(WindowEvent event) {
 		// showing a "Yes" and "No" decision alert
-		int decision = showConfirmationAlert(ScreenController.getInstance().getStage(),
+		int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(),
 				"Are you sure you want to leave?", "Yes", "No");
 		if (decision == 2) // if the user clicked on "No"
 			event.consume();
