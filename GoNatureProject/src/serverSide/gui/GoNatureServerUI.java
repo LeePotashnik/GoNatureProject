@@ -2,11 +2,12 @@ package serverSide.gui;
 
 import java.io.IOException;
 
-import common.controllers.ScreenController;
+import common.controllers.ScreenManager;
 import common.controllers.StageSettings;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import serverSide.control.GoNatureServer;
+import serverSide.jdbc.DatabaseException;
 
 public class GoNatureServerUI extends Application {
 	protected static GoNatureServer server;
@@ -18,21 +19,22 @@ public class GoNatureServerUI extends Application {
 	 * @param portString the port number input from the server connection GUI
 	 * @return a message about the connection status
 	 */
-	public static String runServer(String portString) {
-		int chosenPort = 0;
-		try {
-			chosenPort = Integer.parseInt(portString); // get port from command line
-		} catch (Throwable t) {
-			return "Error: Could not connect to server.";
-		}
-		server = new GoNatureServer(chosenPort);
+	public static String runServer(int portNumber, String database, String root, String password) {
+		server = new GoNatureServer(portNumber);
 
 		try {
 			server.listen(); // start listening for client connections
 		} catch (Exception ex) {
 			return "Error: Could not listen for clients!";
 		}
-		return "Server is connected to port " + chosenPort;
+		
+		try {
+			server.connectToDatabase(database, root, password);
+		} catch (DatabaseException e) {
+			return e.getMessage();
+		}
+		
+		return "Server is connected to port " + portNumber;
 	}
 
 	/**
@@ -60,9 +62,9 @@ public class GoNatureServerUI extends Application {
 	 * Runs the server-side connection screen
 	 */
 	public void start(Stage primaryStage) throws Exception {
-		ScreenController.getInstance().showScreen("ServerConnectionController",
-				"/serverSide/fxml/ServerConnection.fxml", false,
-				StageSettings.defaultSettings("GoNature System - Server Connection"));
+		ScreenManager.getInstance().showScreen("ServerConnectionController",
+				"/serverSide/fxml/ServerConnection.fxml", true, false,
+				StageSettings.defaultSettings("GoNature System - Server Connection"), null);
 	}
 
 	public static void main(String[] args) {
