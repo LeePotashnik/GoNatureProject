@@ -14,19 +14,13 @@ public class DatabaseController {
 	private Connection conn;
 
 	/**
-	 * 
-	 * @param dbPassword the password for the database
+	 * The constructor establishes a connection to the local MySQL databse
+	 * @param database the local MySQL database path
+	 * @param root the root name
+	 * @param password the database password
+	 * @throws DatabaseException if there is a problem with the connection
 	 */
-	public DatabaseController(String dbPassword) {
-		connectToDB(dbPassword);
-	}
-
-	/**
-	 * This method establishes a connection to the local MySQL databse
-	 * 
-	 * @param dbPassword the password for the database
-	 */
-	protected void connectToDB(String dbPassword) {
+	public DatabaseController(String database, String root, String password) throws DatabaseException {
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
 			System.out.println("Driver definition succeed");
@@ -35,17 +29,13 @@ public class DatabaseController {
 		}
 
 		try {
-			conn = DriverManager.getConnection("jdbc:mysql://localhost/go_nature?serverTimezone=IST", "root",
-					dbPassword);
+			conn = DriverManager.getConnection(database, root, password);
 		} catch (SQLException ex) {
 			System.out.println("Database connection failed to be established");
-			System.out.println("SQLException: " + ex.getMessage());
-			System.out.println("SQLState: " + ex.getSQLState());
-			System.out.println("VendorError: " + ex.getErrorCode());
-			return;
+			throw new DatabaseException("Can't establish connection to database");
 		}
 		System.out.println("Database connection established successfully");
-	}
+	}	
 
 	/**
 	 * Gets a communication request (of a SELECT query), executes the query and

@@ -1,17 +1,16 @@
 package clientSide.gui;
 
 import common.controllers.AbstractScreen;
-import common.controllers.ScreenController;
 import common.controllers.ScreenException;
-import common.controllers.StageSettings;
+import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
+import common.controllers.TemporaryRunner;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.stage.Stage;
 
 /**
  * Controller class for the Client Connection JavaFX screen
@@ -67,18 +66,18 @@ public class ClientConnectionController extends AbstractScreen {
 			GoNatureClientUI.createClient(host, portNumber); // creating an instance of the PrototypeClient
 			boolean result = GoNatureClientUI.client.connectClientToServer(host, portNumber);
 			if (!result) { // if the client connection failed
-				showErrorAlert(ScreenController.getInstance().getStage(),
+				showErrorAlert(ScreenManager.getInstance().getStage(),
 						"Establishing connection to server (host: " + host + ", port: " + port + ") failed");
 				GoNatureClientUI.client = null;
 			} else { // if the client connection succeed
-				showInformationAlert(ScreenController.getInstance().getStage(),
+				showInformationAlert(ScreenManager.getInstance().getStage(),
 						"Establishing connection to server (host: " + host + ", port: " + port + ") succeed");
 				System.out
 						.println("Establishing connection to server (host: " + host + ", port: " + port + ") succeed");
 				runClientSide(); // running the client side
 			}
 		} else {
-			showErrorAlert(ScreenController.getInstance().getStage(), "Errors:" + showMessage);
+			showErrorAlert(ScreenManager.getInstance().getStage(), "Errors:" + showMessage);
 		}
 	}
 
@@ -87,59 +86,12 @@ public class ClientConnectionController extends AbstractScreen {
 	 * successfully. Starts the client-side Main Screen.
 	 */
 	public void runClientSide() {
-//		System.out.println("Trying to print acadia_park_active_booking table:");
-//		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
-//		try {
-//			request.setQueryType(QueryType.SELECT);
-//		} catch (CommunicationException e) {
-//			e.printStackTrace();
-//		}
-//		request.setSelectColumns(Arrays.asList("bookingId", "firstName", "finalPrice"));
-//		request.setTables(Arrays.asList("acadia_park_active_booking"));
-//		GoNatureClientUI.client.accept(request);
-//		for (Object[] o : request.getResultList()) {
-//			JustChecking just = new JustChecking((String) o[0], (String) o[1], (Integer) o[2]);
-//			System.out.println(just);
-//		}
-//
-//		Communication request2 = new Communication(CommunicationType.QUERY_REQUEST);
-//		try {
-//			request2.setQueryType(QueryType.UPDATE);
-//		} catch (CommunicationException e) {
-//			e.printStackTrace();
-//		}
-//		request2.setTables(Arrays.asList("acadia_park_active_booking"));
-//		request2.setColumnsAndValues(Arrays.asList("numberOfVisitors", "parkEntryTime"), Arrays.asList(8, LocalTime.of(10,30,0)));
-//		request2.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList("4552040587"));
-//		GoNatureClientUI.client.accept(request2);
-//		try {
-//			System.out.println(request2.combineQuery());
-//		} catch (CommunicationException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		System.out.println(request2.getQueryResult());
-
-		showInformationAlert(ScreenController.getInstance().getStage(), "The Main Screen will be displayed now");
-		// starting the MainScreen
+		// DO NOT TOUCH PLEASE
 		try {
-			ScreenController.getInstance().showScreen("cancellationReportController",
-					"/clientSide/fxml/cancellationReport.fxml", false,
-					StageSettings.defaultSettings("GoNature System -Cancellation Report"));
+			new TemporaryRunner().showScreen();
 		} catch (StatefulException | ScreenException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-//		try {
-//			ScreenController.getInstance().showScreen("DepartmentManagerReportsController",
-//					"/clientSide/fxml/DepartmentManagerReports.fxml", false,
-//					StageSettings.defaultSettings("GoNature System -Department Manager Reports"));
-//		} catch (StatefulException | ScreenException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		
-	
 	}
 	///// --- FXML / JAVA FX METHODS --- /////
 	@FXML
@@ -152,5 +104,13 @@ public class ClientConnectionController extends AbstractScreen {
 		hostTxtField.setPromptText("Enter host address");
 		// initializing the image component
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
+	}
+
+	@Override
+	public void loadBefore(Object information) {
+		String[] info = ((String)information).split(" ");
+		hostTxtField.setText(info[0]);
+		portTxtField.setText(info[1]);
+		
 	}
 }

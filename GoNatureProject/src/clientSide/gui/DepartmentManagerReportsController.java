@@ -88,4 +88,10 @@ public class DepartmentManagerReportsController extends AbstractScreen{
 	    choiceBoxPark.getItems().addAll(Eastern);
     }
 
+	@Override
+	public void loadBefore(Object information) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

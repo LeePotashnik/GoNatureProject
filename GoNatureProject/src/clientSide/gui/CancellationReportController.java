@@ -1,29 +1,23 @@
 package clientSide.gui;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import common.controllers.AbstractScreen;
-import common.controllers.ScreenController;
 import entities.DepartmentalReport;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Side;
-import javafx.scene.Node;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.image.ImageView;
-import javafx.stage.Stage;
-import javafx.collections.FXCollections;
 
-public class cancellationReportController extends AbstractScreen{
+public class CancellationReportController extends AbstractScreen{
 
     @FXML
     private ImageView goNatureLogo;
@@ -134,5 +128,11 @@ public class cancellationReportController extends AbstractScreen{
 	    data.put("Saturday", 4);
 	    return data;
 	
+	}
+
+	@Override
+	public void loadBefore(Object information) {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -9,6 +9,7 @@ import common.communication.Communication.MessageType;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
 import serverSide.jdbc.DatabaseController;
+import serverSide.jdbc.DatabaseException;
 
 public class GoNatureServer extends AbstractServer {
 	private DatabaseController db;
@@ -22,7 +23,17 @@ public class GoNatureServer extends AbstractServer {
 	 */
 	public GoNatureServer(int port) {
 		super(port);
-		db = new DatabaseController("Elad43251064"); // creates a new instance of the db connector
+	}
+	
+	/**
+	 * Creates a new instance of the database controller
+	 * @param database the local MySQL database path
+	 * @param root the root name
+	 * @param password the database password
+	 * @throws DatabaseException if there is a problem with the connection
+	 */
+	public void connectToDatabase(String databae, String root, String password) throws DatabaseException {
+		db = new DatabaseController(databae, root, password); // creates a new instance of the db connector
 	}
 
 	@Override

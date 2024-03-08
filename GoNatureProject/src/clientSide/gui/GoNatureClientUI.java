@@ -1,8 +1,7 @@
 package clientSide.gui;
 
 import clientSide.control.GoNatureClientController;
-//import common.controllers.ScreenChanger;
-import common.controllers.ScreenController;
+import common.controllers.ScreenManager;
 import common.controllers.StageSettings;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -20,9 +19,9 @@ public class GoNatureClientUI extends Application {
 	 */
 	@Override
 	public void start(Stage arg0) throws Exception {
-		ScreenController.getInstance().showScreen("ClientConnectionController",
-				"/clientSide/fxml/ClientConnection.fxml", false,
-				StageSettings.defaultSettings("GoNature System - Client Connection"));
+		ScreenManager.getInstance().showScreen("ClientConnectionController",
+				"/clientSide/fxml/ClientConnection.fxml", false, false,
+				StageSettings.defaultSettings("GoNature System - Client Connection"), "localhost 5555");
 	}
 
 	/**
