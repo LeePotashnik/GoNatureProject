@@ -8,14 +8,14 @@ package entities;
  */
 public class ParkVisitor extends SystemUser {
 	public enum VisitorType {
-		TRAVELER, GROUPGUIDE;
+		TRAVELLER, GROUPGUIDE;
 	}
-
+	
 	private VisitorType visitorType;
 
-	public ParkVisitor(String idNumber, String firstName, String lastName, String username, String password,
-			String emailAddress, String phoneNumber, boolean isLoggedIn, VisitorType visitorType) {
-		super(idNumber, firstName, lastName, username, password, emailAddress, phoneNumber, isLoggedIn);
+	public ParkVisitor(String idNumber, String firstName, String lastName, String emailAddress, String phoneNumber,
+			String username, String password, boolean isLoggedIn, VisitorType visitorType) {
+		super(idNumber, firstName, lastName, emailAddress, phoneNumber, username, password, isLoggedIn);
 		this.visitorType = visitorType;
 	}
 

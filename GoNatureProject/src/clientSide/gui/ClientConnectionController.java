@@ -113,4 +113,9 @@ public class ClientConnectionController extends AbstractScreen {
 		portTxtField.setText(info[1]);
 		
 	}
+
+	@Override
+	public String getScreenTitle() {
+		return "Client Connection";
+	}
 }

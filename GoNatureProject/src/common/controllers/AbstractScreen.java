@@ -31,6 +31,8 @@ public abstract class AbstractScreen {
 	 * @param information an object with the specific information for the screen
 	 */
 	public abstract void loadBefore(Object information);
+	
+	public abstract String getScreenTitle();
 
 	/**
 	 * This method is activated after the X is clicked on the window. The default is

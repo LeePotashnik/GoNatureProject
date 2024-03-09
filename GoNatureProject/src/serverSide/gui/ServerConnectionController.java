@@ -253,4 +253,9 @@ public class ServerConnectionController extends AbstractScreen {
 
 	}
 
+	@Override
+	public String getScreenTitle() {
+		return "Server Connection";
+	}
+
 }
