@@ -12,6 +12,15 @@ import java.util.List;
  */
 public class Communication implements Serializable {
 	private static final long serialVersionUID = 1L;
+	
+	// general table names
+	public static final String active = "_park_active_booking";
+	public static final String cancel = "_park_cencelled_booking";
+	public static final String done = "_park_done_booking";
+	public static final String employees = "_park_employees";
+	public static final String report = "_park_report";
+	public static final String wait = "_park_waiting_list";
+
 	private String uniqueId; // will hold a unique id for client-server identification
 
 	// the communication type
