@@ -1,5 +1,7 @@
 package clientSide.gui;
 
+import java.util.TimeZone;
+
 import clientSide.control.GoNatureClientController;
 import common.controllers.ScreenManager;
 import common.controllers.StageSettings;
@@ -11,6 +13,7 @@ public class GoNatureClientUI extends Application {
 
 	public static void main(String args[]) throws Exception {
 		System.out.println("Launching client side");
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 		launch(args);
 	}
 

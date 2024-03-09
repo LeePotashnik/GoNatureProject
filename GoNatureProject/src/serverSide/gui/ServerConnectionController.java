@@ -226,7 +226,6 @@ public class ServerConnectionController extends AbstractScreen {
 	 */
 	public void initialize() {
 		disconnectBtn.setVisible(false);
-		portTxtField.setPromptText("Enter port number here");
 		// initializing the image component
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		// setting alignment of the labels to right
@@ -235,6 +234,8 @@ public class ServerConnectionController extends AbstractScreen {
 		databaseLbl.setStyle("-fx-alignment: center-right;");
 		rootLbl.setStyle("-fx-alignment: center-right;");
 		passwordLbl.setStyle("-fx-alignment: center-right;");
+		
+		databaseTxtField.setText("jdbc:mysql://localhost/go_nature?serverTimezone=Asia/Kolkata");
 	}
 
 	@Override
