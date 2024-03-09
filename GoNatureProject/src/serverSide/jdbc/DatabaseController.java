@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.TimeZone;
 
 import common.communication.Communication;
 import common.communication.CommunicationException;
@@ -21,6 +22,7 @@ public class DatabaseController {
 	 * @throws DatabaseException if there is a problem with the connection
 	 */
 	public DatabaseController(String database, String root, String password) throws DatabaseException {
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
 			System.out.println("Driver definition succeed");
