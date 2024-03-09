@@ -1,5 +1,7 @@
 package common.controllers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 
 import clientSide.gui.GoNatureClientUI;
@@ -25,13 +27,14 @@ public abstract class AbstractScreen {
 	 * This method is called after the FXML is invoked
 	 */
 	public abstract void initialize();
-	
+
 	/**
 	 * This method is called if a screen has to get information before it is shown.
+	 * 
 	 * @param information an object with the specific information for the screen
 	 */
 	public abstract void loadBefore(Object information);
-	
+
 	public abstract String getScreenTitle();
 
 	/**
@@ -46,8 +49,12 @@ public abstract class AbstractScreen {
 	 */
 	public void handleCloseRequest(WindowEvent event) {
 		// showing a "Yes" and "No" decision alert
-		int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(),
-				"Are you sure you want to leave?", "Yes", "No");
+		ArrayList<String> buttonsText = new ArrayList<>();
+		buttonsText.add("Yes");
+		buttonsText.add("No");
+
+		int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(), "Are you sure you want to leave?",
+				buttonsText);
 		if (decision == 2) // if the user clicked on "No"
 			event.consume();
 		else { // if the user clicked on "Yes"
@@ -97,16 +104,15 @@ public abstract class AbstractScreen {
 	}
 
 	/**
-	 * This method uses Alert to show a confirmation alert on the screen. This alert
-	 * includes two button for decision to be taken by the user.
 	 * 
-	 * @param stage   the application's primary stage
-	 * @param content the content to be displayed inside the confirmation alert
-	 * @param btn1    the text to be shown inside the first button
-	 * @param btn2    the text to be shown inside the second button
-	 * @return 1 if the first button clicked, 2 if the second button clicked
+	 * @param stage       the application's primary stage
+	 * @param content     the content to be displayed inside the confirmation alert
+	 * @param buttonsText an array list of the text to be shown in every button. The
+	 *                    size of this array list of strings, will determine how
+	 *                    many buttons will be displayed.
+	 * @return the index of the button which was clicked
 	 */
-	public final int showConfirmationAlert(Stage stage, String content, String btn1, String btn2) {
+	public final int showConfirmationAlert(Stage stage, String content, ArrayList<String> buttonsText) {
 		Alert alert = new Alert(AlertType.CONFIRMATION);
 		alert.initOwner(stage);
 		alert.setHeaderText(null);
@@ -115,13 +121,19 @@ public abstract class AbstractScreen {
 		dialogPane.setStyle("-fx-font-size: 14px;");
 
 		// setting the buttons of the alert
-		ButtonType button1 = new ButtonType(btn1), button2 = new ButtonType(btn2);
-		alert.getButtonTypes().setAll(button1, button2);
+		ArrayList<ButtonType> buttons = new ArrayList<>();
+		for (String text : buttonsText) {
+			buttons.add(new ButtonType(text));
+		}
+		alert.getButtonTypes().setAll(buttons);
 		Optional<ButtonType> result = alert.showAndWait();
-		if (result.isPresent() && result.get() == button1)
-			return 1; // button 1 clicked
-		else
-			return 2; // button 2 clicked
+
+		// checking which button is pressed
+		for (ButtonType button : buttons) {
+			if (result.isPresent() && result.get() == button)
+				return buttons.indexOf(button) + 1; // button #i clicked
+		}
+		return -1; // in case of an error
 	}
 
 	/**
@@ -129,7 +141,7 @@ public abstract class AbstractScreen {
 	 * 
 	 * @return the string to be set inside setStyle() method of JavaFX
 	 */
-	public String setTextFieldToError() {
+	public final String setFieldToError() {
 		return "-fx-border-color: red; -fx-border-width: 0.8px; -fx-border-radius: 2px; -fx-background-color: #ffe6e6;";
 	}
 
@@ -138,7 +150,7 @@ public abstract class AbstractScreen {
 	 * 
 	 * @return the string to be set inside setStyle() method of JavaFX
 	 */
-	public String setTextFieldToRegular() {
+	public final String setFieldToRegular() {
 		return "";
 	}
 }

@@ -37,8 +37,8 @@ public class ClientConnectionController extends AbstractScreen {
 	void connectToServer(ActionEvent event) {
 		String host = hostTxtField.getText();
 		String port = portTxtField.getText();
-		hostTxtField.setStyle(setTextFieldToRegular());
-		portTxtField.setStyle(setTextFieldToRegular());
+		hostTxtField.setStyle(setFieldToRegular());
+		portTxtField.setStyle(setFieldToRegular());
 		String showMessage = "";
 		boolean valid = true;
 
@@ -46,18 +46,18 @@ public class ClientConnectionController extends AbstractScreen {
 		if (host.trim().isEmpty() || (!host.equals("localhost") && !host
 				.matches("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))) {
 			valid = false;
-			hostTxtField.setStyle(setTextFieldToError());
+			hostTxtField.setStyle(setFieldToError());
 			showMessage += "\nThe host field must be 'localhost' or a valid IPV4";
 		}
 
 		// validating the port
 		if (port.trim().isEmpty() || !port.matches("\\d+")) {
 			valid = false;
-			portTxtField.setStyle(setTextFieldToError());
+			portTxtField.setStyle(setFieldToError());
 			showMessage += "\nYou must enter a valid digits-only port number";
 		} else if (!(Integer.parseInt(port) >= 1024 && Integer.parseInt(port) <= 65535)) {
 			valid = false;
-			portTxtField.setStyle(setTextFieldToError());
+			portTxtField.setStyle(setFieldToError());
 			showMessage += "\nPort number must be in range (1024-65535)";
 		}
 
