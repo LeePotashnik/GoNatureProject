@@ -2,6 +2,7 @@ package common.controllers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import clientSide.gui.GoNatureClientUI;
@@ -49,12 +50,12 @@ public abstract class AbstractScreen {
 	 */
 	public void handleCloseRequest(WindowEvent event) {
 		// showing a "Yes" and "No" decision alert
-		ArrayList<String> buttonsText = new ArrayList<>();
-		buttonsText.add("Yes");
-		buttonsText.add("No");
+//		ArrayList<String> buttonsText = new ArrayList<>();
+//		buttonsText.add("Yes");
+//		buttonsText.add("No");
 
 		int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(), "Are you sure you want to leave?",
-				buttonsText);
+				Arrays.asList("Yes", "No"));
 		if (decision == 2) // if the user clicked on "No"
 			event.consume();
 		else { // if the user clicked on "Yes"
@@ -112,7 +113,7 @@ public abstract class AbstractScreen {
 	 *                    many buttons will be displayed.
 	 * @return the index of the button which was clicked
 	 */
-	public final int showConfirmationAlert(Stage stage, String content, ArrayList<String> buttonsText) {
+	public final int showConfirmationAlert(Stage stage, String content, List<Object> buttonsText) {
 		Alert alert = new Alert(AlertType.CONFIRMATION);
 		alert.initOwner(stage);
 		alert.setHeaderText(null);
@@ -122,8 +123,8 @@ public abstract class AbstractScreen {
 
 		// setting the buttons of the alert
 		ArrayList<ButtonType> buttons = new ArrayList<>();
-		for (String text : buttonsText) {
-			buttons.add(new ButtonType(text));
+		for (Object text : buttonsText) {
+			buttons.add(new ButtonType((String)text));
 		}
 		alert.getButtonTypes().setAll(buttons);
 		Optional<ButtonType> result = alert.showAndWait();
