@@ -11,6 +11,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 
 /**
  * Controller class for the Client Connection JavaFX screen
@@ -24,6 +28,8 @@ public class ClientConnectionController extends AbstractScreen {
 	private ImageView goNatureLogo;
 	@FXML
 	private TextField hostTxtField, portTxtField;
+	@FXML
+	private Pane pane;
 
 	///// --- EVENT METHODS --- /////
 	@FXML
@@ -37,8 +43,8 @@ public class ClientConnectionController extends AbstractScreen {
 	void connectToServer(ActionEvent event) {
 		String host = hostTxtField.getText();
 		String port = portTxtField.getText();
-		hostTxtField.setStyle(setTextFieldToRegular());
-		portTxtField.setStyle(setTextFieldToRegular());
+		hostTxtField.setStyle(setFieldToRegular());
+		portTxtField.setStyle(setFieldToRegular());
 		String showMessage = "";
 		boolean valid = true;
 
@@ -46,18 +52,18 @@ public class ClientConnectionController extends AbstractScreen {
 		if (host.trim().isEmpty() || (!host.equals("localhost") && !host
 				.matches("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))) {
 			valid = false;
-			hostTxtField.setStyle(setTextFieldToError());
+			hostTxtField.setStyle(setFieldToError());
 			showMessage += "\nThe host field must be 'localhost' or a valid IPV4";
 		}
 
 		// validating the port
 		if (port.trim().isEmpty() || !port.matches("\\d+")) {
 			valid = false;
-			portTxtField.setStyle(setTextFieldToError());
+			portTxtField.setStyle(setFieldToError());
 			showMessage += "\nYou must enter a valid digits-only port number";
 		} else if (!(Integer.parseInt(port) >= 1024 && Integer.parseInt(port) <= 65535)) {
 			valid = false;
-			portTxtField.setStyle(setTextFieldToError());
+			portTxtField.setStyle(setFieldToError());
 			showMessage += "\nPort number must be in range (1024-65535)";
 		}
 
@@ -113,4 +119,55 @@ public class ClientConnectionController extends AbstractScreen {
 		portTxtField.setText(info[1]);
 		
 	}
+
+	@Override
+	public String getScreenTitle() {
+		return "Client Connection";
+	}
+	
+	/// TEXT FIELDS TABS FLOW METHODS ///
+	@FXML
+	/**
+	 * transfers the focus from hostTxtField to portTxtField
+	 * @param event
+	 */
+    void hostTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			portTxtField.requestFocus();
+		}
+    }
+	
+	@FXML
+	/**
+	 * transfers the focus from portTxtField to the connect button
+	 * @param event
+	 */
+    void portTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			connectBtn.requestFocus();
+		}
+    }
+	
+	@FXML
+	/**
+	 * transfers the focus from the button to the pane
+	 * @param event
+	 */
+    void btnTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			pane.requestFocus();
+		}
+    }
+		
+	@FXML
+    /**
+     * sets the focus to the pane
+     * @param event
+     */
+    void paneClicked(MouseEvent event) {
+    	pane.requestFocus();
+    }
 }

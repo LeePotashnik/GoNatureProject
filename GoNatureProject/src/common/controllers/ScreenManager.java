@@ -6,6 +6,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
@@ -76,34 +77,32 @@ public class ScreenManager {
 		// method of the current screen's controller
 		if (saveState && !screensStack.isEmpty()) {
 			AbstractScreen currentScreenController = screensMap.get(screensStack.peek());
-			if (!(currentScreenController instanceof Stateful))
+			if (!(currentScreenController instanceof Stateful)) {
 				throw new StatefulException("Saving screen's state is allowed only for screens who implement Stateful");
-			else
-				((Stateful) screensMap.get(screensStack.peek())).saveState(); // saving the state
+			} else {
+				Stateful stateScreen = (Stateful) screensMap.get(screensStack.peek());
+				Platform.runLater(() -> {
+					stateScreen.saveState(); // saving the state
+				});
+			}
 		}
 
 		// now loading the requested screen
-		// in case it was already loaded before, retrieveing its controller
 		AbstractScreen controller;
 		Parent root = null;
 		FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlResource));
 		try {
 			root = loader.load();
+			controller = loader.getController();
 		} catch (IOException e) {
+			e.printStackTrace();
 			throw new ScreenException(e.getMessage());
 		}
-		if (screensMap.get(screenName) != null) {
-			controller = screensMap.get(screenName);
-		} else {
-			controller = loader.getController();
-		}
 
 		if (!showOnce) { // if the screen is not meant to be shown only once
-			screensMap.put(screenName, controller); // adding the screen to the screens map
-		}
-
-		if (!showOnce) { // if the screen is not meant to be shown only once
-			screensStack.push(screenName); // pushing the screen to the screens stack
+			// adding the screen to the screens map and stack
+			screensMap.put(screenName, controller);
+			screensStack.push(screenName);
 		}
 
 		// sending information to the new screen, if needed and existed
@@ -132,50 +131,76 @@ public class ScreenManager {
 		if (screensStack.size() <= 1)
 			throw new ScreenException("No screens to go back to");
 
-		screensStack.pop();
-
-		// checking if the restoreState flag is true. In this case, calling the
-		// restoreState()
-		// method of the current screen's controller
-		if (restoreState && !screensMap.isEmpty()) {
-			AbstractScreen currentScreenController = screensMap.get(screensStack.peek());
-			if (!(currentScreenController instanceof Stateful))
-				throw new StatefulException(
-						"Restoring screen's state is allowed only for screens who implement Stateful");
-			((Stateful) screensMap.get(screensStack.peek())).restoreState();
-		}
+		if (screensMap.containsKey(screensStack.peek())) // removing the current screen from the map
+			screensMap.remove(screensStack.peek());
+		screensStack.pop(); // removing the current screen from the stack
 
 		Parent root = null;
-		String previousScreen = screensStack.peek();
-		screensMap.get(previousScreen).initialize();
+		AbstractScreen controller = null;
 		String fxmlResource = "/clientSide/fxml/"
 				+ (screensStack.peek()).substring(0, screensStack.peek().length() - "Controller".length()) + ".fxml";
 		FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlResource));
 		try {
 			root = loader.load();
+			controller = loader.getController();
 		} catch (IOException e) {
+			e.printStackTrace();
 			throw new ScreenException(e.getMessage());
 		}
 
-		addRootAndStart(root, screensMap.get(previousScreen),
-				StageSettings.defaultSettings("GoNature System - Client Connection"));
+		// updating the controller if necessary
+		screensMap.put(screensStack.peek(), controller);
+
+		// checking if the saveState flag is true. In this case, calling the saveState()
+		// method of the current screen's controller
+		if (restoreState) {
+			if (!(controller instanceof Stateful)) {
+				throw new StatefulException(
+						"Restoring screen's state is allowed only for screens who implement Stateful");
+			} else {
+				Stateful stateScreen = (Stateful) controller;
+				Platform.runLater(() -> {
+					stateScreen.restoreState(); // restoring the state
+				});
+			}
+		}
+
+		addRootAndStart(root, controller,
+				StageSettings.defaultSettings("GoNature System - " + controller.getScreenTitle()));
 	}
 
 	/**
-	 * This method gets a root, a controller and stage settings and shows the root on the screen
-	 * @param root the fxml root
-	 * @param controller the screen's controller
-	 * @param settings the stage settings
+	 * This method gets a root, a controller and stage settings and shows the root
+	 * on the screen
+	 * 
+	 * @param root         the fxml root
+	 * @param controller   the screen's controller
+	 * @param settings     the stage settings
+	 * @param restoreState indicates whether the state of the previous screen needs
+	 *                     to be restored, or the previous screen should be loaded
+	 * @throws StatefulException if the restoreState flag is true while the screen
+	 *                           does not implement Stateful
 	 */
-	private void addRootAndStart(Parent root, AbstractScreen controller, StageSettings settings) {
-		stage.setScene(new Scene(root)); // setting the scene
+	private void addRootAndStart(Parent root, AbstractScreen controller, StageSettings settings)
+			throws StatefulException {
+		Scene scene = new Scene(root);
+		scene.getStylesheets().add(getClass().getResource("/clientSide/fxml/Styles.css").toExternalForm()); // setting
+																											// styles
+		stage.setScene(scene); // setting the scene
 		settings.implementSettings(settings, stage); // implementing the settings of the stage
 		stage.setOnCloseRequest(controller::handleCloseRequest); // handleCloseRequest method of the
 																	// controller will be called
 		root.requestFocus(); // setting the focus on the root, not on the GUI components
 		((Pane) root).setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
 		stage.show(); // showing the new scene
-		System.out.println("Current Screens Stack: " + screensStack);
-		System.out.println("Current Screens Map: " + screensMap);
+	}
+
+	/**
+	 * This method is called if the stack needs to be resetted. This can happen if
+	 * an operation is fully completed, and returning to the main/account screen is
+	 * required, without any other screen to go back to.
+	 */
+	public void resetScreensStack() {
+		screensStack.removeAll(screensStack);
 	}
 }

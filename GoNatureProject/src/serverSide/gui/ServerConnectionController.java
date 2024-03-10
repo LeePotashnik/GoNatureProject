@@ -109,8 +109,8 @@ public class ServerConnectionController extends AbstractScreen {
 	private boolean validate() {
 		boolean result = true;
 		String error = "";
-		hostTxtField.setStyle(setTextFieldToRegular());
-		portTxtField.setStyle(setTextFieldToRegular());
+		hostTxtField.setStyle(setFieldToRegular());
+		portTxtField.setStyle(setFieldToRegular());
 
 		// validating host
 		String hostAddress = hostTxtField.getText();
@@ -118,7 +118,7 @@ public class ServerConnectionController extends AbstractScreen {
 		if (hostAddress.trim().isEmpty() || (!hostAddress.matches(
 				"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")
 				&& !hostAddress.equals("localhost"))) {
-			hostTxtField.setStyle(setTextFieldToError());
+			hostTxtField.setStyle(setFieldToError());
 			result = false;
 			error += "You must enter a valid IPV4 address, or 'localhost'\n";
 		}
@@ -126,13 +126,13 @@ public class ServerConnectionController extends AbstractScreen {
 		String portNumber = portTxtField.getText();
 		// checking if the port number is a digit-only string
 		if (portNumber.trim().isEmpty() || !portNumber.matches("\\d+")) {
-			portTxtField.setStyle(setTextFieldToError());
+			portTxtField.setStyle(setFieldToError());
 			result = false;
 			error += "You must enter a valid digits-only port number\n";
 		}
 		// checking if the port number is in the correct range
 		if (portNumber.matches("\\d+") && !(Integer.parseInt(portNumber) >= 1024 && Integer.parseInt(portNumber) <= 65535)) {
-			portTxtField.setStyle(setTextFieldToError());
+			portTxtField.setStyle(setFieldToError());
 			result = false;
 			error += "Port number must be in range (1024-65535)";
 		}
@@ -226,7 +226,6 @@ public class ServerConnectionController extends AbstractScreen {
 	 */
 	public void initialize() {
 		disconnectBtn.setVisible(false);
-		portTxtField.setPromptText("Enter port number here");
 		// initializing the image component
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		// setting alignment of the labels to right
@@ -235,6 +234,8 @@ public class ServerConnectionController extends AbstractScreen {
 		databaseLbl.setStyle("-fx-alignment: center-right;");
 		rootLbl.setStyle("-fx-alignment: center-right;");
 		passwordLbl.setStyle("-fx-alignment: center-right;");
+		
+		databaseTxtField.setText("jdbc:mysql://localhost/go_nature?serverTimezone=Asia/Kolkata");
 	}
 
 	@Override
@@ -251,6 +252,11 @@ public class ServerConnectionController extends AbstractScreen {
 	public void loadBefore(Object information) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public String getScreenTitle() {
+		return "Server Connection";
 	}
 
 }

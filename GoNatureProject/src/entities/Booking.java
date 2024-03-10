@@ -7,49 +7,81 @@ public class Booking {
 	public enum VisitType {
 		INDIVIDUAL, GROUP;
 	}
-	
+
 	public enum Status {
 		PENDING, CANCELLED, INWAITINGLIST, DONE;
 	}
-	
-	private int bookingId, numberOfVisitors;
-	private Park parkBooked;
-	private LocalDate dayOfVisit, dayOfBooking;
-	private LocalTime timeOfVisit, entryParkTime, exitParkTime, reminderArrivalTime;
-	private VisitType visitType;
-	private String firstName, lastName, phoneNumber, emailAddress;
-	private float finalPrice;
-	private boolean paid, confirmed, isRecievedReminder;
-	
 
-	public Booking(int bookingId, int numberOfVisitors, Park parkBooked, LocalDate dayOfVisit, 
-			LocalDate dayOfBooking, LocalTime timeOfVisit, LocalTime entryParkTime, LocalTime exitParkTime,
-			LocalTime reminderArrivalTime, VisitType visitType, String firstName, String lastName, boolean isRecievedReminder, 
-			String phoneNumber, String emailAddress, float finalPrice, boolean paid, boolean confirmed) {
+	private String bookingId;
+	private LocalDate dayOfVisit;
+	private LocalTime timeOfVisit;
+	private LocalDate dayOfBooking;
+	private VisitType visitType;
+	private int numberOfVisitors;
+	private String firstName, lastName, emailAddress, phoneNumber;
+	private int finalPrice;
+	private boolean paid, confirmed;
+	private LocalTime entryParkTime, exitParkTime;
+	private boolean isRecievedReminder;
+	private LocalTime reminderArrivalTime;
+	private Park parkBooked;
+
+	/**
+	 * 
+	 * @param bookingId
+	 * @param dayOfVisit
+	 * @param timeOfVisit
+	 * @param dayOfBooking
+	 * @param visitType
+	 * @param numberOfVisitors
+	 * @param firstName
+	 * @param lastName
+	 * @param emailAddress
+	 * @param phoneNumber
+	 * @param finalPrice
+	 * @param paid
+	 * @param confirmed
+	 * @param entryParkTime
+	 * @param exitParkTime
+	 * @param isRecievedReminder
+	 * @param reminderArrivalTime
+	 * @param parkBooked
+	 */
+	public Booking(String bookingId, LocalDate dayOfVisit, LocalTime timeOfVisit, LocalDate dayOfBooking,
+			VisitType visitType, int numberOfVisitors, String firstName, String lastName, String emailAddress,
+			String phoneNumber, int finalPrice, boolean paid, boolean confirmed, LocalTime entryParkTime,
+			LocalTime exitParkTime, boolean isRecievedReminder, LocalTime reminderArrivalTime, Park parkBooked) {
 		this.bookingId = bookingId;
-		this.numberOfVisitors = numberOfVisitors;
-		this.parkBooked = parkBooked;
 		this.dayOfVisit = dayOfVisit;
 		this.timeOfVisit = timeOfVisit;
+		this.dayOfBooking = dayOfBooking;
+		this.visitType = visitType;
+		this.numberOfVisitors = numberOfVisitors;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.emailAddress = emailAddress;
+		this.phoneNumber = phoneNumber;
+		this.finalPrice = finalPrice;
+		this.paid = paid;
+		this.confirmed = confirmed;
 		this.entryParkTime = entryParkTime;
 		this.exitParkTime = exitParkTime;
-		this.visitType = visitType;
-		this.phoneNumber = phoneNumber;
-		this.emailAddress = emailAddress;
-		this.finalPrice = finalPrice;
+		this.isRecievedReminder = isRecievedReminder;
+		this.reminderArrivalTime = reminderArrivalTime;
+		this.parkBooked = parkBooked;
 	}
 
 	/**
 	 * @return bookingId
 	 */
-	public int getBookingId() {
+	public String getBookingId() {
 		return bookingId;
 	}
 
 	/**
 	 * @param bookingId
 	 */
-	public void setBookingId(int bookingId) {
+	public void setBookingId(String bookingId) {
 		this.bookingId = bookingId;
 	}
 
@@ -150,13 +182,6 @@ public class Booking {
 	public void setRecievedReminder(boolean isRecievedReminder) {
 		this.isRecievedReminder = isRecievedReminder;
 	}
-	
-	/**
-	 * @return bookingId
-	 */
-	public int getBookingIdNumber() {
-		return bookingId;
-	}
 
 	/**
 	 * @return numberOfVisitors
@@ -164,7 +189,6 @@ public class Booking {
 	public int getNumberOfVisitors() {
 		return numberOfVisitors;
 	}
-
 
 	/**
 	 * @return parkBooked
@@ -201,14 +225,12 @@ public class Booking {
 		return exitParkTime;
 	}
 
-
 	/**
 	 * @return visitType (can be INDIVIDUAL or GROUP)
 	 */
 	public VisitType getVisitType() {
 		return visitType;
 	}
-
 
 	/**
 	 * @return phoneNumber
@@ -217,14 +239,12 @@ public class Booking {
 		return phoneNumber;
 	}
 
-
 	/**
 	 * @return emailAddress
 	 */
 	public String getEmailAddress() {
 		return emailAddress;
 	}
-
 
 	/**
 	 * @return finalPrice
@@ -233,22 +253,12 @@ public class Booking {
 		return finalPrice;
 	}
 
-
-	/**
-	 * @param bookingIdNumber
-	 */
-	public void setBookingIdNumber(int bookingIdNumber) {
-		this.bookingId = bookingIdNumber;
-	}
-
-
 	/**
 	 * @param numberOfVisitors
 	 */
 	public void setNumberOfVisitors(int numberOfVisitors) {
 		this.numberOfVisitors = numberOfVisitors;
 	}
-
 
 	/**
 	 * @param parkBooked
@@ -264,14 +274,12 @@ public class Booking {
 		this.dayOfVisit = dayOfVisit;
 	}
 
-
 	/**
 	 * @param timeOfVisit
 	 */
 	public void setTimeOfVisit(LocalTime timeOfVisit) {
 		this.timeOfVisit = timeOfVisit;
 	}
-
 
 	/**
 	 * @param entryParkTime
@@ -280,7 +288,6 @@ public class Booking {
 		this.entryParkTime = entryParkTime;
 	}
 
-
 	/**
 	 * @param exitParkTime
 	 */
@@ -288,14 +295,12 @@ public class Booking {
 		this.exitParkTime = exitParkTime;
 	}
 
-
 	/**
-	 * @param visitType	 
+	 * @param visitType
 	 */
 	public void setVisitType(VisitType visitType) {
 		this.visitType = visitType;
 	}
-
 
 	/**
 	 * @param phoneNumber
@@ -304,7 +309,6 @@ public class Booking {
 		this.phoneNumber = phoneNumber;
 	}
 
-
 	/**
 	 * @param emailAddress
 	 */
@@ -312,21 +316,21 @@ public class Booking {
 		this.emailAddress = emailAddress;
 	}
 
-
 	/**
 	 * @param finalPrice
 	 */
-	public void setFinalPrice(float finalPrice) {
+	public void setFinalPrice(int finalPrice) {
 		this.finalPrice = finalPrice;
 	}
 
-
 	@Override
 	public String toString() {
-		return "Order [bookingIdNumber=" + bookingId + ", numberOfVisitors=" + numberOfVisitors + ", parkBooked="
-				+ parkBooked + ", dayOfVisit=" + dayOfVisit + ", timeOfVisit=" + timeOfVisit
-				+ ", entryParkTime=" + entryParkTime + ", exitParkTime=" + exitParkTime + ", visitType=" + visitType
-				+ ", phoneNumber=" + phoneNumber + ", emailAddress=" + emailAddress + ", finalPrice=" + finalPrice
-				+ "]";
+		return "Booking [bookingId=" + bookingId + ", dayOfVisit=" + dayOfVisit + ", timeOfVisit=" + timeOfVisit
+				+ ", dayOfBooking=" + dayOfBooking + ", visitType=" + visitType + ", numberOfVisitors="
+				+ numberOfVisitors + ", firstName=" + firstName + ", lastName=" + lastName + ", emailAddress="
+				+ emailAddress + ", phoneNumber=" + phoneNumber + ", finalPrice=" + finalPrice + ", paid=" + paid
+				+ ", confirmed=" + confirmed + ", entryParkTime=" + entryParkTime + ", exitParkTime=" + exitParkTime
+				+ ", isRecievedReminder=" + isRecievedReminder + ", reminderArrivalTime=" + reminderArrivalTime
+				+ ", parkBooked=" + parkBooked + "]";
 	}
 }
