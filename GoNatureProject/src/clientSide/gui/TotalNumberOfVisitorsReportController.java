@@ -12,6 +12,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.util.Pair;
 
 
 public class TotalNumberOfVisitorsReportController extends AbstractScreen {
@@ -40,7 +41,7 @@ public class TotalNumberOfVisitorsReportController extends AbstractScreen {
 	@Override
 	public void initialize() {
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
-		populateChart();
+		//populateChart();
 		 // setting the back button image
 	 	ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
 	 	backImage.setFitHeight(30);
@@ -49,23 +50,24 @@ public class TotalNumberOfVisitorsReportController extends AbstractScreen {
 	 	backButton.setGraphic(backImage);
 	 	backButton.setPadding(new Insets(1, 1, 1, 1));
 	}
-
-	private void populateChart() {
-		PieChart.Data singleVisitorsData = new PieChart.Data("Single visitors", 150);
-        PieChart.Data groupVisitorsData = new PieChart.Data("Groups", 75);
-      
-        TotalVisitorsPaiChart.getData().addAll(singleVisitorsData, groupVisitorsData);
-       
-        TotalVisitorsPaiChart.getData().forEach(data ->data.nameProperty().bind(javafx.beans.binding.Bindings.concat(data.getName(), " ", data.pieValueProperty())));	
+	
+	private void populateChart(int countIndividual, int countGroup) {
+	    PieChart.Data singleVisitorsData = new PieChart.Data("Single visitors", countIndividual);
+	    PieChart.Data groupVisitorsData = new PieChart.Data("Groups", countGroup);
+	    
+	    TotalVisitorsPaiChart.getData().clear(); // Clear previous data if any
+	    TotalVisitorsPaiChart.getData().addAll(singleVisitorsData, groupVisitorsData);
+	    
+	    TotalVisitorsPaiChart.getData().forEach(data ->data.nameProperty().bind(javafx.beans.binding.Bindings.concat(data.getName(), " ", data.pieValueProperty())));
 	}
-
 
 	@Override
 	public void loadBefore(Object information) {
-		// TODO Auto-generated method stub
-		
+	    if (information instanceof Pair) {
+	        Pair<Integer, Integer> visitorsData = (Pair<Integer, Integer>) information;
+	        populateChart(visitorsData.getKey(), visitorsData.getValue());
+	    }
 	}
-
 	@Override
 	public String getScreenTitle() {
 		// TODO Auto-generated method stub

@@ -1,5 +1,9 @@
 package clientSide.gui;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
@@ -15,6 +19,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.util.Pair;
 
 public class UsageReportController extends AbstractScreen{
 
@@ -47,7 +52,7 @@ public class UsageReportController extends AbstractScreen{
 
 	@Override
 	public void initialize() {
-		populateChart();
+		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		// setting the back button image
  	 	ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
 	 	backImage.setFitHeight(30);
@@ -58,22 +63,32 @@ public class UsageReportController extends AbstractScreen{
 		
 	}
 
-	private void populateChart() {
+	private void populateChart(List<Pair<LocalDate, Integer>> occupancyData) {
 		XYChart.Series<String, Number> series = new XYChart.Series<>();
         series.setName("Occupancy(%)");
+     // Format for displaying dates on the chart
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd");
 
-        series.getData().add(new XYChart.Data<>("01", 50)); // "01" for 1st of the month, 50% occupancy
-        series.getData().add(new XYChart.Data<>("02", 75)); // "02" for 2nd of the month, 75% occupancy
-        series.getData().add(new XYChart.Data<>("05", 100));
-        series.getData().add(new XYChart.Data<>("08", 20));
+        for (Pair<LocalDate, Integer> data : occupancyData) {
+            LocalDate date = data.getKey();
+            Integer occupancy = data.getValue();
+            String formattedDate = date.format(formatter); // Convert LocalDate to String
+            series.getData().add(new XYChart.Data<>(formattedDate, occupancy));
+        }
+
+        UsageLineChart.getData().clear(); // Clear previous data
         UsageLineChart.getData().add(series);
-		
+
 	}
 
 	@Override
 	public void loadBefore(Object information) {
-		// TODO Auto-generated method stub
-		
+	    if (information instanceof List) {
+	        List<Pair<LocalDate, Integer>> occupancyData = (List<Pair<LocalDate, Integer>>) information;
+	        populateChart(occupancyData);
+	    } else {
+	        showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred. Occupancy data is not available.");
+	    }
 	}
 
 	@Override

@@ -43,7 +43,15 @@ public class DepartmentManagerReportsController extends AbstractScreen implement
     
     @FXML
     void cancellationReport(ActionEvent event) {
-    	 try {
+    	String selectedMonth = choiceBoxMonth.getValue();
+        String selectedYear = choiceBoxYear.getValue();
+        String selectedPark= choiceBoxPark.getValue();
+     // Validate that month,park and year are selected
+        if (selectedMonth == null || selectedYear == null || selectedPark == null) {
+            showErrorAlert(ScreenManager.getInstance().getStage(), "Please select month, year and park before generating the report.");
+            return;
+        } 
+    	try {
     	        ScreenManager.getInstance().showScreen("CancellationReportScreen", "/clientSide/fxml/cancellationReport.fxml", false, false, StageSettings.defaultSettings("Cancellation Report"), null);
     	    } catch (StatefulException | ScreenException e) {
     			e.printStackTrace();
@@ -62,7 +70,15 @@ public class DepartmentManagerReportsController extends AbstractScreen implement
 
     @FXML
     void visitReport(ActionEvent event) {
-    	 try {
+    	String selectedMonth = choiceBoxMonth.getValue();
+        String selectedYear = choiceBoxYear.getValue();
+        String selectedPark= choiceBoxPark.getValue();
+    	// Validate that month,park and year are selected
+        if (selectedMonth == null || selectedYear == null || selectedPark == null) {
+            showErrorAlert(ScreenManager.getInstance().getStage(), "Please select month, year and park before generating the report.");
+            return;
+        }  
+    	try {
  	        ScreenManager.getInstance().showScreen("VisitReportScreen", "/clientSide/fxml/VisitReport.fxml", false, false, StageSettings.defaultSettings("Visit Report"), null);
  	    } catch (StatefulException | ScreenException e) {
  			e.printStackTrace();
