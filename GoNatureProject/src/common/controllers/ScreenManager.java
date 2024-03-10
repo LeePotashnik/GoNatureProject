@@ -95,6 +95,7 @@ public class ScreenManager {
 			root = loader.load();
 			controller = loader.getController();
 		} catch (IOException e) {
+			e.printStackTrace();
 			throw new ScreenException(e.getMessage());
 		}
 
@@ -192,5 +193,14 @@ public class ScreenManager {
 		root.requestFocus(); // setting the focus on the root, not on the GUI components
 		((Pane) root).setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
 		stage.show(); // showing the new scene
+	}
+
+	/**
+	 * This method is called if the stack needs to be resetted. This can happen if
+	 * an operation is fully completed, and returning to the main/account screen is
+	 * required, without any other screen to go back to.
+	 */
+	public void resetScreensStack() {
+		screensStack.removeAll(screensStack);
 	}
 }
