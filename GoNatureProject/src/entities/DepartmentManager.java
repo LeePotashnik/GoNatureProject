@@ -4,11 +4,20 @@ import java.util.ArrayList;
 
 public class DepartmentManager extends ParkEmployee {
 	private ArrayList<Park> responsible;
+	private String managesDepartment;
 
-	public DepartmentManager(String idNumber, String firstName, String lastName, String username, String password,
-			String emailAddress, String phoneNumber, boolean isLoggedIn, Park workingIn, ArrayList<Park> responsible) {
-		super(idNumber, firstName, lastName, username, password, emailAddress, phoneNumber, isLoggedIn, workingIn);
-		this.responsible = responsible;
+	public DepartmentManager(String idNumber, String firstName, String lastName, String emailAddress, String phoneNumber,
+			String managesDepartment, String username, String password, boolean isLoggedIn) {
+		super(idNumber, firstName, lastName, emailAddress, phoneNumber, username, password, isLoggedIn);
+		this.managesDepartment = managesDepartment;
+	}
+	
+	public String getManagesDepartment() {
+		return managesDepartment;
+	}
+
+	public void setManagesDepartment(String managesDepartment) {
+		this.managesDepartment = managesDepartment;
 	}
 
 	public ArrayList<Park> getResponsible() {

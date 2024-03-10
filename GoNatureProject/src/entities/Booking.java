@@ -18,7 +18,7 @@ public class Booking {
 	private LocalDate dayOfBooking;
 	private VisitType visitType;
 	private int numberOfVisitors;
-	private String firstName, lastName, emailAddress, phoneNumber;
+	private String idNumber, firstName, lastName, emailAddress, phoneNumber;
 	private int finalPrice;
 	private boolean paid, confirmed;
 	private LocalTime entryParkTime, exitParkTime;
@@ -48,15 +48,17 @@ public class Booking {
 	 * @param parkBooked
 	 */
 	public Booking(String bookingId, LocalDate dayOfVisit, LocalTime timeOfVisit, LocalDate dayOfBooking,
-			VisitType visitType, int numberOfVisitors, String firstName, String lastName, String emailAddress,
-			String phoneNumber, int finalPrice, boolean paid, boolean confirmed, LocalTime entryParkTime,
-			LocalTime exitParkTime, boolean isRecievedReminder, LocalTime reminderArrivalTime, Park parkBooked) {
+			VisitType visitType, int numberOfVisitors, String idNumber, String firstName, String lastName,
+			String emailAddress, String phoneNumber, int finalPrice, boolean paid, boolean confirmed,
+			LocalTime entryParkTime, LocalTime exitParkTime, boolean isRecievedReminder, LocalTime reminderArrivalTime,
+			Park parkBooked) {
 		this.bookingId = bookingId;
 		this.dayOfVisit = dayOfVisit;
 		this.timeOfVisit = timeOfVisit;
 		this.dayOfBooking = dayOfBooking;
 		this.visitType = visitType;
 		this.numberOfVisitors = numberOfVisitors;
+		this.idNumber = idNumber;
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.emailAddress = emailAddress;
@@ -69,6 +71,20 @@ public class Booking {
 		this.isRecievedReminder = isRecievedReminder;
 		this.reminderArrivalTime = reminderArrivalTime;
 		this.parkBooked = parkBooked;
+	}
+	
+	/**
+	 * @return
+	 */
+	public String getIdNumber() {
+		return idNumber;
+	}
+
+	/**
+	 * @param idNumber
+	 */
+	public void setIdNumber(String idNumber) {
+		this.idNumber = idNumber;
 	}
 
 	/**
