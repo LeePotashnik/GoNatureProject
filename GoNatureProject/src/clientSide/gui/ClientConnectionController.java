@@ -11,6 +11,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 
 /**
  * Controller class for the Client Connection JavaFX screen
@@ -24,6 +28,8 @@ public class ClientConnectionController extends AbstractScreen {
 	private ImageView goNatureLogo;
 	@FXML
 	private TextField hostTxtField, portTxtField;
+	@FXML
+	private Pane pane;
 
 	///// --- EVENT METHODS --- /////
 	@FXML
@@ -118,4 +124,50 @@ public class ClientConnectionController extends AbstractScreen {
 	public String getScreenTitle() {
 		return "Client Connection";
 	}
+	
+	/// TEXT FIELDS TABS FLOW METHODS ///
+	@FXML
+	/**
+	 * transfers the focus from hostTxtField to portTxtField
+	 * @param event
+	 */
+    void hostTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			portTxtField.requestFocus();
+		}
+    }
+	
+	@FXML
+	/**
+	 * transfers the focus from portTxtField to the connect button
+	 * @param event
+	 */
+    void portTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			connectBtn.requestFocus();
+		}
+    }
+	
+	@FXML
+	/**
+	 * transfers the focus from the button to the pane
+	 * @param event
+	 */
+    void btnTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			pane.requestFocus();
+		}
+    }
+		
+	@FXML
+    /**
+     * sets the focus to the pane
+     * @param event
+     */
+    void paneClicked(MouseEvent event) {
+    	pane.requestFocus();
+    }
 }

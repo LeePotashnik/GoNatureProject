@@ -5,13 +5,10 @@ import java.util.Arrays;
 
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
-import common.communication.CommunicationException;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
+import common.communication.CommunicationException;
 import entities.Park;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.util.Pair;
 
 public class ParkController {
 	private static ParkController instance;
@@ -53,7 +50,6 @@ public class ParkController {
 					(Integer) row[10]);
 			parkList.add(park);
 		}
-
 		return parkList;
 	}
 }
