@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.text.Font?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.DepartmentManagerAccountScreen">
+   <children>
+      <ImageView fx:id="goNatureLogo" fitHeight="260.0" fitWidth="650.0" layoutX="90.0" layoutY="12.0" pickOnBounds="true" preserveRatio="true" />
+      <Label fx:id="Title" layoutX="130.0" layoutY="260.0" prefHeight="38.0" prefWidth="476.0" text="Departmrnt Manager">
+            <font>
+            <Font name="Cambria" size="30.0" />
+         </font>
+      </Label>
+      <Label fx:id="privateName" layoutX="200.0" layoutY="298.0" prefHeight="38.0" prefWidth="224.0" text="Label">
+      <font>
+            <Font name="Calibri" size="20.0" />
+         </font>
+      </Label>
+      <Button fx:id="currentCapacitiesBTN" layoutX="271.0" layoutY="343.0" mnemonicParsing="false" onAction="#getCurrenetCapacities" text="Current Parks Capacities">
+         <font>
+            <Font name="Calibri" size="14.0" />
+         </font>
+      </Button>
+      <Button fx:id="approvingDataBTN" layoutX="279.0" layoutY="382.0" mnemonicParsing="false" onAction="#GoToApprovingParksDataScreen" text="Approving Parks Data">
+         <font>
+            <Font name="Calibri" size="14.0" />
+         </font>
+      </Button>
+      <Button fx:id="reportsBTN" layoutX="318.0" layoutY="419.0" mnemonicParsing="false" onAction="#GoToReportsScreen" text="Reports">
+         <font>
+            <Font name="Calibri" size="14.0" />
+         </font>
+      </Button>
+      <Button fx:id="logOutBTN" layoutX="318.0" layoutY="459.0" mnemonicParsing="false" onAction="#logOut" text="Log Out">
+         <font>
+            <Font name="Calibri" size="14.0" />
+         </font>
+      </Button>
+   </children>
+</Pane>
