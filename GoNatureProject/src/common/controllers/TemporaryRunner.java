@@ -16,9 +16,15 @@ public class TemporaryRunner {
 		 * 5. StageSettings (Use the default)
 		 * 6. Information object to the screen (if needed to have information BEFORE load)
 		 */
-		ScreenManager.getInstance().showScreen("BookingScreenController",
-				"/clientSide/fxml/BookingScreen.fxml", false, false,
-				StageSettings.defaultSettings("GoNature System - Reservations"), null);
+	ScreenManager.getInstance().showScreen("ParkManagerReportController",
+				"/clientSide/fxml/ParkManagerReport.fxml", false, false,
+				StageSettings.defaultSettings("GoNature System - Reservations"),null);
+//		ScreenManager.getInstance().showScreen("DepartmentManagerReportsController",
+//				"/clientSide/fxml/DepartmentManagerReports.fxml", false, false,
+//				StageSettings.defaultSettings("GoNature System - Reservations"), null);	
+//		ScreenManager.getInstance().showScreen("CancellationReportController",
+//				"/clientSide/fxml/cancellationReport.fxml", false, false,
+//				StageSettings.defaultSettings("GoNature System - Reservations"), null);
 	}
 }
 
