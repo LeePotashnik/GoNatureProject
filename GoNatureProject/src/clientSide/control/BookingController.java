@@ -86,7 +86,7 @@ public class BookingController {
 		// pre-setting data for request
 		Communication availabilityRequest = new Communication(CommunicationType.QUERY_REQUEST);
 		Park parkOfBooking = booking.getParkBooked();
-		String parkTableName = ParkController.getInstance().nameOfTable(parkOfBooking) + availabilityRequest.active;
+		String parkTableName = ParkController.getInstance().nameOfTable(parkOfBooking) + availabilityRequest.activeBookings;
 		int parkTimeLimit = parkOfBooking.getTimeLimit();
 		int numberOfVisitors = booking.getNumberOfVisitors();
 
@@ -110,9 +110,7 @@ public class BookingController {
 		// getting the result from the database
 		int countVisitors = 0;
 		// checking the orders amount for the specific time
-		int i = 0;
 		for (Object[] row : availabilityRequest.getResultList()) {
-			System.out.println("Row number " + i++ + ": " + (Integer) row[0]);
 			countVisitors += (Integer) row[0];
 		}
 		// checking park parameters
@@ -172,7 +170,7 @@ public class BookingController {
 			e.printStackTrace();
 		}
 		String parkTableName = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
-				+ insertRequest.active;
+				+ insertRequest.activeBookings;
 		insertRequest.setTables(Arrays.asList(parkTableName));
 		insertRequest.setColumnsAndValues(
 				Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType", "numberOfVisitors",
@@ -214,7 +212,7 @@ public class BookingController {
 			e.printStackTrace();
 		}
 		String parkTableName = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
-				+ waitingListRequest.wait;
+				+ waitingListRequest.waitingList;
 		waitingListRequest.setTables(Arrays.asList(parkTableName));
 		waitingListRequest.setSelectColumns(Arrays.asList("dayOfVisit", "timeOfVisit"));
 		int parkTimeLimit = newBooking.getParkBooked().getTimeLimit();
@@ -227,7 +225,7 @@ public class BookingController {
 
 		// getting the result from the database and counting what's the current booking
 		// priority
-		int bookingPriority = waitingListRequest.getResultList().size() + 1;
+		int bookingPriority = waitingListRequest.getResultList().size();
 
 		// now, creating the request for the new booking insert
 		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
@@ -269,7 +267,7 @@ public class BookingController {
 			e.printStackTrace();
 		}
 		String parkTableName = ParkController.getInstance().nameOfTable(updateBooking.getParkBooked())
-				+ updateRequest.active;
+				+ updateRequest.activeBookings;
 		updateRequest.setTables(Arrays.asList(parkTableName));
 		updateRequest.setColumnsAndValues(Arrays.asList("finalPrice", "paid"),
 				Arrays.asList(updateBooking.getFinalPrice(), updateBooking.isPaid() == true ? 1 : 0));

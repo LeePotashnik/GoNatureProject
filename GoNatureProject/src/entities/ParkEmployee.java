@@ -3,10 +3,9 @@ package entities;
 public class ParkEmployee extends SystemUser {
 	private Park workingIn;
 
-	public ParkEmployee(String idNumber, String firstName, String lastName, String username, String password,
-			String emailAddress, String phoneNumber, boolean isLoggedIn, Park workingIn) {
-		super(idNumber, firstName, lastName, username, password, emailAddress, phoneNumber, isLoggedIn);
-		this.workingIn = workingIn;
+	public ParkEmployee(String idNumber, String firstName, String lastName, String emailAddress, String phoneNumber,
+			String username, String password, boolean isLoggedIn) {
+		super(idNumber, firstName, lastName, emailAddress, phoneNumber, username, password, isLoggedIn);
 	}
 
 	public Park getWorkingIn() {
