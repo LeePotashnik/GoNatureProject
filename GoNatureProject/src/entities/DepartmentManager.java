@@ -4,22 +4,20 @@ import java.util.ArrayList;
 
 public class DepartmentManager extends ParkEmployee {
 	private ArrayList<Park> responsible;
-	private String department_managercol;
+	private String managesDepartment;
 
-	public DepartmentManager(String idNumber, String firstName, String lastName, String username, String password,
-			String emailAddress, String phoneNumber, boolean isLoggedIn, Park workingIn, ArrayList<Park> responsible,
-			String department_managercol) {
-		super(idNumber, firstName, lastName, username, password, emailAddress, phoneNumber, isLoggedIn, workingIn);
-		this.responsible = responsible;
-		this.department_managercol = department_managercol;
+	public DepartmentManager(String idNumber, String firstName, String lastName, String emailAddress, String phoneNumber,
+			String managesDepartment, String username, String password, boolean isLoggedIn) {
+		super(idNumber, firstName, lastName, emailAddress, phoneNumber, username, password, isLoggedIn);
+		this.managesDepartment = managesDepartment;
+	}
+	
+	public String getManagesDepartment() {
+		return managesDepartment;
 	}
 
-	public String getDepartment_managercol() {
-		return department_managercol;
-	}
-
-	public void setDepartment_managercol(String department_managercol) {
-		this.department_managercol = department_managercol;
+	public void setManagesDepartment(String managesDepartment) {
+		this.managesDepartment = managesDepartment;
 	}
 
 	public ArrayList<Park> getResponsible() {

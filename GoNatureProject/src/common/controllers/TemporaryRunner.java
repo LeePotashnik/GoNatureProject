@@ -1,11 +1,14 @@
 package common.controllers;
 
+<<<<<<< HEAD
 import java.util.ArrayList;
 
 import entities.DepartmentManager;
 import entities.Park;
 import entities.ParkManager;
 
+=======
+>>>>>>> refs/remotes/origin/master
 /**
  * This class has one method for running a specific screen. It is a temporary
  * class for testing functionality. Will not be part of the final project. No
@@ -21,6 +24,7 @@ public class TemporaryRunner {
 		 * (Use the default) 6. Information object to the screen (if needed to have
 		 * information BEFORE load)
 		 */
+<<<<<<< HEAD
 		Park Hawaii = new Park(9,"Hawaii Volcanoes", "Hilo", "Hawaii", "Pacific", "151071559", "638683080", 100, 80, 4, 0);
 		Park BigBend = new Park(2,"Big Bend", "Alpine", "Texas", "Southern", "883879564", "104666977", 100, 80, 4, 0);
 		Park Congaree = new Park(3,"Congaree", "Columbia", "South Carolina", "Southern", "223549857", "104666977", 100, 80, 4, 0);
@@ -44,5 +48,12 @@ public class TemporaryRunner {
 //		ScreenManager.getInstance().showScreen("BookingScreenController", "/clientSide/fxml/BookingScreen.fxml", false,
 //				false, StageSettings.defaultSettings("GoNature System - Reservations"), visitor);
 
+=======
+
+		ScreenManager.getInstance().showScreen("VisitorsLoginScreen",
+				"/clientSide/fxml/VisitorsLogin.fxml", false, false,
+				StageSettings.defaultSettings("GoNature System - Reservations"), null);
+
+>>>>>>> refs/remotes/origin/master
 	}
 }
