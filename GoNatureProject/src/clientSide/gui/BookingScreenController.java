@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 import clientSide.control.BookingController;
+import clientSide.control.ParkController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
@@ -24,6 +25,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -38,22 +40,25 @@ import javafx.scene.layout.Pane;
 import javafx.util.Pair;
 
 public class BookingScreenController extends AbstractScreen implements Stateful {
-	
+
 	private BookingController control; // controller
 	private ObservableList<Park> parksList;
 	private ObservableList<String> parksStrings;
 	private ObservableList<LocalTime> hours;
-	
+
 	// date validation parameters
 	private final int futureBookingsRange = 4; // 4 month
-	private final int openHour = 8;
+	private final int openHour = 4;
 	private final int closeHour = 18;
-	
+	private final int minimumVisitorsInReservation = 1;
+	private final int maximumVisitorsInReservation = 15;
+
 	// data objects
 	private ParkVisitor visitor;
 	private Booking booking;
 	private String bookingId;
 	private int parkIndexInCombobox;
+	private boolean isGroupReservation; // determines if this is a regular or guided group
 
 	/**
 	 * Constructor, initializes the booking controller instance
@@ -64,7 +69,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 	/// FXML AND JAVAFX COMPONENTS
 	@FXML
-	private Label dateLbl, emailLbl, hourLbl, parkLbl, phoneLbl, visitorsLbl, titleLbl, bookingLbl;
+	private Label nameLbl, dateLbl, emailLbl, hourLbl, parkLbl, phoneLbl, visitorsLbl, titleLbl, bookingLbl, typeLbl;
 	@FXML
 	private Button backButton, makeReservationBtn;
 	@FXML
@@ -76,7 +81,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	@FXML
 	private ComboBox<String> parkComboBox;
 	@FXML
-	private TextField emailTxt, phoneTxt, visitorsTxt;
+	private TextField firstNameTxt, lastNameTxt, emailTxt, phoneTxt, visitorsTxt;
 	@FXML
 	private Pane pane;
 
@@ -113,12 +118,14 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 				event.consume();
 				// HERE: should be returned to his account page
 				// chose to reschedule
+				break;
 			case 2:
 				datePicker.setValue(null);
 				hourCombobox.setValue(null);
 				datePicker.setStyle(setFieldToError());
 				hourCombobox.setStyle(setFieldToError());
-				// chose to enter the waiting list
+				break;
+			// chose to enter the waiting list
 			case 3:
 				if (control.insertToWaitingList(booking, visitor)) {
 					event.consume();
@@ -159,7 +166,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 				showInformationAlert(ScreenManager.getInstance().getStage(), "Your payment is accepted. Thank You!");
 				break;
 
-				// chose to pay upon arrival
+			// chose to pay upon arrival
 			case 2:
 				booking.setPaid(false);
 				booking.setFinalPrice(finalPrice);
@@ -167,7 +174,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 				control.updateBookingPayment(booking);
 				break;
 			}
-			
+
 			// showing the confirmation screen
 			try {
 				ScreenManager.getInstance().showScreen("ConfirmationScreenController",
@@ -206,29 +213,55 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	void paneClicked(MouseEvent event) {
 		pane.requestFocus();
 	}
-	
+
 	@FXML
 	/**
 	 * transfers the focus from the button to the pane, if tab pressed
+	 * 
 	 * @param event
 	 */
-    void btnTabPressed(KeyEvent event) {
+	void btnTabPressed(KeyEvent event) {
 		if (event.getCode() == KeyCode.TAB) {
 			event.consume();
 			pane.requestFocus();
 		}
-    }
-	
+	}
+
 	@FXML
 	/**
 	 * ignores event of pressing a tab on the pane
+	 * 
 	 * @param event
 	 */
-    void paneTabPressed(KeyEvent event) {
+	void paneTabPressed(KeyEvent event) {
 		if (event.getCode() == KeyCode.TAB) {
 			event.consume();
 		}
-    }
+	}
+
+	@FXML
+	/**
+	 * When a park is chosen, updating the background to this park
+	 * 
+	 * @param event
+	 */
+	void parkChosen(ActionEvent event) {
+		parkIndexInCombobox = parkComboBox.getSelectionModel().getSelectedIndex();
+		Park parkChosen = parksList.get(parkIndexInCombobox);
+		ImageView backgroundImage = new ImageView(
+				new Image("/" + ParkController.getInstance().nameOfTable(parkChosen) + ".jpg"));
+		
+		backgroundImage.fitWidthProperty().bind(ScreenManager.getInstance().getStage().widthProperty());
+		backgroundImage.fitHeightProperty().bind(ScreenManager.getInstance().getStage().heightProperty());
+		backgroundImage.setPreserveRatio(false);
+		backgroundImage.setOpacity(0.2);
+
+		if (pane.getChildren().get(0) instanceof ImageView) {
+			pane.getChildren().remove(0);
+		}
+		pane.getChildren().add(0, backgroundImage);
+
+	}
 
 	/// INSTANCE METHODS ///
 	/**
@@ -299,9 +332,11 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			error += "• enter a digit-only number of visitors\n";
 			valid = false;
 		} else {
-			if (Integer.parseInt(visitorsTxt.getText()) < 1 || Integer.parseInt(visitorsTxt.getText()) > 15) {
+			if (Integer.parseInt(visitorsTxt.getText()) < minimumVisitorsInReservation
+					|| Integer.parseInt(visitorsTxt.getText()) > maximumVisitorsInReservation) {
 				visitorsTxt.setStyle(setFieldToError());
-				error += "• enter a number of visitors in range of 1 to 15\n";
+				error += "• enter a number of visitors in range of " + minimumVisitorsInReservation + " to "
+						+ maximumVisitorsInReservation + "\n";
 				valid = false;
 			}
 		}
@@ -402,12 +437,14 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		titleLbl.setAlignment(Pos.CENTER);
 		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
 		// setting all the labels to right alignment
+		nameLbl.getStyleClass().add("label-center-right");
 		dateLbl.getStyleClass().add("label-center-right");
 		emailLbl.getStyleClass().add("label-center-right");
 		hourLbl.getStyleClass().add("label-center-right");
 		parkLbl.getStyleClass().add("label-center-right");
 		phoneLbl.getStyleClass().add("label-center-right");
 		visitorsLbl.getStyleClass().add("label-center-right");
+		bookingLbl.getStyleClass().add("label-center-right");
 
 		// setting texts to font family and size
 		parkComboBox.getStyleClass().add("combo-box-text");
@@ -453,10 +490,31 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 * This method is called in order to set pre-info into the GUI components
 	 */
 	public void loadBefore(Object information) {
-		visitor = (ParkVisitor) information;
-		// setting email and phone of the visitor into the text fields
-		emailTxt.setText(visitor.getEmailAddress());
-		phoneTxt.setText(visitor.getPhoneNumber());
+		// in case the user is logged in
+		if (information instanceof ParkVisitor) {
+			visitor = (ParkVisitor) information;
+			// setting email and phone of the visitor into the text fields
+			firstNameTxt.setText(visitor.getFirstName());
+			lastNameTxt.setText(visitor.getLastName());
+			firstNameTxt.setDisable(true);
+			lastNameTxt.setDisable(true);
+			emailTxt.setText(visitor.getEmailAddress());
+			phoneTxt.setText(visitor.getPhoneNumber());
+			// setting the reservation type
+			isGroupReservation = visitor.getVisitorType() == VisitorType.GROUPGUIDE ? true : false;
+			typeLbl.setText((isGroupReservation == true ? "Guided Group | Your Id: " : "Regular Group | Your Id: ")
+					+ visitor.getIdNumber());
+		}
+
+		// in case the user in not logged in, entered only with id
+		if (information instanceof String) {
+
+		}
+
+		if (information instanceof Booking) {
+			// in case the visitor wants to edit his reservation
+			// will arrive this screen after being in the booking managing screen
+		}
 	}
 
 	/**

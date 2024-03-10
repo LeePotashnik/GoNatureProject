@@ -12,16 +12,28 @@ import java.util.List;
  */
 public class Communication implements Serializable {
 	private static final long serialVersionUID = 1L;
-	
-	// general table names
-	public final String active = "_park_active_booking";
-	public final String cancel = "_park_cencelled_booking";
-	public final String done = "_park_done_booking";
-	public final String employees = "_park_employees";
-	public final String report = "_park_report";
-	public final String wait = "_park_waiting_list";
-
 	private String uniqueId; // will hold a unique id for client-server identification
+
+	/// TABLES NAMES ///
+	// tables in context of a specific park
+	public final String activeBookings = "_park_active_booking";
+	public final String cancelledBookings = "_park_cencelled_booking";
+	public final String doneBokkings = "_park_done_booking";
+	public final String parkEmployees = "_park_employees";
+	public final String parkReport = "_park_report";
+	public final String waitingList = "_park_waiting_list";
+	// tables in context of stakeholders
+	public final String departmentManager = "department_manager";
+	public final String parkManager = "park_manager";
+	public final String traveller = "traveller";
+	public final String griupGuide = "group_guide";
+	public final String representative = "representative";
+	// tables in context of management
+	public final String invoice = "invoice";
+	public final String park = "park";
+	public final String pendingAdjustment = "pending_adjustment";
+	public final String viewedAdjustment = "viewed_adjustment";
+	public final String pricing = "pricing";
 
 	// the communication type
 	public enum CommunicationType {
@@ -30,6 +42,11 @@ public class Communication implements Serializable {
 
 	private CommunicationType communicationType;
 
+	/**
+	 * Constructor of a Communication object
+	 * 
+	 * @param communicationType the type of the communication
+	 */
 	public Communication(CommunicationType communicationType) { // Constructor
 		this.communicationType = communicationType;
 		if (communicationType == CommunicationType.QUERY_REQUEST) { // if it's a query request
@@ -112,9 +129,9 @@ public class Communication implements Serializable {
 	}
 
 	/**
-	 * This method returns if the communication is a query request
+	 * This method returns true if the communication is a query request
 	 * 
-	 * @return true if the CommunicationType is QUERY_REQUEST
+	 * @return true if the CommunicationType is QUERY_REQUEST, false otherwise
 	 */
 	public boolean isQuery() {
 		return communicationType == CommunicationType.QUERY_REQUEST;

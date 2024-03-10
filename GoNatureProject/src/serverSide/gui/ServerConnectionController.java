@@ -6,6 +6,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -21,24 +22,20 @@ public class ServerConnectionController extends AbstractScreen {
 
 	@FXML
 	private Button connectBtn, disconnectBtn;
-
 	@FXML
 	private ImageView goNatureLogo;
-
 	@FXML
-	private TextField hostTxtField, portTxtField, databaseTxtField, rootTxtField, passwordTxtField;
-
+	private TextField hostTxtField, portTxtField, databaseTxtField, rootTxtField;
 	@FXML
 	private TableColumn<?, ?> clientIpColumn, clientStatusColumn;
-
 	@FXML
 	private TableView<?> connectedClientsTable;
-
 	@FXML
 	private Label hostLbl, portLbl, databaseLbl, rootLbl, passwordLbl;
-	
 	@FXML
     private Pane pane;
+	@FXML
+	private PasswordField passwordTxtField;
 
 	@FXML
 	/**
@@ -250,8 +247,6 @@ public class ServerConnectionController extends AbstractScreen {
 
 	@Override
 	public void loadBefore(Object information) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
