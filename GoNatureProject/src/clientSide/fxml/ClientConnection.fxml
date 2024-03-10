@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ClientConnectionController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ClientConnectionController">
    <children>
       <ImageView fx:id="goNatureLogo" fitHeight="200.0" fitWidth="400.0" layoutX="100.0" layoutY="23.0" pickOnBounds="true" preserveRatio="true" />
       <Label layoutX="187.0" layoutY="230.0" text="Client Connection">
@@ -20,17 +20,17 @@
             <Font name="Calibri Light" size="20.0" />
          </font>
       </Label>
-      <TextField fx:id="hostTxtField" layoutX="145.0" layoutY="308.0" prefHeight="29.0" prefWidth="150.0">
+      <TextField fx:id="hostTxtField" layoutX="145.0" layoutY="308.0" onKeyPressed="#hostTabPressed" prefHeight="29.0" prefWidth="150.0">
          <font>
             <Font name="Calibri Light" size="16.0" />
          </font>
       </TextField>
-      <Button fx:id="connectBtn" layoutX="231.0" layoutY="345.0" mnemonicParsing="false" onAction="#connectToServer" text="Connect to Server">
+      <Button fx:id="connectBtn" layoutX="231.0" layoutY="345.0" mnemonicParsing="false" onAction="#connectToServer" onKeyPressed="#btnTabPressed" text="Connect to Server">
          <font>
             <Font name="Calibri" size="16.0" />
          </font>
       </Button>
-      <TextField fx:id="portTxtField" layoutX="305.0" layoutY="308.0" prefHeight="29.0" prefWidth="150.0">
+      <TextField fx:id="portTxtField" layoutX="305.0" layoutY="308.0" onKeyPressed="#portTabPressed" prefHeight="29.0" prefWidth="150.0">
          <font>
             <Font name="Calibri Light" size="16.0" />
          </font>
