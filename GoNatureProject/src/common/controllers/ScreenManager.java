@@ -73,6 +73,8 @@ public class ScreenManager {
 	 */
 	public void showScreen(String screenName, String fxmlResource, boolean showOnce, boolean saveState,
 			StageSettings settings, Object information) throws StatefulException, ScreenException {
+		System.out.println("screensStack: " + screensStack);
+		System.out.println("screensMap: " + screensMap);
 		// checking if the saveState flag is true. In this case, calling the saveState()
 		// method of the current screen's controller
 		if (saveState && !screensStack.isEmpty()) {
@@ -117,7 +119,10 @@ public class ScreenManager {
 	 * a screen has finished its action and wants the previous screen to be shown.
 	 * The screen who called this method is on the top of the stack, so it is
 	 * removed and then the new top is displayed on the stage.
-	 *
+	 * 
+	 * @param wasShownOnce indicates if the calling screen was shown only once.
+	 *                     Therefore, it was not in the screens stack so there is
+	 *                     not need to pop anything
 	 * @param restoreState indicates whether the state of the previous screen needs
 	 *                     to be restored, or the previous screen should be loaded
 	 *                     as new screen
@@ -126,14 +131,18 @@ public class ScreenManager {
 	 * @throws StatefulException if the restoreState flag is true while the screen
 	 *                           does not implement Stateful
 	 */
-	public void goToPreviousScreen(boolean restoreState) throws ScreenException, StatefulException {
+	public void goToPreviousScreen(boolean wasShownOnce, boolean restoreState)
+			throws ScreenException, StatefulException {
+		System.out.println("screensStack: " + screensStack);
+		System.out.println("screensMap: " + screensMap);
 		// checking if there's a screen to go back to
 		if (screensStack.size() <= 1)
 			throw new ScreenException("No screens to go back to");
 
 		if (screensMap.containsKey(screensStack.peek())) // removing the current screen from the map
 			screensMap.remove(screensStack.peek());
-		screensStack.pop(); // removing the current screen from the stack
+		if (!wasShownOnce)
+			screensStack.pop(); // removing the current screen from the stack
 
 		Parent root = null;
 		AbstractScreen controller = null;
