@@ -138,6 +138,6 @@ public class DepartmentManagerAccountScreen extends AbstractScreen{
 	@Override
 	public String getScreenTitle() {
 		// TODO Auto-generated method stub
-		return departmentManager.getDepartment_managercol() + " Departmrnt Manager";
+		return departmentManager.getManagesDepartment() + " Departmrnt Manager";
 	}
 }
