@@ -1,5 +1,6 @@
 package clientSide.control;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import clientSide.gui.GoNatureClientUI;
@@ -22,7 +23,7 @@ public class ReportsController {
 		return instance;
 	}
 
-	public Park getPark(String parkName) {
+	public Park getManagerPark(String parkName) {
 		Communication getPark = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			getPark.setQueryType(QueryType.SELECT);
@@ -38,7 +39,7 @@ public class ReportsController {
 		if (getPark.getResultList().isEmpty()) { // no park like that
 			return null;
 		}
-		
+
 		// setting the park's data into a park object and returning it
 		Object[] row = getPark.getResultList().get(0);
 		Park park = new Park((Integer) row[0], (String) row[1], (String) row[2], (String) row[3], (String) row[4],
@@ -46,4 +47,44 @@ public class ReportsController {
 				(Integer) row[10]);
 		return park;
 	}
+
+	public ArrayList<Park> getDepartmentParks(String departmentName) {
+		Communication getParks = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			getParks.setQueryType(QueryType.SELECT);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		getParks.setTables(Arrays.asList("park"));
+		getParks.setSelectColumns(Arrays.asList("*"));
+		getParks.setWhereConditions(Arrays.asList("department"), Arrays.asList("="), Arrays.asList(departmentName));
+		GoNatureClientUI.client.accept(getParks);
+
+		// getting the result
+		if (getParks.getResultList().isEmpty()) { // no park like that
+			return null;
+		}
+
+		// setting the park's data into a park object and returning it
+		ArrayList<Park> departmentParks = new ArrayList<>();
+		for (Object[] row : getParks.getResultList()) {
+			Park park = new Park((Integer) row[0], (String) row[1], (String) row[2], (String) row[3], (String) row[4],
+					(String) row[5], (String) row[6], (Integer) row[7], (Integer) row[8], (Integer) row[9],
+					(Integer) row[10]);
+			departmentParks.add(park);
+		}
+
+		return departmentParks;
+	}
+
+//	if (information instanceof ParkManager) {
+//		parkManager = (ParkManager)information;
+//		park = control.getManagerPark(parkManager.getManages());
+//	}
+//	
+//	if (information instanceof DepartmentManager) {
+//		departmentManager = (DepartmentManager)information;
+//		ArrayList<Park> parksInDepartment = control.getDepartmentParks(departmentManager.getManagesDepartment());
+//	}
+
 }
