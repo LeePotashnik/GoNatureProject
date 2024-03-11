@@ -22,7 +22,7 @@ public class DatabaseController {
 	 * @throws DatabaseException if there is a problem with the connection
 	 */
 	public DatabaseController(String database, String root, String password) throws DatabaseException {
-		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Jerusalem"));
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
 			System.out.println("Driver definition succeed");
