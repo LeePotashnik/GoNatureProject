@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
@@ -18,12 +20,14 @@ import javafx.geometry.Insets;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.util.Pair;
 
-public class CancellationReportController extends AbstractScreen implements Stateful{
+public class CancellationReportController extends AbstractScreen {
 
     @FXML
     private ImageView goNatureLogo;
@@ -52,9 +56,9 @@ public class CancellationReportController extends AbstractScreen implements Stat
     @FXML
     public void initialize() {
     	goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
-        List<String> categories = Arrays.asList("Sunday","Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
-        daysAxis.setCategories(FXCollections.observableArrayList(categories));
-        populateChart(); // Populate the chart with data
+        //List<String> categories = Arrays.asList("Sunday","Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
+       // daysAxis.setCategories(FXCollections.observableArrayList(categories));
+        //populateChart(); // Populate the chart with data
         
      // setting the back button image
      	 	ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
@@ -72,8 +76,7 @@ public class CancellationReportController extends AbstractScreen implements Stat
 		reportDetails = report;
 		RecievedData = true;
 		return;
-//		String selectQuery = "SELECT * FROM go_nature_prototype_db.order;";
-//		sendRequestToServer(selectQuery);
+
 	} 
 	
 //    @FXML
@@ -100,12 +103,12 @@ public class CancellationReportController extends AbstractScreen implements Stat
 //        // Use the data to create a data series and add it to the chart
 //    }
 //}
-	public void populateChart() 
+	public void populateChart(HashMap<Integer, Pair<Integer, Integer>> dailyData) 
 	{
 		// Assume you have a method to get your cancellation data that returns a Map<String, Integer>
 	    // where the key is the day of the week and the value is the average amount of cancellations
-	    Map<String, Integer> cancelledOrders = getCancellationData();
-	    Map<String, Integer> noShowVisitors = getNoShowData();
+	    //Pair<String, Integer> cancelledOrders = getCancellationData();
+	    //Pair<String, Integer> noShowVisitors = getNoShowData();
 	    
 	    // Series for Cancelled Orders
 	    XYChart.Series<String, Number> seriesCancelled = new XYChart.Series<>();
@@ -115,56 +118,70 @@ public class CancellationReportController extends AbstractScreen implements Stat
 	    XYChart.Series<String, Number> seriesNoShow = new XYChart.Series<>();
 	    seriesNoShow.setName("No-Show Visitors");
 	    
+	    cancellationBarChart.getData().clear(); // Clear previous data
 	    cancellationBarChart.setLegendVisible(true);
 	    
-	    // Populate the series with data
-	    for (String day : daysAxis.getCategories()) {
-	        seriesCancelled.getData().add(new XYChart.Data<>(day, cancelledOrders.getOrDefault(day, 0)));
-	        seriesNoShow.getData().add(new XYChart.Data<>(day, noShowVisitors.getOrDefault(day, 0)));
+	    // Iterate over the hashmap and add data to the series
+	    for (Map.Entry<Integer, Pair<Integer, Integer>> entry : dailyData.entrySet()) {
+	        Integer day = entry.getKey();
+	        Pair<Integer, Integer> counts = entry.getValue();
+	        Integer cancelledCount = counts.getKey();
+	        Integer noShowCount = counts.getValue();
+
+	        seriesCancelled.getData().add(new XYChart.Data<>(day.toString(), cancelledCount));
+	        seriesNoShow.getData().add(new XYChart.Data<>(day.toString(), noShowCount));
 	    }
-		// Add series to bar chart
+
+	    // Add series to bar chart
 	    cancellationBarChart.getData().addAll(seriesCancelled, seriesNoShow);
-	
-	}
-	private Map<String, Integer> getCancellationData() {
-	    Map<String, Integer> data = new HashMap<>();
-	    data.put("Sunday", 10);
-	    data.put("Monday", 40);
-	    data.put("Tuesday", 3);
-	    data.put("Wednesday", 6);
-	    data.put("Thursday", 9);
-	    data.put("Friday", 1);
-	    data.put("Saturday", 4);
-	    return data;
+
+	    // Optional: Adjust the category axis to display days of the month
+	    daysAxis.setLabel("Day of the Month");
+	    List<String> daysOfMonth = IntStream.rangeClosed(1, 31)
+	                                        .mapToObj(Integer::toString)
+	                                        .collect(Collectors.toList());
+	    daysAxis.setCategories(FXCollections.observableArrayList(daysOfMonth));
 	}
 
-	private Map<String, Integer> getNoShowData() {
-	    Map<String, Integer> data = new HashMap<>();
-	    data.put("Sunday", 3);
-	    data.put("Monday", 2);
-	    data.put("Tuesday", 5);
-	    data.put("Wednesday", 8);
-	    data.put("Thursday", 6);
-	    data.put("Friday", 9);
-	    data.put("Saturday", 4);
-	    return data;
-	
+//	    // Populate the series with data
+//	    for (String day : daysAxis.getCategories()) {
+//	        seriesCancelled.getData().add(new XYChart.Data<>(day, cancelledOrders.getOrDefault(day, 0)));
+//	        seriesNoShow.getData().add(new XYChart.Data<>(day, noShowVisitors.getOrDefault(day, 0)));
+//	    }
+//		// Add series to bar chart
+//	    cancellationBarChart.getData().addAll(seriesCancelled, seriesNoShow);
+//	
+//	}
+	// Method that would be called when data is received from the server
+	public void onDataReceived(HashMap<Integer, Pair<Integer, Integer>> dailyData) {
+	    populateChart(dailyData); // Call populateChart with the received data
 	}
+//	private Pair<String, Integer> getCancellationData(int countres1,int countres2) {
+//		BarChart.Data CancelledOrdersData = new BarChart.Data("Cancelled orders", countres1);
+//		BarChart.Data NoShowVisitorsData = new BarChart.Data("No-Show Visitors", countres2);
+//	    
+//		cancellationBarChart.getData().clear(); // Clear previous data if any
+//		cancellationBarChart.getData().addAll(CancelledOrdersData, NoShowVisitorsData);
+//	    
+//		cancellationBarChart.getData().forEach(data ->data.nameProperty().bind(javafx.beans.binding.Bindings.concat(data.getName(), " ", data.chartProperty())));
+//	
+//	}
+
+//	private Map<String, Integer> getNoShowData() {
+//	    Map<String, Integer> data = new HashMap<>();
+//	    data.put("Sunday", 3);
+//	    data.put("Monday", 2);
+//	    data.put("Tuesday", 5);
+//	    data.put("Wednesday", 8);
+//	    data.put("Thursday", 6);
+//	    data.put("Friday", 9);
+//	    data.put("Saturday", 4);
+//	    return data;
+	
+	//}
 
 	@Override
 	public void loadBefore(Object information) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void saveState() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void restoreState() {
 		// TODO Auto-generated method stub
 		
 	}

@@ -1,14 +1,11 @@
 package common.controllers;
 
-<<<<<<< HEAD
 import java.util.ArrayList;
 
 import entities.DepartmentManager;
 import entities.Park;
 import entities.ParkManager;
 
-=======
->>>>>>> refs/remotes/origin/master
 /**
  * This class has one method for running a specific screen. It is a temporary
  * class for testing functionality. Will not be part of the final project. No
@@ -24,36 +21,41 @@ public class TemporaryRunner {
 		 * (Use the default) 6. Information object to the screen (if needed to have
 		 * information BEFORE load)
 		 */
-<<<<<<< HEAD
+
 		Park Hawaii = new Park(9,"Hawaii Volcanoes", "Hilo", "Hawaii", "Pacific", "151071559", "638683080", 100, 80, 4, 0);
 		Park BigBend = new Park(2,"Big Bend", "Alpine", "Texas", "Southern", "883879564", "104666977", 100, 80, 4, 0);
 		Park Congaree = new Park(3,"Congaree", "Columbia", "South Carolina", "Southern", "223549857", "104666977", 100, 80, 4, 0);
 		Park Everglades = new Park(4,"Everglades", "Homestead", "Florida", "Southern", "450849137", "104666977", 100, 80, 4, 0);
 		ArrayList<Park> parks = new ArrayList<>();
-		parks.add(BigBend);
-		parks.add(Congaree);
-		parks.add(Everglades);
-		ParkManager pm = new ParkManager("151071559", "Reese", "Moore", "reese.moore", "Reese8##649112",
-				"reese.moore@gonature.com","0503868747" , false, Hawaii, Hawaii);
-		DepartmentManager dm = new DepartmentManager("104666977", "Peyton", "Martin", "Peyton.Martin", "Peyton5678%",
-				"Peyton.Martin@gonature.com","0547654321" , false,Hawaii, parks, "Southern");
-		ScreenManager.getInstance().showScreen("ParkManagerReportController",
-				"/clientSide/fxml/ParkManagerReport.fxml", false, false,
-				StageSettings.defaultSettings("GoNature System - Reservations"),pm);
+		parks.add(new Park(2,"Big Bend", "Alpine", "Texas", "Southern", "883879564", "104666977", 100, 80, 4, 0));
+        parks.add(new Park(3,"Congaree", "Columbia", "South Carolina", "Southern", "223549857", "104666977", 100, 80, 4, 0));
+        parks.add(new Park(4,"Everglades", "Homestead", "Florida", "Southern", "450849137", "104666977", 100, 80, 4, 0));
+		ParkManager pm = new ParkManager("151071559", "Reese", "Moore", "reese.moore@gonature.com","0503868747","Hawaii Volcanoes","reese.moore", "Reese8##649112", false);
+		DepartmentManager dm = new DepartmentManager("104666977", "Peyton", "Martin","Peyton.Martin@gonature.com","0547654321","Southern", "Peyton.Martin", "Peyton5678%",
+		false);
+		   // Add parks that are under the 'Southern' department
+        
+
+        // Now pass the relevant parks to the DepartmentManagerReportsController along with the department manager
+        Object[] infoForScreen = { dm, parks };
+
+        ScreenManager.getInstance().showScreen("DepartmentManagerReportsController",
+                "/clientSide/fxml/DepartmentManagerReports.fxml", false, false,
+                StageSettings.defaultSettings("GoNature System - Reservations"), infoForScreen);
+    }
+
+//		ScreenManager.getInstance().showScreen("ParkManagerReportController",
+//				"/clientSide/fxml/ParkManagerReport.fxml", false, false,
+//				StageSettings.defaultSettings("GoNature System - Reservations"),pm);
 //		ScreenManager.getInstance().showScreen("DepartmentManagerReportsController",
 //				"/clientSide/fxml/DepartmentManagerReports.fxml", false, false,
-//				StageSettings.defaultSettings("GoNature System - Reservations"),null);
+//				StageSettings.defaultSettings("GoNature System - Reservations"),dm);
 	//	ParkVisitor visitor = new ParkVisitor("1234567890", "Elad", "Krauz", "eladkrauz0905@gmail.com", "0526687878",
 //				"elad.krauz", "password", true, VisitorType.TRAVELLER);
 //		ScreenManager.getInstance().showScreen("BookingScreenController", "/clientSide/fxml/BookingScreen.fxml", false,
 //				false, StageSettings.defaultSettings("GoNature System - Reservations"), visitor);
 
-=======
 
-		ScreenManager.getInstance().showScreen("VisitorsLoginScreen",
-				"/clientSide/fxml/VisitorsLogin.fxml", false, false,
-				StageSettings.defaultSettings("GoNature System - Reservations"), null);
 
->>>>>>> refs/remotes/origin/master
-	}
+	
 }

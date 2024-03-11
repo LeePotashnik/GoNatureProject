@@ -24,7 +24,7 @@
       </Label>
       <BarChart fx:id="cancellationBarChart" animated="false" barGap="10" layoutX="43.0" layoutY="146.0" legendVisible="true" prefHeight="332.0" prefWidth="602.0">
          <xAxis>
-            <CategoryAxis fx:id="daysAxis" label="Day of the Week" />
+            <CategoryAxis fx:id="daysAxis" label="Dates" />
          </xAxis>
          <yAxis>
             <NumberAxis fx:id="amountAxis" autoRanging="false" label="Average Amount" lowerBound="0" tickUnit="10" upperBound="100" />

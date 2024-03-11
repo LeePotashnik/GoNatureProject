@@ -20,7 +20,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class VisitReportController extends AbstractScreen implements Stateful{
+public class VisitReportController extends AbstractScreen {
 
     @FXML
     private Button backButton;
@@ -48,18 +48,6 @@ public class VisitReportController extends AbstractScreen implements Stateful{
     	        e.printStackTrace();
     	  }
     }
-
-	@Override
-	public void saveState() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void restoreState() {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	public void initialize() {

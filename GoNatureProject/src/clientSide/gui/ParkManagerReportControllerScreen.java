@@ -8,7 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 import clientSide.control.ParkController;
+import clientSide.control.ParkManagerReportsController;
 import common.communication.Communication;
+import common.communication.Communication.CommunicationType;
+import common.communication.Communication.QueryType;
 import common.communication.CommunicationException;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
@@ -29,7 +32,7 @@ import javafx.util.Pair;
 
 public class ParkManagerReportControllerScreen extends AbstractScreen implements Stateful{
 	
-
+	private ParkManagerReportsController PMR;
 	private Park park;
     @FXML
     private Button backButton;
@@ -76,6 +79,7 @@ public class ParkManagerReportControllerScreen extends AbstractScreen implements
             return;
         }
         try {
+        	//List<Pair<LocalDate, Integer>> visitorsData = control.generateUsageReport(selectedMonth, selectedYear, this.park);
         	List<Pair<LocalDate, Integer>> visitorsData = generateUsageReport(selectedMonth, selectedYear, this.park);
             ScreenManager.getInstance().showScreen("UsageReportScreen", "/clientSide/fxml/UsageReport.fxml", false, false, StageSettings.defaultSettings("Total number of visitors Report"), visitorsData);
         } catch (CommunicationException | StatefulException | ScreenException e) {
@@ -160,14 +164,10 @@ public class ParkManagerReportControllerScreen extends AbstractScreen implements
 	public void loadBefore(Object information) {
 		ParkManager manager = (ParkManager) information;
 		park=manager.getManages();
-//    	 if (information instanceof ParkManager) {
-//    	        ParkManager manager = (ParkManager) information;
-//    	        this.park = manager.getManages();
-//    	    } else {
-//    	        // Handle the unexpected or null information scenario
-//    	        showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred. Park information is not available.");
-//    	    }
-    	}
+    }
+    
+    
+    
     /**
 	 * Generate the report based on the selected month.
 	 * @param month the month selected from the ChoiceBox.
