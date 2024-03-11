@@ -27,9 +27,9 @@ public class ServerConnectionController extends AbstractScreen {
 	@FXML
 	private TextField hostTxtField, portTxtField, databaseTxtField, rootTxtField;
 	@FXML
-	private TableColumn<?, ?> clientIpColumn, clientStatusColumn;
+	private TableColumn<String, String> clientIpColumn, clientStatusColumn;
 	@FXML
-	private TableView<?> connectedClientsTable;
+	private TableView<String> connectedClientsTable;
 	@FXML
 	private Label hostLbl, portLbl, databaseLbl, rootLbl, passwordLbl;
 	@FXML
@@ -232,7 +232,7 @@ public class ServerConnectionController extends AbstractScreen {
 		rootLbl.setStyle("-fx-alignment: center-right;");
 		passwordLbl.setStyle("-fx-alignment: center-right;");
 		
-		databaseTxtField.setText("jdbc:mysql://localhost/go_nature?serverTimezone=Asia/Kolkata");
+		databaseTxtField.setText("jdbc:mysql://localhost/go_nature?serverTimezone=Asia/Jerusalem");
 	}
 
 	@Override
