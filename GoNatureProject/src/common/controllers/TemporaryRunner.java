@@ -1,8 +1,5 @@
 package common.controllers;
 
-import entities.ParkVisitor;
-import entities.ParkVisitor.VisitorType;
-
 /**
  * This class has one method for running a specific screen. It is a temporary
  * class for testing functionality. Will not be part of the final project. No
@@ -18,9 +15,10 @@ public class TemporaryRunner {
 		 * (Use the default) 6. Information object to the screen (if needed to have
 		 * information BEFORE load)
 		 */
-		ParkVisitor visitor = new ParkVisitor("1234567890", "Elad", "Krauz", "eladkrauz0905@gmail.com", "0526687878",
-				"elad.krauz", "password", true, VisitorType.TRAVELLER);
-		ScreenManager.getInstance().showScreen("BookingScreenController", "/clientSide/fxml/BookingScreen.fxml", false,
-				false, StageSettings.defaultSettings("GoNature System - Reservations"), visitor);
+
+		ScreenManager.getInstance().showScreen("VisitorsLoginScreen",
+				"/clientSide/fxml/VisitorsLogin.fxml", false, false,
+				StageSettings.defaultSettings("GoNature System - Reservations"), null);
+
 	}
 }
