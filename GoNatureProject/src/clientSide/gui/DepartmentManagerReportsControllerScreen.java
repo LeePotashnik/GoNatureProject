@@ -111,19 +111,7 @@ public class DepartmentManagerReportsControllerScreen extends AbstractScreen imp
 
 	    return dailyCounts;
 	}
-//	    int countres1=0;
-//	    int countres2=0;
-//	    if (comm.getResultList() != null) {
-//	    	for (Object[] row : comm.getResultList()) {
-//	        	if(((String)row[0]).equals(res1))
-//	        		countres1+=(Integer)row[1];
-//	        	else
-//	        		countres2+=(Integer)row[1];
-//	    	}
-//	    }
-//	    Pair<Integer, Integer> pairResult = new Pair<>(countres1, countres2);
-//		return pairResult;
-   // }
+
     @FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
