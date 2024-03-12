@@ -13,7 +13,9 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
 
 /**
@@ -82,7 +84,12 @@ public abstract class AbstractScreen {
 		alert.setHeaderText(null);
 		alert.setContentText(content);
 		DialogPane dialogPane = alert.getDialogPane();
-		dialogPane.setStyle("-fx-background-color: #ffdddd; -fx-font-size: 14px;");
+		dialogPane.setStyle(
+				"-fx-background-color: #ffdddd; -fx-font-size: 14px; -fx-padding: 20; -fx-border-color: black; -fx-border-width: 2;");
+		alert.initStyle(StageStyle.UNDECORATED);
+		alert.initModality(Modality.APPLICATION_MODAL);
+		alert.setWidth(400);
+		alert.setHeight(200);
 
 		alert.showAndWait();
 	}
@@ -99,7 +106,12 @@ public abstract class AbstractScreen {
 		alert.setHeaderText(null);
 		alert.setContentText(content);
 		DialogPane dialogPane = alert.getDialogPane();
-		dialogPane.setStyle("-fx-background-color: #ddfeff; -fx-font-size: 14px;");
+		dialogPane.setStyle(
+				"-fx-background-color: #ddfeff; -fx-font-size: 14px; -fx-padding: 20; -fx-border-color: black; -fx-border-width: 2;");
+		alert.initStyle(StageStyle.UNDECORATED);
+		alert.initModality(Modality.APPLICATION_MODAL);
+		alert.setWidth(400);
+		alert.setHeight(200);
 
 		alert.showAndWait();
 	}
@@ -119,12 +131,17 @@ public abstract class AbstractScreen {
 		alert.setHeaderText(null);
 		alert.setContentText(content);
 		DialogPane dialogPane = alert.getDialogPane();
-		dialogPane.setStyle("-fx-background-color: #e6ffe6; -fx-font-size: 14px;");
+		dialogPane.setStyle(
+				"-fx-background-color: #e6ffe6; -fx-font-size: 14px; -fx-padding: 20; -fx-border-color: black; -fx-border-width: 2;");
+		alert.initStyle(StageStyle.UNDECORATED);
+		alert.initModality(Modality.APPLICATION_MODAL);
+		alert.setWidth(400);
+		alert.setHeight(200);
 
 		// setting the buttons of the alert
 		ArrayList<ButtonType> buttons = new ArrayList<>();
 		for (Object text : buttonsText) {
-			buttons.add(new ButtonType((String)text));
+			buttons.add(new ButtonType((String) text));
 		}
 		alert.getButtonTypes().setAll(buttons);
 		Optional<ButtonType> result = alert.showAndWait();

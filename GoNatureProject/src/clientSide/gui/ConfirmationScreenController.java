@@ -15,6 +15,7 @@ import javafx.scene.layout.Pane;
 import javafx.util.Pair;
 
 public class ConfirmationScreenController extends AbstractScreen {
+	private ParkVisitor visitor;
 
 	@FXML
 	private Label bookingIdLabel, dateLabel, emailLabel, holderLabel, isPaidLabel, parkAddressLabel, parkNameLabel,
@@ -31,7 +32,11 @@ public class ConfirmationScreenController extends AbstractScreen {
 
 	@FXML
 	void returnToAccount(ActionEvent event) {
-		showInformationAlert(ScreenManager.getInstance().getStage(), "Now returning to account screen.");
+		if (visitor == null) { // is not connected to the system, entered only with id
+			showInformationAlert(ScreenManager.getInstance().getStage(), "Now returning to main screen.");
+		} else {
+			showInformationAlert(ScreenManager.getInstance().getStage(), "Now returning to account screen.");
+		}
 	}
 
 	@Override
@@ -48,7 +53,6 @@ public class ConfirmationScreenController extends AbstractScreen {
 	 */
 	public void loadBefore(Object information) {
 		Booking booking;
-		ParkVisitor visitor;
 		if (information != null && information instanceof Pair) {
 			@SuppressWarnings("unchecked")
 			Pair<Booking, ParkVisitor> pair = (Pair<Booking, ParkVisitor>) information;
@@ -59,9 +63,9 @@ public class ConfirmationScreenController extends AbstractScreen {
 			parkAddressLabel.setText("Park Location: " + booking.getParkBooked().getParkCity() + ", "
 					+ booking.getParkBooked().getParkState());
 			bookingIdLabel.setText("Booking ID: " + booking.getBookingId());
-			holderLabel.setText("Full Name: " + visitor.getFirstName() + " " + visitor.getLastName());
-			emailLabel.setText("Email: " + visitor.getEmailAddress());
-			phoneLabel.setText("Phone: " + visitor.getPhoneNumber());
+			holderLabel.setText("Full Name: " + booking.getFirstName() + " " + booking.getLastName());
+			emailLabel.setText("Email: " + booking.getEmailAddress());
+			phoneLabel.setText("Phone: " + booking.getPhoneNumber());
 			dateLabel.setText("Date of Visit: " + booking.getDayOfVisit() + "");
 			timeLabel.setText("Time of Visit: " + booking.getTimeOfVisit() + "");
 			visitorsLabel.setText("Group Size: " + booking.getNumberOfVisitors() + "");

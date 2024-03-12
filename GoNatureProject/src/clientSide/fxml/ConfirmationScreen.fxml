@@ -20,79 +20,79 @@
             <Font name="Calibri" size="20.0" />
          </font>
       </Label>
-      <Label layoutX="98.0" layoutY="189.0" text="Park Details:">
+      <Label layoutX="31.0" layoutY="191.0" text="Park Details:">
          <font>
             <Font name="System Bold" size="16.0" />
          </font>
       </Label>
-      <Separator layoutX="98.0" layoutY="180.0" prefHeight="9.0" prefWidth="501.0" />
-      <Label fx:id="parkNameLabel" layoutX="98.0" layoutY="214.0" prefHeight="25.0" prefWidth="400.0" text="Park Name">
+      <Separator layoutX="23.0" layoutY="184.0" prefHeight="9.0" prefWidth="651.0" />
+      <Label fx:id="parkNameLabel" layoutX="31.0" layoutY="216.0" prefHeight="25.0" prefWidth="400.0" text="Park Name">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="parkAddressLabel" layoutX="98.0" layoutY="239.0" prefHeight="25.0" prefWidth="400.0" text="Park Address">
+      <Label fx:id="parkAddressLabel" layoutX="31.0" layoutY="241.0" prefHeight="25.0" prefWidth="400.0" text="Park Address">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label layoutX="98.0" layoutY="278.0" text="Your Reservation:">
+      <Label layoutX="31.0" layoutY="278.0" text="Your Reservation:">
          <font>
             <Font name="System Bold" size="16.0" />
          </font>
       </Label>
-      <Label fx:id="bookingIdLabel" layoutX="100.0" layoutY="303.0" prefHeight="25.0" prefWidth="287.0" text="Booking id">
+      <Label fx:id="bookingIdLabel" layoutX="33.0" layoutY="303.0" prefHeight="25.0" prefWidth="337.0" text="Booking id">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="timeLabel" layoutX="390.0" layoutY="353.0" prefHeight="25.0" prefWidth="177.0" text="time">
+      <Label fx:id="timeLabel" layoutX="390.0" layoutY="353.0" prefHeight="25.0" prefWidth="277.0" text="time">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="emailLabel" layoutX="100.0" layoutY="328.0" prefHeight="25.0" prefWidth="287.0" text="Email Address">
+      <Label fx:id="emailLabel" layoutX="33.0" layoutY="328.0" prefHeight="25.0" prefWidth="337.0" text="Email Address">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="dateLabel" layoutX="100.0" layoutY="353.0" prefHeight="25.0" prefWidth="287.0" text="date">
+      <Label fx:id="dateLabel" layoutX="33.0" layoutY="353.0" prefHeight="25.0" prefWidth="337.0" text="date">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="visitorsLabel" layoutX="100.0" layoutY="378.0" prefHeight="25.0" prefWidth="287.0" text="number of visitor">
+      <Label fx:id="visitorsLabel" layoutX="33.0" layoutY="378.0" prefHeight="25.0" prefWidth="337.0" text="number of visitor">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="holderLabel" layoutX="391.0" layoutY="303.0" prefHeight="25.0" prefWidth="210.0" text="Reservation holder">
+      <Label fx:id="holderLabel" layoutX="391.0" layoutY="303.0" prefHeight="25.0" prefWidth="277.0" text="Reservation holder">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Separator layoutX="98.0" layoutY="269.0" prefHeight="9.0" prefWidth="501.0" />
-      <Label fx:id="phoneLabel" layoutX="391.0" layoutY="328.0" prefHeight="25.0" prefWidth="210.0" text="Phone number">
+      <Label fx:id="phoneLabel" layoutX="391.0" layoutY="328.0" prefHeight="25.0" prefWidth="277.0" text="Phone number">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="priceLabel" layoutX="390.0" layoutY="378.0" prefHeight="25.0" prefWidth="177.0" text="final price">
+      <Label fx:id="priceLabel" layoutX="390.0" layoutY="378.0" prefHeight="25.0" prefWidth="277.0" text="final price">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <ImageView fx:id="parkImage" fitHeight="80.0" fitWidth="80.0" layoutX="519.0" layoutY="188.0" pickOnBounds="true" preserveRatio="true" />
-      <Label fx:id="isPaidLabel" layoutX="98.0" layoutY="412.0" prefHeight="25.0" prefWidth="501.0" text="Your reservation is paid">
+      <ImageView fx:id="parkImage" fitHeight="80.0" fitWidth="80.0" layoutX="588.0" layoutY="190.0" pickOnBounds="true" preserveRatio="true" />
+      <Label fx:id="isPaidLabel" layoutX="33.0" layoutY="417.0" prefHeight="25.0" prefWidth="642.0" text="Your reservation is paid">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Separator layoutX="98.0" layoutY="403.0" prefHeight="9.0" prefWidth="501.0" />
       <Button fx:id="returnToAccountBtn" layoutX="274.0" layoutY="449.0" mnemonicParsing="false" onAction="#returnToAccount" text="Return to Account">
          <font>
             <Font size="16.0" />
          </font>
       </Button>
+      <Separator layoutX="23.0" layoutY="270.0" prefHeight="9.0" prefWidth="651.0" />
+      <Separator layoutX="25.0" layoutY="408.0" prefHeight="9.0" prefWidth="651.0" />
    </children>
 </Pane>
