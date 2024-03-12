@@ -119,7 +119,7 @@ public abstract class AbstractScreen {
 		alert.setHeaderText(null);
 		alert.setContentText(content);
 		DialogPane dialogPane = alert.getDialogPane();
-		dialogPane.setStyle("-fx-font-size: 14px;");
+		dialogPane.setStyle("-fx-background-color: #e6ffe6; -fx-font-size: 14px;");
 
 		// setting the buttons of the alert
 		ArrayList<ButtonType> buttons = new ArrayList<>();
