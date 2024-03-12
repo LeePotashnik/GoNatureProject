@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.LoadingScreen">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.LoadingScreenController">
    <children>
       <ImageView fx:id="goNatureLogo" fitHeight="75.0" fitWidth="450.0" layoutX="135.0" layoutY="53.0" pickOnBounds="true" preserveRatio="true" />
       <Label fx:id="titleLbl" layoutX="202.0" layoutY="222.0" prefHeight="38.0" prefWidth="317.0" text="Loading... Please wait">

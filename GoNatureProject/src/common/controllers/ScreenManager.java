@@ -22,6 +22,7 @@ public class ScreenManager {
 	private static ScreenManager instance;
 
 	private final Stage stage;
+//	private Stage conquerprStage;
 	private final Map<String, AbstractScreen> screensMap = new HashMap<>();
 	private final Deque<String> screensStack = new ArrayDeque<>();
 
@@ -212,4 +213,45 @@ public class ScreenManager {
 	public void resetScreensStack() {
 		screensStack.removeAll(screensStack);
 	}
+
+//	public void conquerFocus(String message) {
+//		// Run later on the JavaFX thread
+//		Platform.runLater(() -> {
+//			Label textlabel = new Label();
+//			textlabel.setText("Fetching data...\n");
+//			textlabel.setStyle("-fx-font-size: 14px; -fx-font-family: 'Consolas';");
+//			textlabel.setWrapText(true);
+//
+//			StackPane layout = new StackPane(textlabel);
+//			layout.setStyle(
+//					"-fx-padding: 20; -fx-background-color: white; -fx-border-color: black; -fx-border-width: 2;");
+//			Scene scene = new Scene(layout, 400, 200); // Directly set the size of Scene
+//
+//			Stage conquerprStage = new Stage();
+//			conquerprStage.initModality(Modality.APPLICATION_MODAL);
+//			conquerprStage.initStyle(StageStyle.UNDECORATED);
+//			conquerprStage.setScene(scene);
+//			conquerprStage.show();
+//
+//			// Simulate appending lines of text as if executing commands
+//			new Thread(() -> {
+//				String[] lines = message.split("\n"); // Assume message contains lines separated by newline characters
+//				for (String line : lines) {
+//					try {
+//						Thread.sleep(500); // Simulate delay between lines
+//						Platform.runLater(() -> textlabel.setText(textlabel.getText() + "\n" + line));
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
+//				}
+//
+//				try {
+//					Thread.sleep(500); // Wait a bit before closing
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
+//				Platform.runLater(conquerprStage::close);
+//			}).start();
+//		});
+//	}
 }
