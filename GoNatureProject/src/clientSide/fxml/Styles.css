@@ -16,3 +16,8 @@
 .combo-box-popup .list-cell:filled:selected:focused {
     -fx-background-color: #00cc66; /* Replace with your desired color */
 }
+
+.pane {
+    -fx-background-size: cover;
+    -fx-opacity: 0.1;
+}

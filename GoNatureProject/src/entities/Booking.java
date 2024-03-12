@@ -25,6 +25,7 @@ public class Booking {
 	private boolean isRecievedReminder;
 	private LocalTime reminderArrivalTime;
 	private Park parkBooked;
+	private int waitingListPriority;
 
 	/**
 	 * 
@@ -73,6 +74,15 @@ public class Booking {
 		this.parkBooked = parkBooked;
 	}
 	
+	public Booking(String bookingId, LocalTime timeOfVisit, LocalDate dayOfBooking, int waitingListPriority, VisitType visitType, int numberOfVisitor) {
+		this.bookingId = bookingId;
+		this.timeOfVisit = timeOfVisit;
+		this.dayOfBooking = dayOfBooking;
+		this.waitingListPriority = waitingListPriority;
+		this.visitType = visitType;
+		this.numberOfVisitors = numberOfVisitor;
+	}
+	
 	/**
 	 * @return
 	 */
@@ -85,6 +95,22 @@ public class Booking {
 	 */
 	public void setIdNumber(String idNumber) {
 		this.idNumber = idNumber;
+	}
+	
+	/**
+	 * 
+	 * @return waitingListPriority
+	 */
+	public int getWaitingListPriority() {
+		return waitingListPriority;
+	}
+
+	/**
+	 * 
+	 * @param waitingListPriority
+	 */
+	public void setWaitingListPriority(int waitingListPriority) {
+		this.waitingListPriority = waitingListPriority;
 	}
 
 	/**
@@ -343,10 +369,11 @@ public class Booking {
 	public String toString() {
 		return "Booking [bookingId=" + bookingId + ", dayOfVisit=" + dayOfVisit + ", timeOfVisit=" + timeOfVisit
 				+ ", dayOfBooking=" + dayOfBooking + ", visitType=" + visitType + ", numberOfVisitors="
-				+ numberOfVisitors + ", firstName=" + firstName + ", lastName=" + lastName + ", emailAddress="
-				+ emailAddress + ", phoneNumber=" + phoneNumber + ", finalPrice=" + finalPrice + ", paid=" + paid
-				+ ", confirmed=" + confirmed + ", entryParkTime=" + entryParkTime + ", exitParkTime=" + exitParkTime
-				+ ", isRecievedReminder=" + isRecievedReminder + ", reminderArrivalTime=" + reminderArrivalTime
-				+ ", parkBooked=" + parkBooked + "]";
+				+ numberOfVisitors + ", idNumber=" + idNumber + ", firstName=" + firstName + ", lastName=" + lastName
+				+ ", emailAddress=" + emailAddress + ", phoneNumber=" + phoneNumber + ", finalPrice=" + finalPrice
+				+ ", paid=" + paid + ", confirmed=" + confirmed + ", entryParkTime=" + entryParkTime + ", exitParkTime="
+				+ exitParkTime + ", isRecievedReminder=" + isRecievedReminder + ", reminderArrivalTime="
+				+ reminderArrivalTime + ", parkBooked=" + parkBooked + ", waitingListPriority=" + waitingListPriority
+				+ "]";
 	}
 }
