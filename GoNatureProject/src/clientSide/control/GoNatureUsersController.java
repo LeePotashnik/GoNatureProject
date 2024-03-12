@@ -7,15 +7,41 @@ import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.CommunicationException;
 import common.communication.Communication.CommunicationType;
+import common.communication.Communication.MessageType;
 import common.communication.Communication.QueryType;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
+import entities.Representative;
+import entities.SystemUser;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 
 public class GoNatureUsersController {
 
+	private SystemUser user;
+	private String title;
+
+	private Representative representative;
+	private static GoNatureUsersController instance;
+	/**
+	 * An empty and private controller, for the singleton design pattern
+	 */
+	private GoNatureUsersController() {
+	}
+
+	/**
+	 * The GoNatureUsersController is defined as a Singleton class. This method allows
+	 * creating an instance of the class only once during runtime of the
+	 * application.
+	 * 
+	 * @return the GoNatureUsersController instance
+	 */
+	public static GoNatureUsersController getInstance() {
+		if (instance == null)
+			instance = new GoNatureUsersController();
+		return instance;
+	}
 	/**
 	 * @param table
 	 * @param IdCol
@@ -41,33 +67,36 @@ public class GoNatureUsersController {
 			return true;
 		return false;
 	}
-	
+    
     /**
-     * @param park
-     * @return 
-     * A 'SELECT' SQL query is generated to access the 'park' table in the database and retrieve the 'maximumVisitorsCapacity' 
-     * field for the relevant park. 
-     * This indicates to the managers the capacity of a specific park.
-     * It returns a String describing the capacity 
+     * creating a communication request for disconnecting from the server port
      */
-    public String checkCurrentMaximumCapacity(String park) {
-    	Communication request = new Communication(CommunicationType.QUERY_REQUEST);
-    	try {
-			request.setQueryType(QueryType.SELECT);
-	    	request.setTables(Arrays.asList("park"));
-	    	request.setSelectColumns(Arrays.asList("maximumVisitorsCapacity"));
-	    	request.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="),Arrays.asList(park));
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-    	GoNatureClientUI.client.accept(request);
-    	ArrayList<Object[]> result = request.getResultList();
-    	if (!result.isEmpty()) {
-    		Object[] capacityDB = result.get(0);
-    		 if (capacityDB.length > 0) {
-                 return capacityDB[0].toString();   
-    		 }	
-    	}
-    	return null;
+    public void disconnectClientFromServer() {
+		Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
+		message.setMessageType(MessageType.DISCONNECT);
+		GoNatureClientUI.client.accept(message);
     }
+    
+    public SystemUser restoreUser() {
+    	return this.user;
+    }
+
+	public void saveUser(SystemUser user) {
+    	this.user = user;
+	}
+
+	public Representative restoreRepresentative() {
+    	return this.representative;
+    }
+	public void saveRepresentative(Representative representative) {
+		this.representative = representative;
+	}	
+	public String restoreTitle() {
+		return title;
+	}
+
+	public void saveTitle(String title) {
+		this.title = title;
+	}
+    
 }
