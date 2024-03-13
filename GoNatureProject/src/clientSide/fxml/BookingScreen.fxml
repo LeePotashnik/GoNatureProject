@@ -12,30 +12,30 @@
 
 <Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onKeyPressed="#paneTabPressed" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.BookingScreenController">
    <children>
-      <ComboBox fx:id="parkComboBox" layoutX="128.0" layoutY="166.0" onAction="#parkChosen" prefHeight="35.0" prefWidth="489.0" promptText="Choose your park" />
-      <DatePicker fx:id="datePicker" layoutX="128.0" layoutY="215.0" prefHeight="35.0" prefWidth="213.0" promptText="Choose date" />
+      <ComboBox fx:id="parkComboBox" layoutX="128.0" layoutY="166.0" onAction="#parkChosen" onKeyPressed="#parkTabPressed" prefHeight="35.0" prefWidth="489.0" promptText="Choose your park" />
+      <DatePicker fx:id="datePicker" layoutX="128.0" layoutY="215.0" onKeyPressed="#dateTabPressed" prefHeight="35.0" prefWidth="213.0" promptText="Choose date" />
       <Label fx:id="hourLbl" layoutX="406.0" layoutY="220.0" text="Hour:">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <ComboBox fx:id="hourCombobox" layoutX="452.0" layoutY="215.0" prefHeight="35.0" prefWidth="165.0" promptText="Choose hour" />
-      <TextField fx:id="visitorsTxt" layoutX="128.0" layoutY="313.0" promptText="1-15">
+      <ComboBox fx:id="hourCombobox" layoutX="452.0" layoutY="215.0" onKeyPressed="#hourTabPressed" prefHeight="35.0" prefWidth="165.0" promptText="Choose hour" />
+      <TextField fx:id="visitorsTxt" layoutX="128.0" layoutY="313.0" onKeyPressed="#visitorsTabPressed" promptText="1-15">
          <font>
             <Font size="16.0" />
          </font>
       </TextField>
-      <TextField fx:id="emailTxt" layoutX="128.0" layoutY="362.0" prefHeight="35.0" prefWidth="489.0" promptText="Your email address">
+      <TextField fx:id="emailTxt" layoutX="128.0" layoutY="362.0" onKeyPressed="#emailTabPressed" prefHeight="35.0" prefWidth="489.0" promptText="Your email address">
          <font>
             <Font size="16.0" />
          </font>
       </TextField>
-      <Label fx:id="phoneLbl" layoutX="333.0" layoutY="318.0" prefHeight="25.0" prefWidth="88.0" text="Phone:" textAlignment="RIGHT">
+      <Label fx:id="phoneLbl" layoutX="336.0" layoutY="318.0" prefHeight="25.0" prefWidth="88.0" text="Phone:" textAlignment="RIGHT">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <TextField fx:id="phoneTxt" layoutX="425.0" layoutY="313.0" prefHeight="35.0" prefWidth="186.0" promptText="Your phone number">
+      <TextField fx:id="phoneTxt" layoutX="431.0" layoutY="313.0" onKeyPressed="#phoneTabPressed" prefHeight="35.0" prefWidth="186.0" promptText="Your phone number">
          <font>
             <Font size="16.0" />
          </font>
@@ -88,12 +88,12 @@
             <Font name="Calibri" size="18.0" />
          </font>
       </Label>
-      <TextField fx:id="firstNameTxt" layoutX="128.0" layoutY="262.0" prefHeight="35.0" prefWidth="240.0" promptText="Your First Name">
+      <TextField fx:id="firstNameTxt" layoutX="128.0" layoutY="262.0" onKeyPressed="#firstNameTabPressed" prefHeight="35.0" prefWidth="240.0" promptText="Your First Name">
          <font>
             <Font size="16.0" />
          </font>
       </TextField>
-      <TextField fx:id="lastNameTxt" layoutX="377.0" layoutY="262.0" prefHeight="35.0" prefWidth="240.0" promptText="Your Last Name">
+      <TextField fx:id="lastNameTxt" layoutX="377.0" layoutY="262.0" onKeyPressed="#lastNameTabPressed" prefHeight="35.0" prefWidth="240.0" promptText="Your Last Name">
          <font>
             <Font size="16.0" />
          </font>

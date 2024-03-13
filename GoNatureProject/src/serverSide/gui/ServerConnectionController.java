@@ -231,7 +231,6 @@ public class ServerConnectionController extends AbstractScreen {
 		databaseLbl.setStyle("-fx-alignment: center-right;");
 		rootLbl.setStyle("-fx-alignment: center-right;");
 		passwordLbl.setStyle("-fx-alignment: center-right;");
-		
 		databaseTxtField.setText("jdbc:mysql://localhost/go_nature?serverTimezone=Asia/Jerusalem");
 	}
 
