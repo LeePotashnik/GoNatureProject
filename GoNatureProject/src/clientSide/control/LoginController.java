@@ -11,41 +11,35 @@ import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
 import common.communication.CommunicationException;
 import entities.Booking;
-import entities.GroupGuide;
+import entities.DepartmentManager;
 import entities.Park;
 import entities.ParkEmployee;
 import entities.ParkManager;
 import entities.ParkVisitor;
 import entities.SystemUser;
-import entities.Traveler;
 import entities.ParkVisitor.VisitorType;
 
 public class LoginController {
-	
-	
-	
-	
 	
 	/**
 	 * This method gets userName and password of Traveler/GroupGuide
 	 * @return instance of systemUser of the traveler/groupGuide or null if there is no user with this userName and password
 	 * @throws CommunicationException 
 	 */
-	@SuppressWarnings("unused")
-	public static SystemUser checkVisitorCredential(String userName ,String password) throws CommunicationException
+	public static ParkVisitor checkVisitorCredential(String userName ,String password) throws CommunicationException
 	{
 		//check if there is travelerUser with this userName&password: return Traveler if there is and null if not
-		SystemUser systemUser=checkTravelerCredential(userName,password); 
-		
-		if(systemUser!=null)
+		ParkVisitor visitorUser=checkTravelerCredential(userName,password); 
+		if(visitorUser!=null)
 		{
-			return systemUser;
+			System.out.println(visitorUser+"!!!!");
+			return visitorUser;
 		}
 		//check if there is groupGuideUser with this userName&password: return GruopGuide if there is and null if not
 		else
 		{
-			systemUser=checkgroupGuideCredential(userName,password);
-			return systemUser; 
+			visitorUser=checkgroupGuideCredential(userName,password);
+			return visitorUser; 
 		}
 	}
 	
@@ -54,39 +48,47 @@ public class LoginController {
 	 * @return instance of Traveler if there is travelerUser with this userName&password
 	 * @throws CommunicationException 
 	 */
-	private static SystemUser checkTravelerCredential(String userName ,String password) throws CommunicationException
+	private static ParkVisitor checkTravelerCredential(String userName ,String password) throws CommunicationException
 	{
 		//check if there is travelerUser with this userName&password:
 		
 		//Creating a select query in order to check if such a travelerUser exists in the traveler table and get all his details
 		Communication requestForTraveler = new Communication(CommunicationType.QUERY_REQUEST); 
-		requestForTraveler.setQueryType(QueryType.SELECT);
+		
+		// creating the request for the availability check
+				try {
+					requestForTraveler.setQueryType(QueryType.SELECT);
+				} catch (CommunicationException e) {
+					e.printStackTrace();
+				}
+		
 		requestForTraveler.setTables(Arrays.asList("traveller"));
 		requestForTraveler.setSelectColumns(Arrays.asList("*"));
 		requestForTraveler.setWhereConditions(Arrays.asList("userName","password"), Arrays.asList("=", "AND","="),      
 		  						Arrays.asList(userName,password));
+				
+		
 		GoNatureClientUI.client.accept(requestForTraveler); //sending the query to the server that will connect to the DB
 		
-		if(requestForTraveler.getQueryResult())  //getQueryResult will return true if there is traveler user with this userName&password
+		if(!requestForTraveler.getResultList().isEmpty())  //getResultList will return list if there is travelerUser with this userName&password
 		{
 			//insert the travelerUser details to an ArrayList
 			ArrayList<Object[]> travelerResult = requestForTraveler.getResultList(); 
 			
 			//insert relevant objects from the ArrayList to values
 			String idNumber=(String)travelerResult.get(0)[0];
-			String firstName=(String)travelerResult.get(1)[0];
-			String lastName=(String)travelerResult.get(2)[0];
-			String emailAddress=(String)travelerResult.get(3)[0];
-			String phoneNumber=(String)travelerResult.get(4)[0];
-			boolean isLoggedIn=(boolean)travelerResult.get(7)[0];
+			String firstName=(String)travelerResult.get(0)[1];
+			String lastName=(String)travelerResult.get(0)[2];
+			String emailAddress=(String)travelerResult.get(0)[3];
+			String phoneNumber=(String)travelerResult.get(0)[4];
+			boolean isLoggedIn=((Integer)travelerResult.get(0)[7]) == 0 ? false : true;
 			
 			//creating an instance of the traveler user and return it
-			 Traveler travelerUser=new Traveler(idNumber,firstName,lastName,userName,password,
-						emailAddress,phoneNumber,isLoggedIn,ParkVisitor.VisitorType.TRAVELER);
-			return travelerUser;
+			ParkVisitor travelerUser=new ParkVisitor(idNumber,firstName,lastName,emailAddress,phoneNumber,userName,password,
+			isLoggedIn,ParkVisitor.VisitorType.TRAVELLER);
+			return travelerUser;	
 		}
 		else return null; //There is no travelerUser with this userName and password	
-
 	}
 	
 	
@@ -95,43 +97,43 @@ public class LoginController {
 	 * @return instance of GroupGuide if there is groupGuideUser with this userName&password
 	 * @throws CommunicationException 
 	 */
-	private static SystemUser checkgroupGuideCredential(String userName ,String password) throws CommunicationException
+	private static ParkVisitor checkgroupGuideCredential(String userName ,String password) throws CommunicationException
 	{
 		//Creating a select query in order to check if such a groupGuideUser exists in the group_guide table and get all his details
 		Communication requestForGrupGuide = new Communication(CommunicationType.QUERY_REQUEST);
-		requestForGrupGuide.setQueryType(QueryType.SELECT);
+		// creating the request for the availability check
+		try {
+			requestForGrupGuide.setQueryType(QueryType.SELECT);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		
 		requestForGrupGuide.setTables(Arrays.asList("group_guide"));
 		requestForGrupGuide.setSelectColumns(Arrays.asList("*"));
 		requestForGrupGuide.setWhereConditions(Arrays.asList("userName","password"), Arrays.asList("=", "AND","="),      
 		  						Arrays.asList(userName,password));
 		GoNatureClientUI.client.accept(requestForGrupGuide); //sending the query to the server that will connect to the DB
 		
-		if(requestForGrupGuide.getQueryResult()) //getQueryResult will return true if there is groupGuideUser with this userName&password
+		if(!requestForGrupGuide.getResultList().isEmpty())  //getResultList will return list if there is groupGuideUser with this userName&password
 		{
 			//insert the groupGuideUser details to an ArrayList
 			ArrayList<Object[]> groupGuideResult = requestForGrupGuide.getResultList();
 			
 			//insert relevant objects from the ArrayList to values
 			String idNumber=(String)groupGuideResult.get(0)[0];
-			String firstName=(String)groupGuideResult.get(1)[0];
-			String lastName=(String)groupGuideResult.get(2)[0];
-			String emailAddress=(String)groupGuideResult.get(3)[0];
-			String phoneNumber=(String)groupGuideResult.get(4)[0];
-			boolean isLoggedIn=(boolean)groupGuideResult.get(7)[0];
+			String firstName=(String)groupGuideResult.get(0)[1];
+			String lastName=(String)groupGuideResult.get(0)[2];
+			String emailAddress=(String)groupGuideResult.get(0)[3];
+			String phoneNumber=(String)groupGuideResult.get(0)[4];
+			boolean isLoggedIn=((Integer)groupGuideResult.get(0)[7]) == 0 ? false : true;
 			
 			//creating an instance of the GroupGuideUser and return it
-			 GroupGuide groupGuideUser=new GroupGuide(idNumber,firstName,lastName,userName,password,
-						emailAddress,phoneNumber,isLoggedIn,ParkVisitor.VisitorType.GROUPGUIDE);
+			ParkVisitor groupGuideUser=new ParkVisitor(idNumber,firstName,lastName,emailAddress,phoneNumber,userName,password,
+						isLoggedIn,ParkVisitor.VisitorType.GROUPGUIDE);
 			return groupGuideUser;			
 		}
 		else {return null;} //There is no GroupGuideUser with this userName and password
 	}
-	
-	
-	
-	
-	
-	
 	
 	
 	/**
@@ -140,97 +142,266 @@ public class LoginController {
 	 * @throws CommunicationException 
 	 */
 	public static SystemUser checkEmployeeCredential(String userName ,String password) throws CommunicationException
-	{
-		return null;
+	{		
+		//check if there is parkManagerUser with this userName&password: return ParkManager if there is and null if not
+		SystemUser systemUser=checkParkManagerCredential(userName,password); 
+		if(systemUser!=null)
+		{
+			System.out.println("found the user from loginController");
+			return systemUser;
+		}
+		//check if there is departmentManagerUser with this userName&password: return DepartmentManager if there is and null if not
+		else if((systemUser=checkDepartmentManagerCredential(userName,password))!=null)
+		{
+			return systemUser;
+		}
+		//check if there is parkEmployeeUser with this userName&password: return ParkEmployee if there is and null if not
+		else if((systemUser=checkParkEmployeeCredential(userName,password))!=null)
+		{
+			return systemUser;
+		}
+		//there is no parkManagerUser,departmentManagerUser,parkEmployeeUser with this userName&password (will return null)
+		return systemUser; 
 	}
 	
 	
-/*	private static SystemUser checkParkManagerCredential(String userName ,String password) throws CommunicationException
+	/**
+	 * This method gets userName and password of ParkManager/DepartmentManager/ParkEmployee
+	 * @return instance of systemUser of the ParkManager or null if there is no parkManagerUser with this userName and password
+	 * @throws CommunicationException 
+	 */
+	private static SystemUser checkParkManagerCredential(String userName ,String password) throws CommunicationException
 	{
-		//check if there is ParkManagerUser with this userName&password:
+		//Creating a select query in order to check if such a parkManagerUser exists in the park_manager table and get all his details
+		Communication requestForParkManager = new Communication(CommunicationType.QUERY_REQUEST);
+		// creating the request for the availability check
+		try {
+			requestForParkManager.setQueryType(QueryType.SELECT);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
 		
-		//Creating a query in order to check if such a ParkManagerUser exists in the park_manager table and get all his details
-		Communication requestForParkManager = new Communication(CommunicationType.QUERY_REQUEST); 
-		requestForParkManager.setQueryType(QueryType.SELECT);
 		requestForParkManager.setTables(Arrays.asList("park_manager"));
 		requestForParkManager.setSelectColumns(Arrays.asList("*"));
 		requestForParkManager.setWhereConditions(Arrays.asList("userName","password"), Arrays.asList("=", "AND","="),      
 		  						Arrays.asList(userName,password));
 		GoNatureClientUI.client.accept(requestForParkManager); //sending the query to the server that will connect to the DB
 		
-		if(requestForParkManager.getQueryResult())  //getQueryResult will return true if there is ParkManagerUser with this userName&password
+		if(!requestForParkManager.getResultList().isEmpty())  //getResultList will return list if there is parkManagerUser with this userName&password
 		{
-			//insert the ParkManagerUser details to an ArrayList
-			ArrayList<Object[]> travelerResult = requestForParkManager.getResultList(); 
+			//insert the parkManagerUser details to an ArrayList
+			ArrayList<Object[]> parkManagerResult = requestForParkManager.getResultList();
 			
 			//insert relevant objects from the ArrayList to values
-			String idNumber=(String)travelerResult.get(0)[0];
-			String firstName=(String)travelerResult.get(1)[0];
-			String lastName=(String)travelerResult.get(2)[0];
-			String emailAddress=(String)travelerResult.get(3)[0];
-			String phoneNumber=(String)travelerResult.get(4)[0];
-			String managesPark=(String)travelerResult.get(5)[0];
-			boolean isLoggedIn=(boolean)travelerResult.get(8)[0];
-				
-			////////////call create park///////
-			//creating an instance of the traveler user and return it:
-			
-			ParkManager parkManagerUser=new ParkManager(idNumber,firstName,lastName,userName,password,
-						emailAddress,phoneNumber,isLoggedIn,null,null);
-			return parkManagerUser;
-		}		
-		return null;		
-	}*/
+			String parkManagerId=(String)parkManagerResult.get(0)[0];
+			String firstName=(String)parkManagerResult.get(0)[1];
+			String lastName=(String)parkManagerResult.get(0)[2];
+			String emailAddress=(String)parkManagerResult.get(0)[3];
+			String phoneNumber=(String)parkManagerResult.get(0)[4];
+			String managesPark=(String)parkManagerResult.get(0)[5];
+			boolean isLoggedIn=((Integer)parkManagerResult.get(0)[8]) == 0 ? false : true;			
+			//creating an instance of the parkManagerUser and return it
+			ParkManager parkManagerUser=new ParkManager(parkManagerId,firstName,lastName,emailAddress,phoneNumber,managesPark,userName,password,
+						isLoggedIn);
+			return parkManagerUser;			
+		}
+		else {return null;} //There is no parkManagerUser with this userName and password
+	}
 	
 	
-	
-	
-	/*private static SystemUser createParkInstance(String managesPark) throws CommunicationException
+	/**
+	 * This method gets userName and password of ParkManager/DepartmentManager/ParkEmployee
+	 * @return instance of systemUser of the ParkManager or null if there is no parkManagerUser with this userName and password
+	 * @throws CommunicationException 
+	 */
+	private static SystemUser checkDepartmentManagerCredential(String userName ,String password) throws CommunicationException
 	{
-		//Creating a query in order to get details of specific park (using the park name)
-		Communication requestForParkDetails = new Communication(CommunicationType.QUERY_REQUEST); 
-		requestForParkDetails.setQueryType(QueryType.SELECT);
-		requestForParkDetails.setTables(Arrays.asList("park"));
-		requestForParkDetails.setSelectColumns(Arrays.asList("*"));
-		requestForParkDetails.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="),      
-		  						Arrays.asList(managesPark));
-		GoNatureClientUI.client.accept(requestForParkDetails); //sending the query to the server that will connect to the DB
+		//Creating a select query in order to check if such a departmentManagerUser exists in the department_manager table and get all his details
+		Communication requestForDepartmentManager = new Communication(CommunicationType.QUERY_REQUEST);
+		// creating the request for the availability check
+		try {
+			requestForDepartmentManager.setQueryType(QueryType.SELECT);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
 		
-		if(requestForParkDetails.getQueryResult())  //getQueryResult will return true if there is this park 
+		requestForDepartmentManager.setTables(Arrays.asList("department_manager"));
+		requestForDepartmentManager.setSelectColumns(Arrays.asList("*"));
+		requestForDepartmentManager.setWhereConditions(Arrays.asList("userName","password"), Arrays.asList("=", "AND","="),      
+		  						Arrays.asList(userName,password));
+		GoNatureClientUI.client.accept(requestForDepartmentManager); //sending the query to the server that will connect to the DB
+		
+		if(!requestForDepartmentManager.getResultList().isEmpty())  //getResultList will return list if there is departmentManagerUser with this userName&password
 		{
-			//insert the Park details to an ArrayList
-			ArrayList<Object[]> travelerResult = requestForParkDetails.getResultList(); 
+			//insert the departmentManagerUser details to an ArrayList
+			ArrayList<Object[]> departmentManagerResult = requestForDepartmentManager.getResultList();
 			
 			//insert relevant objects from the ArrayList to values
-			String parkID=(String)travelerResult.get(0)[0];
-			String parkName=(String)travelerResult.get(1)[0];
-			//String parkAddress=(String)travelerResult.get(2)[0] +" "+(String)travelerResult.get(3)[0];
-			//ParkManager parkManager=/////////parkManagerId=(String)travelerResult.get(5)[0];
-			//ArrayList<ParkEmployee> employees=///////String parkID
-			//DepartmentManager departmentManager=/////(String)departmentManagerId=travelerResult.get(6)[0];
+			String departmentManagerId=(String)departmentManagerResult.get(0)[0];
+			String firstName=(String)departmentManagerResult.get(0)[1];
+			String lastName=(String)departmentManagerResult.get(0)[2];
+			String emailAddress=(String)departmentManagerResult.get(0)[3];
+			String phoneNumber=(String)departmentManagerResult.get(0)[4];
+			String managesDepartment=(String)departmentManagerResult.get(0)[5];
+			boolean isLoggedIn=((Integer)departmentManagerResult.get(0)[8]) == 0 ? false : true;
 			
-			int maximumVisitorsCapacity=(int)travelerResult.get(7)[0];
-			int maximumOrderAmount=(int)travelerResult.get(8)[0];
-			int currentCapacity=(int)travelerResult.get(10)[0];
-			float maximumTimeLimit=(int)travelerResult.get(9)[0];
+			//creating an instance of the parkManagerUser and return it
+			DepartmentManager departmentManager=new DepartmentManager(departmentManagerId,firstName,lastName,emailAddress,phoneNumber,managesDepartment,userName,password,
+						isLoggedIn);
+			return departmentManager;			
+		}
+		else {return null;} //There is no parkManagerUser with this userName and password
+	}
+	
+	
+	/**
+	 * This method gets userName and password of ParkManager/DepartmentManager/ParkEmployee
+	 * @return instance of systemUser of the ParkManager or null if there is no parkManagerUser with this userName and password
+	 * @throws CommunicationException 
+	 */
+	private static SystemUser checkParkEmployeeCredential(String userName ,String password) throws CommunicationException
+	{
+		String[] parkEmployees = {
+			    "acadia_park_employees",
+			    "big_bend_park_employees",
+			    "congaree_park_employees",
+			    "everglades_park_employees",
+			    "gateway_arch_park_employees",
+			    "glacier_park_employees",
+			    "grand_canyon_park_employees",
+			    "great_smoky_mountains_park_employees",
+			    "hawaii_volcanoes_park_employees",
+			    "hot_springs_park_employees",
+			    "mammoth_cave_park_employees",
+			    "olympic_park_employees",
+			    "shenandoah_park_employees",
+			    "theodore_roosevelt_park_employees",
+			    "voyageurs_park_employees",
+			    "yellowstone_park_employees",
+			    "yosemite_park_employees"
+			};
+		
+		   for (String park_employees : parkEmployees) 
+		   {
+	            System.out.println(park_employees);
+	            
+	          //Creating a select query in order to check if such a parkEmployeeUser exists in the parkEmployees tables and get all his details
+	    		Communication requestForparkEmployee = new Communication(CommunicationType.QUERY_REQUEST);
+	    		// creating the request for the availability check
+	    		try {
+	    			requestForparkEmployee.setQueryType(QueryType.SELECT);
+	    		} catch (CommunicationException e) {
+	    			e.printStackTrace();
+	    		}
+	    		
+	    		requestForparkEmployee.setTables(Arrays.asList(park_employees));
+	    		requestForparkEmployee.setSelectColumns(Arrays.asList("*"));
+	    		requestForparkEmployee.setWhereConditions(Arrays.asList("userName","password"), Arrays.asList("=", "AND","="),      
+	    		  						Arrays.asList(userName,password));
+	    		GoNatureClientUI.client.accept(requestForparkEmployee); //sending the query to the server that will connect to the DB
+	    		
+	    		if(!requestForparkEmployee.getResultList().isEmpty())  //getResultList will return list if there is parkEmployeeUser with this userName&password
+				{
+					//insert the parkEmployeeUser details to an ArrayList
+					ArrayList<Object[]> parkEmployeesResult = requestForparkEmployee.getResultList();
+					
+					//insert relevant objects from the ArrayList to values
+					String employeeId=(String)parkEmployeesResult.get(0)[0];
+					String firstName=(String)parkEmployeesResult.get(0)[1];
+					String lastName=(String)parkEmployeesResult.get(0)[2];
+					String emailAddress=(String)parkEmployeesResult.get(0)[3];
+					String phoneNumber=(String)parkEmployeesResult.get(0)[4];
+					boolean isLoggedIn=((Integer)parkEmployeesResult.get(0)[7]) == 0 ? false : true;
+					
+					//creating an instance of the parkEmployeeUser and return it:
+					
+					ParkEmployee parkEmployeeUser=new ParkEmployee(employeeId,firstName,lastName,emailAddress,phoneNumber,userName,password,
+								isLoggedIn);
+					
+					//set the park this parkEmployeeUser workingIn:
+					
+					//Changing the name of the table in which we found the employee to the name of the park it represents
+					String parkName=converFromParkTableToParkName(park_employees,"_park_employees"); //convert the name of table
+					//getting the park instance:
+					Park park=getPark(parkName);
+					//set the workingIn field of ParkEmployee
+					parkEmployeeUser.setWorkingIn(park);
+					
+					return parkEmployeeUser;			
+				}  
+	        }
+		    return null;
+	}
+	
+	
+	public static String converFromParkTableToParkName(String nameOfParkTable,String parkTableType)
+	{
+		
+		 //remove the suffix from the table name .
+		//for example for:nameOfParkTable="mammoth_cave_park_employees" and parkTableType="_park_employees"
+		//parkName will be: "mammoth_cave"
+		 String[] parkNameInParts = nameOfParkTable.split(parkTableType);
+		 String parkName=parkNameInParts[0];
+		 
+		// Capitalize the first letter of each word and replace "_" in " "
+		 //for example mammoth_cave to Mammoth Cave
+		 String[] parkNameInParts2=parkName.split("_"); 
+		 StringBuilder capitalizedParkName = new StringBuilder();
+		 for (String word : parkNameInParts2) {
+		     // Capitalize the first letter of each word
+		     capitalizedParkName.append(word.substring(0, 1).toUpperCase())
+		                         .append(word.substring(1).toLowerCase())
+		                         .append(" "); // Add a space after each word
+		 }
+		//convert the value from StringBuilder to String
+		//and removing spaces from the end of the word
+		return capitalizedParkName.toString().trim(); 
+	}
+	
+	
+	private static Park getPark (String parkName)
+	{
+		//Creating a select query in order to get all the details of specific park (according to the park name)
+		Communication requestForPark = new Communication(CommunicationType.QUERY_REQUEST);
+		// creating the request for the availability check
+		try {
+			requestForPark.setQueryType(QueryType.SELECT);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		
+		requestForPark.setTables(Arrays.asList("park"));
+		requestForPark.setSelectColumns(Arrays.asList("*"));
+		requestForPark.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="),      
+		  						Arrays.asList(parkName));
+		GoNatureClientUI.client.accept(requestForPark); //sending the query to the server that will connect to the DB
+		
+		if(!requestForPark.getResultList().isEmpty())  //getResultList will return list if there is park with this parkName
+		{
+			//insert the park details to an ArrayList
+			ArrayList<Object[]> parkResult = requestForPark.getResultList();
 			
-				
-			////////////call create park///////
-			//creating an instance of the traveler user and return it:
+			//insert relevant objects from the ArrayList to values
+			int parkId=(int)parkResult.get(0)[0];
+			String city=(String)parkResult.get(0)[2];
+			String state=(String)parkResult.get(0)[3];
+			String department=(String)parkResult.get(0)[4];
+			String parkManagerId=(String)parkResult.get(0)[5];
+			String departmentManagerId=(String)parkResult.get(0)[6];
+			int maximumVisitorsCapacity=(int)parkResult.get(0)[7];
+			int maximumOrderAmount=(int)parkResult.get(0)[8];
+			int maximumTimeLimit=(int)parkResult.get(0)[9];
+			int currentCapacity=(int)parkResult.get(0)[10];
+	
 			
-			//Park park=new ParkManager(idNumber,firstName,lastName,userName,password,
-						//emailAddress,phoneNumber,isLoggedIn,null,null);
-			//return ParkManagerUser;
-		}		
-		
-		
-		
-		return null;
-	}/*
-	
-	
-	
-	
+			//creating an instance of the parkManagerUser and return it
+			Park park=new Park(parkId,parkName,city,state,department,parkManagerId,departmentManagerId,maximumVisitorsCapacity,
+					maximumOrderAmount,maximumTimeLimit,currentCapacity);
+			return park;			
+		}
+		else {return null;} //There is no parkManagerUser with this userName and password
+	}
+
 	
 	/**
 	 * This method gets instance of SystemUser according to it's isLoggedIn field 
@@ -241,21 +412,100 @@ public class LoginController {
 		return systemUser.isLoggedIn();
 	}
 
-	/**
-	 * This method gets instance of SystemUser 
-	 * @return boolean true-if this SystemUser have a active booking, false-if not
-	 */
-	public static Booking checkIdInActiveBookings(String idNumber)
-	{
-		return null;
-	}
+	
+	
 	
 	/**
-	 * This method gets instance of SystemUser and update the date and time of the loggedIn in the DB
+	 * This method gets String of isNumber
+	 * @return String of: "traveler"/"grouGuide"/"none" according to if there is user with this id and what type of user
 	 */
-	public static void updateLastLoggedIn(SystemUser systemUser,LocalDate date,LocalTime time)
+	public static String checkIdInVisitorUsers(String idNumber)
 	{
+		String identity="none";
 		
+		//check if there is travelerUser with this idNumber:
+		Communication requestForTraveler = new Communication(CommunicationType.QUERY_REQUEST); 
+				
+		// creating the request for the availability check
+		try
+		{
+			requestForTraveler.setQueryType(QueryType.SELECT);
+		} 
+		catch (CommunicationException e)
+		{
+			e.printStackTrace();
+		}
+				
+		requestForTraveler.setTables(Arrays.asList("traveller"));
+		requestForTraveler.setSelectColumns(Arrays.asList("*"));
+		requestForTraveler.setWhereConditions(Arrays.asList("travellerId"),
+				Arrays.asList("="),Arrays.asList(idNumber));			
+				
+		GoNatureClientUI.client.accept(requestForTraveler); //sending the query to the server that will connect to the DB
+			
+		if(!requestForTraveler.getResultList().isEmpty())  //getResultList will return list if there is travelerUser with this userName&password
+		{
+			identity="traveler";
+			return 	identity;
+		}
+		//there is no travelerUser with this idNumber
+		//check if there is a groupGuideUser with this idNumber:
+		else 
+		{
+			Communication requestForGrupGuide = new Communication(CommunicationType.QUERY_REQUEST);
+			// creating the request for the availability check
+			try
+			{
+				requestForGrupGuide.setQueryType(QueryType.SELECT);
+			} 
+			catch (CommunicationException e)
+			{
+				e.printStackTrace();
+			}
+					
+			requestForGrupGuide.setTables(Arrays.asList("group_guide"));
+			requestForGrupGuide.setSelectColumns(Arrays.asList("*"));
+			requestForGrupGuide.setWhereConditions(Arrays.asList("groupGuideId"), Arrays.asList("="),      
+					  						Arrays.asList(idNumber));
+			GoNatureClientUI.client.accept(requestForGrupGuide); //sending the query to the server that will connect to the DB
+					
+			if(!requestForGrupGuide.getResultList().isEmpty())  //getResultList will return list if there is groupGuideUser with this userName&password
+			{
+				identity="groupGuide";
+				return 	identity;			
+			}			
+		}
+		//there is no user with this id (return "none")
+		return identity;
 	}
+	
+	
+	
+	/**
+	 * The method receives:name of a table that contains details of system users,name of a column that stores id, and id number of a system user who wants to login
+     *@return true if the isLoggedIn information of the user with this id has been successfully updated to 1 in the DB, otherwise false.
+	 */
+	public static boolean updateUserIsLoggedIn(String tableName,String IdCol, String idUser) {
+		//update that the user LoggedIn -> change the isLoggedIn value from 0 (user was logged out),to 1(user logged in)
+		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			request.setQueryType(QueryType.UPDATE);
+	    	request.setTables(Arrays.asList(tableName));
+	    	request.setColumnsAndValues(Arrays.asList("isLoggedIn"), Arrays.asList('1')); //change isLoggedIn column value to 1
+	    	request.setWhereConditions(Arrays.asList(IdCol), Arrays.asList("="),Arrays.asList(idUser));
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		GoNatureClientUI.client.accept(request);
+		boolean result=request.getQueryResult();
+		if (result)
+			return true;
+		return false;
+	}
+	
+	
+	
+	
 
 }
+
