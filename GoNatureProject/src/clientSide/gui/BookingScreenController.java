@@ -25,7 +25,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -42,23 +41,19 @@ import javafx.util.Pair;
 public class BookingScreenController extends AbstractScreen implements Stateful {
 
 	private BookingController control; // controller
-	private ObservableList<Park> parksList;
-	private ObservableList<String> parksStrings;
-	private ObservableList<LocalTime> hours;
+	private ObservableList<Park> parksList; // list of the parks
+	private ObservableList<String> parksStrings; // list of the parks as strings for the parks combox box
+	private ObservableList<LocalTime> hours; // list of booking hours
 
-	// date validation parameters
-	private final int futureBookingsRange = 4; // 4 month
-	private final int openHour = 4;
-	private final int closeHour = 18;
-	private final int minimumVisitorsInReservation = 1;
-	private final int maximumVisitorsInReservation = 15;
-
-	// data objects
+	// the user enters the screen with a visitor instance or only with an id number
 	private ParkVisitor visitor;
+	private String userId;
+	private boolean isGroupReservation; // determines if this is a regular or guided group
+
+	// booking objects and data
 	private Booking booking;
 	private String bookingId;
 	private int parkIndexInCombobox;
-	private boolean isGroupReservation; // determines if this is a regular or guided group
 
 	/**
 	 * Constructor, initializes the booking controller instance
@@ -94,8 +89,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 */
 	void makeReservation(ActionEvent event) {
 		// firstly, validating the details the user entered
-		boolean valid = validateDetails();
-		if (!valid) {
+		if (!validateDetails()) {
 			event.consume();
 			return;
 		}
@@ -103,87 +97,135 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		makeBookingObject();
 
 		// checking the park availability for the chosen date and time
-		boolean isAvailable = control.checkAvailability(booking);
+		boolean isAvailable = control.checkParkAvailabilityForBooking(booking);
 
-		// if the entered date and time are not available
-		if (!isAvailable) {
-			// creating a pop up message for the user to choose what to do next
-			int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
-					"Unfortunately, the date and time chosen are not available in "
-							+ booking.getParkBooked().getParkName() + " Park",
-					Arrays.asList("Exit Reservations", "Reschedule the Booking", "Enter the Waiting List"));
-			switch (choise) {
-			// chose to exit
-			case 1:
-				event.consume();
-				// HERE: should be returned to his account page
-				// chose to reschedule
-				break;
-			case 2:
-				datePicker.setValue(null);
-				hourCombobox.setValue(null);
-				datePicker.setStyle(setFieldToError());
-				hourCombobox.setStyle(setFieldToError());
-				break;
-			// chose to enter the waiting list
-			case 3:
-				if (control.insertToWaitingList(booking, visitor)) {
-					event.consume();
-					showInformationAlert(ScreenManager.getInstance().getStage(),
-							"Your reservation entered the waiting list of " + booking.getParkBooked().getParkName()
-									+ " successfully.\nWe will notify you if we'll find a place for your group.\nHoping to see you soon!");
-					setDisable();
-					// now going back to the account screen
-				}
-			}
+		if (!isAvailable) { // if the entered date and time are not available
+
+			dateIsNotAvailable(event);
 		}
 
-		// if the date and time are available
-		else {
-			// first inserting the new booking to the database to update capacities
-			control.insertNewBooking(booking, visitor);
+		else { // if the date and time are available
 
-			// calculating the final price for the booking
-			// sending visitor cause the price defers between regular and guided groups
-			int finalPrice = control.calculateFinalRegularPrice(booking, visitor.getVisitorType());
-			int discountPrice = control.calculateFinalDiscountPrice(booking, visitor.getVisitorType());
+			dateIsAvailable(event);
+		}
+	}
 
-			// creating the pop up message
-			String payMessage = "Your reservation to " + booking.getParkBooked().getParkName() + " Park is almost set.";
-			payMessage += "\nPay now and get a special discount for pre-ordering:";
-			payMessage += "\n        Your reservation final price: " + finalPrice + "$";
-			payMessage += "\n        Your reservetion price after the special discount: " + discountPrice + "$";
-			int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
-					Arrays.asList("Pay Now and Get Discount", "Pay Upon Arrival"));
+	private void dateIsAvailable(ActionEvent event) {
+		// first inserting the new booking to the database to update capacities and save
+		// the visitor's spot
+		control.insertNewBookingToActiveTable(booking);
 
-			switch (choise) {
-			// chose to pay now and get discount
-			case 1:
-				booking.setPaid(true);
-				booking.setFinalPrice(discountPrice);
-				// updating the payment columns in the database
-				control.updateBookingPayment(booking);
-				showInformationAlert(ScreenManager.getInstance().getStage(), "Your payment is accepted. Thank You!");
-				break;
+		// calculating the final price for the booking. Sending visitor's type cause the
+		// price defers between regular and guided groups
+		int finalPrice = control.calculateFinalRegularPrice(booking,
+				visitor == null ? VisitorType.TRAVELLER : visitor.getVisitorType());
+		int discountPrice = control.calculateFinalDiscountPrice(booking,
+				visitor == null ? VisitorType.TRAVELLER : visitor.getVisitorType());
 
-			// chose to pay upon arrival
-			case 2:
-				booking.setPaid(false);
-				booking.setFinalPrice(finalPrice);
-				// updating the payment columns in the database
-				control.updateBookingPayment(booking);
-				break;
-			}
+		// creating the pop up message
+		String payMessage = "Woohoo! You're almost set.";
+		payMessage += "\nPay now and get a special discount for pre-ordering:";
+		payMessage += "\n        Your reservation final price: " + finalPrice + "$";
+		payMessage += "\n        Your reservetion price after the special discount: " + discountPrice + "$";
+		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
+				Arrays.asList("Pay Now and Get Discount", "Pay Upon Arrival", "Exit Reservations"));
 
+		switch (choise) {
+		// chose to pay now and get discount
+		case 1: {
+			booking.setPaid(true);
+			booking.setFinalPrice(discountPrice);
+			// updating the payment columns in the database
+			control.updateBookingPayment(booking);
 			// showing the confirmation screen
 			try {
-				ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-						"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
-						StageSettings.defaultSettings("Confirmation"),
+				ScreenManager.getInstance().showScreen("LoadingScreenController", "/clientSide/fxml/LoadingScreen.fxml",
+						true, false, StageSettings.defaultSettings("Payment"),
 						new Pair<Booking, ParkVisitor>(booking, visitor));
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
+			return;
+		}
+
+		// chose to pay upon arrival
+		case 2: {
+			booking.setPaid(false);
+			booking.setFinalPrice(finalPrice);
+			// updating the payment columns in the database
+			control.updateBookingPayment(booking);
+			break;
+		}
+
+		// chose to cancel
+		case 3: {
+			// deleting the new booking from the database cause it wat inserted in order to
+			// save the spot for the visitor, and returning to acount screen
+			control.deleteBookingFromActiveTable(booking);
+			returnToPreviousScreen(null);
+			return;
+		}
+		}
+
+		// showing the confirmation screen
+		try {
+			ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+					"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
+					StageSettings.defaultSettings("Confirmation"), new Pair<Booking, ParkVisitor>(booking, visitor));
+		} catch (StatefulException | ScreenException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * This method is called in case the chosen date and time are not available at
+	 * the chosen park
+	 * 
+	 * @param event
+	 */
+	private void dateIsNotAvailable(ActionEvent event) {
+		// creating a pop up message for the user to choose what to do next
+		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+				"We care for your experience in " + booking.getParkBooked().getParkName()
+						+ " Park, so we limit the volume of visitors in the park."
+						+ "\nUnfortunately, the date and time you chose are not available at this moment.",
+				Arrays.asList("Exit", "See Available Dates and Times", "Have a Peek on the Waiting List"));
+		switch (choise) {
+		// chose to exit
+		case 1: {
+			returnToPreviousScreen(null);
+			break;
+		}
+
+		// chose to reschedule (see available dates and times)
+		case 2: {
+			try {
+				ScreenManager.getInstance().showScreen("RescheduleScreenController",
+						"/clientSide/fxml/RescheduleScreen.fxml", true, true,
+						StageSettings.defaultSettings("Reschedule"), new Pair<Booking, ParkVisitor>(booking, visitor));
+			} catch (StatefulException | ScreenException e) {
+				e.printStackTrace();
+			}
+			break;
+//			// should move to the reschedule screen
+//			datePicker.setValue(null);
+//			hourCombobox.setValue(null);
+//			datePicker.setStyle(setFieldToError());
+//			hourCombobox.setStyle(setFieldToError());
+//			break;
+		}
+
+		// chose to enter the waiting list
+		case 3: {
+			// showing the waiting list screen
+			try {
+				ScreenManager.getInstance().showScreen("WaitingListScreenController",
+						"/clientSide/fxml/WaitingListScreen.fxml", true, true,
+						StageSettings.defaultSettings("Waiting List"), booking);
+			} catch (StatefulException | ScreenException e) {
+				e.printStackTrace();
+			}
+		}
 		}
 	}
 
@@ -195,14 +237,141 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 * @param event
 	 */
 	void returnToPreviousScreen(ActionEvent event) {
+		///// TEMPORARY /////
 		try {
-			ScreenManager.getInstance().goToPreviousScreen(false);
+			ScreenManager.getInstance().goToPreviousScreen(false, false);
 		} catch (ScreenException | StatefulException e) {
 			e.printStackTrace();
 		}
+
+		///// BELOW IS THE FINAL IMPLEMENTATION /////
+
+		// returning to account screen >>> restoring state
+//		if (userId == null) {
+//			try {
+//				ScreenManager.getInstance().goToPreviousScreen(false, true);
+//			} catch (ScreenException | StatefulException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//		// returning to main screen >>> not restoring state
+//		else {
+//			try {
+//				ScreenManager.getInstance().goToPreviousScreen(false, false);
+//			} catch (ScreenException | StatefulException e) {
+//				e.printStackTrace();
+//			}
+//		}
 	}
 
 	/// JAVAFX METHODS FOR CONTROLLING FLOW AND FOCUS ///
+
+	@FXML
+	/**
+	 * If the park combobox pressed with tab, moves to the date picker
+	 * 
+	 * @param event
+	 */
+	void parkTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			datePicker.requestFocus();
+		}
+	}
+
+	@FXML
+	/**
+	 * If the date picker pressed with tab, moves to the hour combobox
+	 * 
+	 * @param event
+	 */
+	void dateTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			hourCombobox.requestFocus();
+		}
+	}
+
+	@FXML
+	/**
+	 * If the hour combobox pressed with tab, moves to the first name text
+	 * 
+	 * @param event
+	 */
+	void hourTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			if (!firstNameTxt.isDisabled())
+				firstNameTxt.requestFocus();
+			else
+				visitorsTxt.requestFocus();
+		}
+	}
+
+	@FXML
+	/**
+	 * If the first name text pressed with tab, moves to the last name text
+	 * 
+	 * @param event
+	 */
+	void firstNameTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			lastNameTxt.requestFocus();
+		}
+	}
+
+	@FXML
+	/**
+	 * If the last name text pressed with tab, moves to the visitors text
+	 * 
+	 * @param event
+	 */
+	void lastNameTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			visitorsTxt.requestFocus();
+		}
+	}
+
+	@FXML
+	/**
+	 * If the visitors text pressed with tab, moves to the phone text
+	 * 
+	 * @param event
+	 */
+	void visitorsTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			phoneTxt.requestFocus();
+		}
+	}
+
+	@FXML
+	/**
+	 * If the phone text pressed with tab, moves to the email text
+	 * 
+	 * @param event
+	 */
+	void phoneTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			emailTxt.requestFocus();
+		}
+	}
+
+	@FXML
+	/**
+	 * If the email text pressed with tab, moves to the button
+	 * 
+	 * @param event
+	 */
+	void emailTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			makeReservationBtn.requestFocus();
+		}
+	}
 
 	@FXML
 	/**
@@ -241,7 +410,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 	@FXML
 	/**
-	 * When a park is chosen, updating the background to this park
+	 * When a park is chosen, updating the background image to this park image
 	 * 
 	 * @param event
 	 */
@@ -250,7 +419,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		Park parkChosen = parksList.get(parkIndexInCombobox);
 		ImageView backgroundImage = new ImageView(
 				new Image("/" + ParkController.getInstance().nameOfTable(parkChosen) + ".jpg"));
-		
+
 		backgroundImage.fitWidthProperty().bind(ScreenManager.getInstance().getStage().widthProperty());
 		backgroundImage.fitHeightProperty().bind(ScreenManager.getInstance().getStage().heightProperty());
 		backgroundImage.setPreserveRatio(false);
@@ -275,7 +444,8 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		parkComboBox.setStyle(setFieldToRegular());
 		datePicker.setStyle(setFieldToRegular());
 		hourCombobox.setStyle(setFieldToRegular());
-		visitorsTxt.setStyle(setFieldToRegular());
+		firstNameTxt.setStyle(setFieldToRegular());
+		lastNameTxt.setStyle(setFieldToRegular());
 		visitorsTxt.setStyle(setFieldToRegular());
 		emailTxt.setStyle(setFieldToRegular());
 		phoneTxt.setStyle(setFieldToRegular());
@@ -287,6 +457,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		if (parkComboBox.getValue() == null) {
 			parkComboBox.setStyle(setFieldToError());
 			error += "• choose a park from the parks list\n";
+			valid = false;
 		}
 		// checking if the user chose a date from the date picker
 		if (datePicker.getValue() == null) {
@@ -302,7 +473,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 				valid = false;
 			} else { // future
 				// calculating the date that is in the future allowed range
-				LocalDate maximumFutureRange = (LocalDate.now()).plusMonths(futureBookingsRange);
+				LocalDate maximumFutureRange = (LocalDate.now()).plusMonths(control.futureBookingsRange);
 
 				if (datePicker.getValue().compareTo(maximumFutureRange) > 0) {
 					datePicker.setStyle(setFieldToError());
@@ -326,17 +497,33 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			}
 		}
 
+		// checking the first name
+		if (!firstNameTxt.isDisabled()
+				&& (firstNameTxt.getText().isEmpty() || !firstNameTxt.getText().matches("[a-zA-Z]+( [a-zA-Z]+)?"))) {
+			firstNameTxt.setStyle(setFieldToError());
+			error += "• enter a valid first name\n";
+			valid = false;
+		}
+
+		// checking the last name
+		if (!lastNameTxt.isDisabled()
+				&& (lastNameTxt.getText().isEmpty() || !lastNameTxt.getText().matches("[a-zA-Z]+( [a-zA-Z]+)?"))) {
+			lastNameTxt.setStyle(setFieldToError());
+			error += "• enter a valid last name\n";
+			valid = false;
+		}
+
 		// checking the visitors number
 		if (visitorsTxt.getText().isEmpty() || !visitorsTxt.getText().matches("\\d+")) {
 			visitorsTxt.setStyle(setFieldToError());
 			error += "• enter a digit-only number of visitors\n";
 			valid = false;
 		} else {
-			if (Integer.parseInt(visitorsTxt.getText()) < minimumVisitorsInReservation
-					|| Integer.parseInt(visitorsTxt.getText()) > maximumVisitorsInReservation) {
+			if (Integer.parseInt(visitorsTxt.getText()) < control.minimumVisitorsInReservation
+					|| Integer.parseInt(visitorsTxt.getText()) > control.maximumVisitorsInReservation) {
 				visitorsTxt.setStyle(setFieldToError());
-				error += "• enter a number of visitors in range of " + minimumVisitorsInReservation + " to "
-						+ maximumVisitorsInReservation + "\n";
+				error += "• enter a number of visitors in range of " + control.minimumVisitorsInReservation + " to "
+						+ control.maximumVisitorsInReservation + "\n";
 				valid = false;
 			}
 		}
@@ -375,12 +562,46 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			booking.setEmailAddress(emailTxt.getText());
 			booking.setPhoneNumber(phoneTxt.getText());
 			booking.setParkBooked(parkDesired);
+			booking.setFirstName(prepareName(firstNameTxt.getText()));
+			booking.setLastName(prepareName(lastNameTxt.getText()));
 		} else {
 			booking = new Booking(bookingId, datePicker.getValue(), hourCombobox.getValue(), LocalDate.now(),
-					visitor.getVisitorType() == VisitorType.GROUPGUIDE ? VisitType.GROUP : VisitType.INDIVIDUAL,
-					Integer.parseInt(visitorsTxt.getText()), visitor.getFirstName(), visitor.getLastName(),
-					emailTxt.getText(), phoneTxt.getText(), -1, false, false, null, null, false, null, parkDesired);
+					visitor == null ? VisitType.INDIVIDUAL
+							: (visitor.getVisitorType() == VisitorType.GROUPGUIDE ? VisitType.GROUP
+									: VisitType.INDIVIDUAL),
+					Integer.parseInt(visitorsTxt.getText()), visitor == null ? userId : visitor.getIdNumber(),
+					prepareName(firstNameTxt.getText()), prepareName(lastNameTxt.getText()), emailTxt.getText(),
+					phoneTxt.getText(), -1, false, false, null, null, false, null, parkDesired);
 		}
+	}
+
+	/**
+	 * This method gets a name string and converts it to capital letter form
+	 * 
+	 * @param name
+	 * @return the prepared name
+	 */
+	private String prepareName(String name) {
+		if (name == null || name.isEmpty()) {
+			return name;
+		}
+
+		StringBuilder titleCase = new StringBuilder(name.length());
+		boolean nextTitleCase = true;
+
+		for (char c : name.toCharArray()) {
+			if (Character.isSpaceChar(c)) {
+				nextTitleCase = true;
+			} else if (nextTitleCase) {
+				c = Character.toTitleCase(c);
+				nextTitleCase = false;
+			} else {
+				c = Character.toLowerCase(c);
+			}
+			titleCase.append(c);
+		}
+
+		return titleCase.toString();
 	}
 
 	/// ABSTRACT SCREEN AND STATEFUL METHODS ///
@@ -394,8 +615,8 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		makeBookingObject();
 		control.setBooking(booking);
 		control.setParkIndexInCombobox(parkIndexInCombobox);
-		control.setSavedState(true);
 		control.setVisitor(visitor);
+		control.setSavedState(true);
 	}
 
 	@Override
@@ -404,17 +625,30 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 * restore it
 	 */
 	public void restoreState() {
+		// getting the booking and visitor details
 		booking = control.getBooking();
 		visitor = control.getVisitor();
 		parkIndexInCombobox = control.getParkIndexInCombobox();
 		control.setSavedState(false);
 
+		// setting all the info into the components of the screen
+		bookingLbl.setText("Booking ID: " + booking.getBookingId());
 		parkComboBox.getSelectionModel().select(parkIndexInCombobox);
 		datePicker.setValue(booking.getDayOfVisit());
 		hourCombobox.setValue(booking.getTimeOfVisit());
 		visitorsTxt.setText(((Integer) booking.getNumberOfVisitors()).toString());
 		emailTxt.setText(booking.getEmailAddress());
 		phoneTxt.setText(booking.getPhoneNumber());
+		firstNameTxt.setText(booking.getFirstName());
+		lastNameTxt.setText(booking.getLastName());
+		firstNameTxt.setDisable(true);
+		lastNameTxt.setDisable(true);
+		isGroupReservation = booking.getVisitType() == VisitType.GROUP ? true : false;
+		typeLbl.setText((isGroupReservation == true ? "Guided Group | Your Id: " : "Regular Group | Your Id: ")
+				+ booking.getIdNumber());
+
+		// setting the background image of the park chosen before
+		parkChosen(null);
 	}
 
 	@Override
@@ -427,15 +661,19 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		parksList = pair.getKey();
 		parksStrings = pair.getValue();
 		parkComboBox.setItems(parksStrings);
+
 		// setting the hours combobox
 		if (hours == null)
 			setHours();
-		// initializing the image component and centering it
+
+		// initializing the image component of the logo and centering it
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+
 		// centering the title label
 		titleLbl.setAlignment(Pos.CENTER);
 		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
+
 		// setting all the labels to right alignment
 		nameLbl.getStyleClass().add("label-center-right");
 		dateLbl.getStyleClass().add("label-center-right");
@@ -457,10 +695,6 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		backImage.setPreserveRatio(true);
 		backButton.setGraphic(backImage);
 		backButton.setPadding(new Insets(1, 1, 1, 1));
-
-		// generating booking id
-		bookingId = ((Integer) (1000000000 + new Random().nextInt(900000000))).toString();
-		bookingLbl.setText("Booking ID: " + bookingId);
 	}
 
 	@Override
@@ -474,12 +708,14 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	/**
 	 * This method sets the hours combo box with the relevant hours for visiting
 	 */
+	@SuppressWarnings("unused")
 	private void setHours() {
 		ArrayList<LocalTime> hoursString = new ArrayList<>();
-		for (int hour = openHour; hour <= closeHour; hour++) {
+		for (int hour = control.openHour; hour <= control.closeHour; hour++) {
 			hoursString.add(LocalTime.of(hour, 0));
-			if (hour != closeHour)
-				hoursString.add(LocalTime.of(hour, 30));
+			// sets the minutes intervals. if 0 - only in full hours
+			if (hour != control.closeHour && control.minutes != 0)
+				hoursString.add(LocalTime.of(hour, control.minutes));
 		}
 		hours = FXCollections.observableArrayList(hoursString);
 		hourCombobox.setItems(hours);
@@ -487,48 +723,69 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 	@Override
 	/**
-	 * This method is called in order to set pre-info into the GUI components
+	 * This method is called in order to set pre-info into the GUI components,
+	 * according to the object parameter it gets
+	 * 
+	 * @param information get contain one of the following objects: ParkVisitor if
+	 *                    the user entered this screen from his account screen,
+	 *                    String if the user entered this string from the main
+	 *                    screen, Booking if the user returned from the waiting list
 	 */
 	public void loadBefore(Object information) {
-		// in case the user is logged in
+		// in case the user is logged in entered this screen from his account screen
 		if (information instanceof ParkVisitor) {
 			visitor = (ParkVisitor) information;
-			// setting email and phone of the visitor into the text fields
+
+			// setting the visitor's details into the text fields
 			firstNameTxt.setText(visitor.getFirstName());
 			lastNameTxt.setText(visitor.getLastName());
 			firstNameTxt.setDisable(true);
 			lastNameTxt.setDisable(true);
 			emailTxt.setText(visitor.getEmailAddress());
 			phoneTxt.setText(visitor.getPhoneNumber());
+
 			// setting the reservation type
 			isGroupReservation = visitor.getVisitorType() == VisitorType.GROUPGUIDE ? true : false;
 			typeLbl.setText((isGroupReservation == true ? "Guided Group | Your Id: " : "Regular Group | Your Id: ")
 					+ visitor.getIdNumber());
+
+			// generating booking id
+			bookingId = ((Integer) (1000000000 + new Random().nextInt(900000000))).toString();
+			bookingLbl.setText("Booking ID: " + bookingId);
 		}
 
-		// in case the user in not logged in, entered only with id
+		// in case the user in not logged in, entered only with id from the main screen
 		if (information instanceof String) {
+			userId = (String) information;
+			typeLbl.setText("Regular Group | Your Id: " + userId);
 
+			// generating booking id
+			bookingId = ((Integer) (1000000000 + new Random().nextInt(900000000))).toString();
+			bookingLbl.setText("Booking ID: " + bookingId);
 		}
 
+		// in case the user returned this screen from the waiting list screen
 		if (information instanceof Booking) {
 			// in case the visitor wants to edit his reservation
-			// will arrive this screen after being in the booking managing screen
+			// will arrive this screen after being in the booking managing screenName
+			// or after being in the waiting list screen
+			booking = (Booking) information;
+
+			// setting all the info into the components of the screen
+			bookingLbl.setText("Booking ID: " + booking.getBookingId());
+			parkComboBox.getSelectionModel().select(parksList.indexOf(booking.getParkBooked()));
+			datePicker.setValue(booking.getDayOfVisit());
+			hourCombobox.setValue(booking.getTimeOfVisit());
+			visitorsTxt.setText(((Integer) booking.getNumberOfVisitors()).toString());
+			emailTxt.setText(booking.getEmailAddress());
+			phoneTxt.setText(booking.getPhoneNumber());
+			firstNameTxt.setText(booking.getFirstName());
+			lastNameTxt.setText(booking.getLastName());
+			firstNameTxt.setDisable(true);
+			lastNameTxt.setDisable(true);
+			isGroupReservation = booking.getVisitType() == VisitType.GROUP ? true : false;
+			typeLbl.setText((isGroupReservation == true ? "Guided Group | Your Id: " : "Regular Group | Your Id: ")
+					+ booking.getIdNumber());
 		}
 	}
-
-	/**
-	 * TEMPORARY METHOD
-	 */
-	private void setDisable() {
-		parkComboBox.setDisable(true);
-		datePicker.setDisable(true);
-		hourCombobox.setDisable(true);
-		visitorsTxt.setDisable(true);
-		emailTxt.setDisable(true);
-		phoneTxt.setDisable(true);
-		makeReservationBtn.setDisable(true);
-
-	}
-
 }
