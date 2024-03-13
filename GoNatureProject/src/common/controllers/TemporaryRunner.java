@@ -27,25 +27,28 @@ public class TemporaryRunner {
 		Park Congaree = new Park(3,"Congaree", "Columbia", "South Carolina", "Southern", "223549857", "104666977", 100, 80, 4, 0);
 		Park Everglades = new Park(4,"Everglades", "Homestead", "Florida", "Southern", "450849137", "104666977", 100, 80, 4, 0);
 		ArrayList<Park> parks = new ArrayList<>();
-		parks.add(new Park(2,"Big Bend", "Alpine", "Texas", "Southern", "883879564", "104666977", 100, 80, 4, 0));
-        parks.add(new Park(3,"Congaree", "Columbia", "South Carolina", "Southern", "223549857", "104666977", 100, 80, 4, 0));
-        parks.add(new Park(4,"Everglades", "Homestead", "Florida", "Southern", "450849137", "104666977", 100, 80, 4, 0));
+		parks.add(BigBend);
+		parks.add(Congaree);
+		parks.add(Everglades);
+//		parks.add(new Park(2,"Big Bend", "Alpine", "Texas", "Southern", "883879564", "104666977", 100, 80, 4, 0));
+//        parks.add(new Park(3,"Congaree", "Columbia", "South Carolina", "Southern", "223549857", "104666977", 100, 80, 4, 0));
+//        parks.add(new Park(4,"Everglades", "Homestead", "Florida", "Southern", "450849137", "104666977", 100, 80, 4, 0));
 		ParkManager pm = new ParkManager("151071559", "Reese", "Moore", "reese.moore@gonature.com","0503868747","Hawaii Volcanoes","reese.moore", "Reese8##649112", false);
 		DepartmentManager dm = new DepartmentManager("104666977", "Peyton", "Martin","Peyton.Martin@gonature.com","0547654321","Southern", "Peyton.Martin", "Peyton5678%",
 		false);
-		   // Add parks that are under the 'Southern' department
+		    //Add parks that are under the 'Southern' department
         
 
         // Now pass the relevant parks to the DepartmentManagerReportsController along with the department manager
         Object[] infoForScreen = { dm, parks };
-
+//
         ScreenManager.getInstance().showScreen("DepartmentManagerReportsController",
                 "/clientSide/fxml/DepartmentManagerReports.fxml", false, false,
                 StageSettings.defaultSettings("GoNature System - Reservations"), infoForScreen);
-    }
+    //}
 
-//		ScreenManager.getInstance().showScreen("ParkManagerReportController",
-//				"/clientSide/fxml/ParkManagerReport.fxml", false, false,
+//		ScreenManager.getInstance().showScreen("ParkManagerReportScreenController",
+//				"/clientSide/fxml/ParkManagerReportScreen.fxml", false, false,
 //				StageSettings.defaultSettings("GoNature System - Reservations"),pm);
 //		ScreenManager.getInstance().showScreen("DepartmentManagerReportsController",
 //				"/clientSide/fxml/DepartmentManagerReports.fxml", false, false,
@@ -55,7 +58,8 @@ public class TemporaryRunner {
 //		ScreenManager.getInstance().showScreen("BookingScreenController", "/clientSide/fxml/BookingScreen.fxml", false,
 //				false, StageSettings.defaultSettings("GoNature System - Reservations"), visitor);
 
-
+	}
+}
 
 	
-}
+

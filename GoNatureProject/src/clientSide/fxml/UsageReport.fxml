@@ -22,7 +22,7 @@
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <LineChart fx:id="UsageLineChart" layoutX="115.0" layoutY="109.0" prefHeight="364.0" prefWidth="471.0">
+      <LineChart fx:id="UsageLineChart" layoutX="81.0" layoutY="96.0" prefHeight="391.0" prefWidth="545.0">
         <xAxis>
           <CategoryAxis fx:id="datesAxis" label="Dates" side="BOTTOM" />
         </xAxis>

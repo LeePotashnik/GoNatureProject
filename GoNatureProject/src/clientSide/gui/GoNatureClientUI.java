@@ -13,7 +13,7 @@ public class GoNatureClientUI extends Application {
 
 	public static void main(String args[]) throws Exception {
 		System.out.println("Launching client side");
-		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Jerusalem"));
 		launch(args);
 	}
 

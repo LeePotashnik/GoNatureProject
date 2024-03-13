@@ -1,6 +1,5 @@
 package clientSide.gui;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +9,6 @@ import java.util.stream.IntStream;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.DepartmentalReport;
 import javafx.collections.FXCollections;
@@ -20,7 +18,6 @@ import javafx.geometry.Insets;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
@@ -28,31 +25,35 @@ import javafx.scene.image.ImageView;
 import javafx.util.Pair;
 
 public class CancellationReportController extends AbstractScreen {
-
+	/// FXML AND JAVAFX COMPONENTS
     @FXML
     private ImageView goNatureLogo;
-
     @FXML
     private Button backButton;
-
     @FXML
     private BarChart<String, Number> cancellationBarChart;
-
     @FXML
     private CategoryAxis daysAxis;
-
     @FXML
     private NumberAxis amountAxis;
 
+    /**
+   	 * This method is called after an event is created with clicking on the Back
+   	 * button. Returns the user to the previous screen
+   	 * 
+   	 * @param event
+   	 */
     @FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(true);
+			ScreenManager.getInstance().goToPreviousScreen(true,false);
     	  } catch (ScreenException | StatefulException e) {
     	        e.printStackTrace();
     	  }
 	}
-
+    /**
+ 	 * This method is called by the FXML and JAVAFX and initializes the screen
+ 	 */
     @FXML
     public void initialize() {
     	goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
@@ -167,28 +168,19 @@ public class CancellationReportController extends AbstractScreen {
 //	
 //	}
 
-//	private Map<String, Integer> getNoShowData() {
-//	    Map<String, Integer> data = new HashMap<>();
-//	    data.put("Sunday", 3);
-//	    data.put("Monday", 2);
-//	    data.put("Tuesday", 5);
-//	    data.put("Wednesday", 8);
-//	    data.put("Thursday", 6);
-//	    data.put("Friday", 9);
-//	    data.put("Saturday", 4);
-//	    return data;
-	
-	//}
-
+	/**
+	 * This method is called in order to set pre-info into the GUI components
+	 */
 	@Override
 	public void loadBefore(Object information) {
 		// TODO Auto-generated method stub
 		
 	}
-
+	 /**
+	  * This method returns the screen's name
+	  */
 	@Override
 	public String getScreenTitle() {
-		// TODO Auto-generated method stub
-		return null;
+		return "Cancellation report";
 	}
 }
