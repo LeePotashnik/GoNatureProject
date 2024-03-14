@@ -1,20 +1,28 @@
 package serverSide.gui;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.WindowEvent;
 
@@ -31,17 +39,18 @@ public class ServerConnectionController extends AbstractScreen {
 	@FXML
 	private TableView<String> connectedClientsTable;
 	@FXML
-	private Label hostLbl, portLbl, databaseLbl, rootLbl, passwordLbl;
+	private Label hostLbl, portLbl, databaseLbl, rootLbl, passwordLbl, titleLbl, statusLabel;
 	@FXML
-    private Pane pane;
+	private Pane pane;
 	@FXML
 	private PasswordField passwordTxtField;
+	@FXML
+	private TextArea consoleArea;
 
 	@FXML
 	/**
 	 * This method is called after the user clicked on the "Connect to Server"
-	 * button on the server GUI.
-	 * Validates the input and connects to the server
+	 * button on the server GUI. Validates the input and connects to the server
 	 * 
 	 * @param event an event of clicking to the Connect to Server button
 	 */
@@ -60,6 +69,8 @@ public class ServerConnectionController extends AbstractScreen {
 				databaseTxtField.setDisable(true);
 				rootTxtField.setDisable(true);
 				passwordTxtField.setDisable(true);
+				statusLabel.setText("Connected");
+				statusLabel.setStyle("-fx-background-color: #B2E89D; -fx-text-alignment: center;");
 
 				connectBtn.setVisible(false);
 				disconnectBtn.setVisible(true);
@@ -79,6 +90,9 @@ public class ServerConnectionController extends AbstractScreen {
 			showInformationAlert(ScreenManager.getInstance().getStage(), "Server is disconnected");
 			disconnectBtn.setDisable(true);
 		}
+		pane.requestFocus();
+		statusLabel.setText("Disconnected");
+		statusLabel.setStyle("-fx-background-color: #ffe6e6; -fx-text-alignment: center;");
 	}
 
 	/**
@@ -101,6 +115,7 @@ public class ServerConnectionController extends AbstractScreen {
 
 	/**
 	 * This method validaes the user input from the text fields
+	 * 
 	 * @return true if the input is valid, false if not
 	 */
 	private boolean validate() {
@@ -128,7 +143,8 @@ public class ServerConnectionController extends AbstractScreen {
 			error += "You must enter a valid digits-only port number\n";
 		}
 		// checking if the port number is in the correct range
-		if (portNumber.matches("\\d+") && !(Integer.parseInt(portNumber) >= 1024 && Integer.parseInt(portNumber) <= 65535)) {
+		if (portNumber.matches("\\d+")
+				&& !(Integer.parseInt(portNumber) >= 1024 && Integer.parseInt(portNumber) <= 65535)) {
 			portTxtField.setStyle(setFieldToError());
 			result = false;
 			error += "Port number must be in range (1024-65535)";
@@ -137,85 +153,92 @@ public class ServerConnectionController extends AbstractScreen {
 			showErrorAlert(ScreenManager.getInstance().getStage(), error);
 		return result;
 	}
-	
+
 	/// TEXT FIELDS TABS FLOW METHODS ///
 	@FXML
 	/**
 	 * transfers the focus from hostTxtField to portTxtField
+	 * 
 	 * @param event
 	 */
-    void hostTabPressed(KeyEvent event) {
+	void hostTabPressed(KeyEvent event) {
 		if (event.getCode() == KeyCode.TAB) {
 			event.consume();
 			portTxtField.requestFocus();
 		}
-    }
-	
+	}
+
 	@FXML
 	/**
 	 * transfers the focus from portTxtField to databaseTxtField
+	 * 
 	 * @param event
 	 */
-    void portTabPressed(KeyEvent event) {
+	void portTabPressed(KeyEvent event) {
 		if (event.getCode() == KeyCode.TAB) {
 			event.consume();
 			databaseTxtField.requestFocus();
 		}
-    }
-	
+	}
+
 	@FXML
 	/**
 	 * transfers the focus from databaseTxtField to rootTxtField
+	 * 
 	 * @param event
 	 */
-    void databaseTabPressed(KeyEvent event) {
+	void databaseTabPressed(KeyEvent event) {
 		if (event.getCode() == KeyCode.TAB) {
 			event.consume();
 			rootTxtField.requestFocus();
 		}
-    }
-	
-    @FXML
-    /**
+	}
+
+	@FXML
+	/**
 	 * transfers the focus from rootTxtField to passwordTxtField
-     * @param event
-     */
-    void rootTabPressed(KeyEvent event) {
-    	if (event.getCode() == KeyCode.TAB) {
+	 * 
+	 * @param event
+	 */
+	void rootTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
 			event.consume();
 			passwordTxtField.requestFocus();
 		}
-    }
-    
-    @FXML
-    /**
+	}
+
+	@FXML
+	/**
 	 * transfers the focus from passwordTxtField to connectBtn
-     * @param event
-     */
-    void passwordTabPressed(KeyEvent event) {
-    	if (event.getCode() == KeyCode.TAB) {
+	 * 
+	 * @param event
+	 */
+	void passwordTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
 			event.consume();
 			connectBtn.requestFocus();
 		}
-    }
-    
-    @FXML
-    /**
-     * sets the focus to the pane
-     * @param event
-     */
-    void paneClicked(MouseEvent event) {
-    	pane.requestFocus();
-    }
-    
-    @FXML
-    /**
-     * ignores any key pressing on the root pane
-     * @param event
-     */
-    void paneKeyPressed(KeyEvent event) {
-    	event.consume();
-    }
+	}
+
+	@FXML
+	/**
+	 * sets the focus to the pane
+	 * 
+	 * @param event
+	 */
+	void paneClicked(MouseEvent event) {
+		pane.requestFocus();
+	}
+
+	@FXML
+	/**
+	 * ignores any key pressing on the root pane
+	 * 
+	 * @param event
+	 */
+	void paneKeyPressed(KeyEvent event) {
+		event.consume();
+	}
 
 	@FXML
 	/**
@@ -225,6 +248,11 @@ public class ServerConnectionController extends AbstractScreen {
 		disconnectBtn.setVisible(false);
 		// initializing the image component
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+
+		// centering the title label
+		titleLbl.setAlignment(Pos.CENTER);
+		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
 		// setting alignment of the labels to right
 		hostLbl.setStyle("-fx-alignment: center-right;");
 		portLbl.setStyle("-fx-alignment: center-right;");
@@ -232,6 +260,29 @@ public class ServerConnectionController extends AbstractScreen {
 		rootLbl.setStyle("-fx-alignment: center-right;");
 		passwordLbl.setStyle("-fx-alignment: center-right;");
 		databaseTxtField.setText("jdbc:mysql://localhost/go_nature?serverTimezone=Asia/Jerusalem");
+		
+		statusLabel.setText("Disconnected");
+		statusLabel.setStyle("-fx-background-color: #ffe6e6; -fx-text-alignment: center;");
+
+		consoleArea.setEditable(false);
+		ConsoleOutput consoleOutput = new ConsoleOutput(consoleArea);
+		System.setOut(new PrintStream(consoleOutput, true));
+		System.setErr(new PrintStream(consoleOutput, true));
+	}
+
+	public static class ConsoleOutput extends OutputStream {
+		private TextArea output;
+
+		public ConsoleOutput(TextArea ta) {
+			this.output = ta;
+		}
+
+		@Override
+		public void write(int i) throws IOException {
+			// Append the character to the TextArea (in the JavaFX Application Thread)
+			javafx.application.Platform.runLater(() -> output.appendText(String.valueOf((char) i)));
+		}
+
 	}
 
 	@Override

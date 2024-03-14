@@ -40,7 +40,7 @@
             <Font size="16.0" />
          </font>
       </Label>
-      <Button fx:id="updateReservationBtn" layoutX="478.0" layoutY="430.0" mnemonicParsing="false" onAction="#updateReservation" onKeyPressed="#btnTabPressed" text="Update Reservation">
+      <Button fx:id="updateReservationBtn" layoutX="456.0" layoutY="429.0" mnemonicParsing="false" onAction="#updateReservation" onKeyPressed="#btnTabPressed" text="Update Reservation">
          <font>
             <Font size="16.0" />
          </font>
@@ -68,12 +68,12 @@
             <Font name="Calibri" size="18.0" />
          </font>
       </Label>
-      <Button fx:id="cancelReservationBtn" layoutX="107.0" layoutY="430.0" mnemonicParsing="false" onAction="#cancelReservation" onKeyPressed="#btnTabPressed" text="Cancel Reservation">
+      <Button fx:id="cancelReservationBtn" layoutX="85.0" layoutY="429.0" mnemonicParsing="false" onAction="#cancelReservation" onKeyPressed="#btnTabPressed" text="Cancel Reservation">
          <font>
             <Font size="16.0" />
          </font>
       </Button>
-      <Button fx:id="updateReservationBtn1" layoutX="280.0" layoutY="430.0" mnemonicParsing="false" onAction="#updateReservation" onKeyPressed="#btnTabPressed" text="Check Park Availability">
+      <Button fx:id="availabilityBtn" layoutX="258.0" layoutY="429.0" mnemonicParsing="false" onAction="#availabilityClicked" onKeyPressed="#btnTabPressed" text="Check Park Availability">
          <font>
             <Font size="16.0" />
          </font>

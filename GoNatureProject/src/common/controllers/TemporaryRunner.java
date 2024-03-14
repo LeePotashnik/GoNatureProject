@@ -23,8 +23,8 @@ public class TemporaryRunner {
 				"elad.krauz", "password", true, VisitorType.GROUPGUIDE);
 		// opening booking screen
 //		ScreenManager.getInstance().showScreen("BookingScreenController", "/clientSide/fxml/BookingScreen.fxml", false,
-//				false, StageSettings.defaultSettings("GoNature System - Reservations"), visitor);//"208154303");
-		
+//				false, StageSettings.defaultSettings("GoNature System - Reservations"), "208154303");
+//		
 		// opening booking managing screen
 		ScreenManager.getInstance().showScreen("BookingViewScreenController", "/clientSide/fxml/BookingViewScreen.fxml", false,
 				false, StageSettings.defaultSettings("GoNature System - Booking Managing"), visitor);

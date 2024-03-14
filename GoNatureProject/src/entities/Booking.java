@@ -49,7 +49,7 @@ public class Booking {
 	 * @param reminderArrivalTime
 	 * @param parkBooked
 	 */
-	
+
 	public Booking(String bookingId, LocalDate dayOfVisit, LocalTime timeOfVisit, LocalDate dayOfBooking,
 			VisitType visitType, int numberOfVisitors, String idNumber, String firstName, String lastName,
 			String emailAddress, String phoneNumber, int finalPrice, boolean paid, boolean confirmed,
@@ -75,9 +75,10 @@ public class Booking {
 		this.reminderArrivalTime = reminderArrivalTime;
 		this.parkBooked = parkBooked;
 	}
-	
+
 	/**
 	 * A constructor for waiting list booking
+	 * 
 	 * @param bookingId
 	 * @param timeOfVisit
 	 * @param dayOfBooking
@@ -85,7 +86,8 @@ public class Booking {
 	 * @param visitType
 	 * @param numberOfVisitor
 	 */
-	public Booking(String bookingId, LocalTime timeOfVisit, LocalDate dayOfBooking, int waitingListPriority, VisitType visitType, int numberOfVisitor) {
+	public Booking(String bookingId, LocalTime timeOfVisit, LocalDate dayOfBooking, int waitingListPriority,
+			VisitType visitType, int numberOfVisitor) {
 		this.bookingId = bookingId;
 		this.timeOfVisit = timeOfVisit;
 		this.dayOfBooking = dayOfBooking;
@@ -93,7 +95,7 @@ public class Booking {
 		this.visitType = visitType;
 		this.numberOfVisitors = numberOfVisitor;
 	}
-	
+
 	/**
 	 * @return the booking status
 	 */
@@ -107,7 +109,7 @@ public class Booking {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	
+
 	/**
 	 * @return the id number of the booker
 	 */
@@ -121,7 +123,7 @@ public class Booking {
 	public void setIdNumber(String idNumber) {
 		this.idNumber = idNumber;
 	}
-	
+
 	/**
 	 * 
 	 * @return waitingListPriority
@@ -388,6 +390,18 @@ public class Booking {
 	 */
 	public void setFinalPrice(int finalPrice) {
 		this.finalPrice = finalPrice;
+	}
+
+	/**
+	 * This method returns a clone of the booking called it
+	 * 
+	 * @param toClone
+	 * @return the booking clone
+	 */
+	public Booking cloneBooking() {
+		return new Booking(bookingId, dayOfVisit, timeOfVisit, dayOfBooking, visitType, numberOfVisitors, idNumber,
+				firstName, lastName, emailAddress, phoneNumber, finalPrice, paid, confirmed, entryParkTime,
+				exitParkTime, isRecievedReminder, reminderArrivalTime, parkBooked);
 	}
 
 	@Override

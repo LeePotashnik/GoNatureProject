@@ -21,6 +21,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -193,6 +194,14 @@ public class BookingViewScreenController extends AbstractScreen implements State
 
 		// hiding all the elements but the progress indicator and its label
 		setVisible(false);
+
+		// setting the back button image
+		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
+		backImage.setFitHeight(30);
+		backImage.setFitWidth(30);
+		backImage.setPreserveRatio(true);
+		backButton.setGraphic(backImage);
+		backButton.setPadding(new Insets(1, 1, 1, 1));
 	}
 
 	private void bookingClicked(Booking chosenBooking) {
@@ -256,6 +265,7 @@ public class BookingViewScreenController extends AbstractScreen implements State
 		seperator1.setVisible(visible);
 		seperator2.setVisible(visible);
 		doubleClickLabel.setVisible(visible);
+		backButton.setVisible(visible);
 	}
 
 	/**

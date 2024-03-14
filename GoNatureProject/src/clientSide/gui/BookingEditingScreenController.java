@@ -1,15 +1,21 @@
 package clientSide.gui;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Arrays;
 
 import clientSide.control.BookingController;
 import clientSide.control.ParkController;
-import common.controllers.AbstractScreen;
+import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
+import common.controllers.StageSettings;
+import common.controllers.StatefulException;
 import entities.Booking;
+import entities.Booking.VisitType;
 import entities.Park;
 import entities.ParkVisitor;
-import entities.Booking.VisitType;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -36,12 +42,10 @@ public class BookingEditingScreenController extends BookingScreenController {
 
 	// the user enters the screen with a visitor instance or only with an id number
 	private ParkVisitor visitor;
-	private String userId;
 	private boolean isGroupReservation; // determines if this is a regular or guided group
 
 	// booking objects and data
 	private Booking booking;
-	private String bookingId;
 	private int parkIndexInCombobox;
 
 	/**
@@ -73,12 +77,64 @@ public class BookingEditingScreenController extends BookingScreenController {
 
 	@FXML
 	void cancelReservation(ActionEvent event) {
-
+		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+				"You are about to cancel your " + booking.getParkBooked().getParkName() + "Park reservation for "
+						+ booking.getDayOfVisit() + ", " + booking.getTimeOfVisit()
+						+ ".\nThis action can't be undone.",
+				Arrays.asList("Don't Cancel", "Continue and Cancel"));
+		
+		switch (choise) {
+		case 1: // chose not to cancel
+			event.consume();
+			return;
+		
+		case 2: // chose to cancel
+			if (control.deleteBookingFromActiveTable(booking)) {
+				// showing the cancellation screen
+				try {
+					ScreenManager.getInstance().showScreen("CancellationScreenController",
+							"/clientSide/fxml/CancellationScreen.fxml", true, false,
+							StageSettings.defaultSettings("Cancellation"), new Pair<Booking, ParkVisitor>(booking, visitor));
+				} catch (StatefulException | ScreenException e) {
+					e.printStackTrace();
+				}
+			}
+			else {
+				
+			}
+			event.consume();
+		}
 	}
 
 	@FXML
 	void availabilityClicked(ActionEvent event) {
-
+		// first checking if the user changed any detail before sending a query request
+		if (!checkIfChanged()) {
+			showInformationAlert(ScreenManager.getInstance().getStage(),
+					"You need to change one/more of the details in order to check park availability");
+		} else { // if changed any of the details
+			if (!validateDetails()) { // if details are not valid
+				return;
+			} else { // if details are valid
+				Booking clone = booking.cloneBooking();
+				Park parkDesired = parksList.get(parkComboBox.getSelectionModel().getSelectedIndex());
+				clone.setParkBooked(parkDesired);
+				clone.setDayOfVisit(datePicker.getValue());
+				clone.setTimeOfVisit(hourCombobox.getValue());
+				clone.setNumberOfVisitors(Integer.parseInt(visitorsTxt.getText()));
+				if (control.checkParkAvailabilityForExistingBooking(booking, clone)) {
+					showInformationAlert(ScreenManager.getInstance().getStage(), parkDesired.getParkName()
+							+ " Park is available for " + clone.getNumberOfVisitors() + " visitors on "
+							+ clone.getDayOfVisit() + ", " + clone.getTimeOfVisit()
+							+ "\nPlease make sure the availability can change quickly due to high volume of orders");
+				} else {
+					showInformationAlert(ScreenManager.getInstance().getStage(),
+							"Unfortunately, " + parkDesired.getParkName() + " Park is not available for "
+									+ clone.getNumberOfVisitors() + " visitors on " + clone.getDayOfVisit() + ", "
+									+ clone.getTimeOfVisit());
+				}
+			}
+		}
 	}
 
 	@FXML
@@ -114,7 +170,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 			hourCombobox.requestFocus();
 		}
 	}
-	
+
 	@FXML
 	/**
 	 * transfers the focus from the hour combobox to the visitors text
@@ -125,7 +181,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 			visitorsTxt.requestFocus();
 		}
 	}
-	
+
 	@FXML
 	/**
 	 * tranfers the focus from the visitor text field to the pane
@@ -179,6 +235,128 @@ public class BookingEditingScreenController extends BookingScreenController {
 
 	}
 
+	/// INSTANCE METHODS ///
+
+	/**
+	 * This method is called after the button for make reservations is clicked
+	 * Checks and validates all the reservation details
+	 * 
+	 * @return true if all details are valid, false if not
+	 */
+	private boolean validateDetails() {
+		// set styles to regular
+		parkComboBox.setStyle(setFieldToRegular());
+		datePicker.setStyle(setFieldToRegular());
+		hourCombobox.setStyle(setFieldToRegular());
+		visitorsTxt.setStyle(setFieldToRegular());
+
+		boolean valid = true;
+
+		String error = "Please make sure you:\n";
+		// checking if the user chose a park from the list
+		if (parkComboBox.getValue() == null) {
+			parkComboBox.setStyle(setFieldToError());
+			error += "• choose a park from the parks list\n";
+			valid = false;
+		}
+		// checking if the user chose a date from the date picker
+		if (datePicker.getValue() == null) {
+			datePicker.setStyle(setFieldToError());
+			error += "• choose a date from the date picker\n";
+			valid = false;
+		}
+		// checking if the chosen date is valid (not past, and in future range)
+		if (datePicker.getValue() != null) {
+			if (datePicker.getValue().compareTo(LocalDate.now()) < 0) { // past
+				datePicker.setStyle(setFieldToError());
+				error += "• choose a date that is " + LocalDate.now() + " and on\n";
+				valid = false;
+			} else { // future
+				// calculating the date that is in the future allowed range
+				LocalDate maximumFutureRange = (LocalDate.now()).plusMonths(control.futureBookingsRange);
+
+				if (datePicker.getValue().compareTo(maximumFutureRange) > 0) {
+					datePicker.setStyle(setFieldToError());
+					error += "• choose a date that is before " + maximumFutureRange + "\n";
+					valid = false;
+				}
+			}
+		}
+
+		// checking if the chosen hour is valid
+		if (hourCombobox.getValue() == null) {
+			hourCombobox.setStyle(setFieldToError());
+			error += "• choose an hour\n";
+			valid = false;
+		} else {
+			if (datePicker.getValue() != null && datePicker.getValue().equals(LocalDate.now())
+					&& hourCombobox.getValue().compareTo(LocalTime.now()) < 0) {
+				hourCombobox.setStyle(setFieldToError());
+				error += "• choose a valid hour\n";
+				valid = false;
+			}
+		}
+
+		// checking the visitors number
+		if (visitorsTxt.getText().isEmpty() || !visitorsTxt.getText().matches("\\d+")) {
+			visitorsTxt.setStyle(setFieldToError());
+			error += "• enter a digit-only number of visitors\n";
+			valid = false;
+		} else {
+			if (Integer.parseInt(visitorsTxt.getText()) < control.minimumVisitorsInReservation
+					|| Integer.parseInt(visitorsTxt.getText()) > control.maximumVisitorsInReservation) {
+				visitorsTxt.setStyle(setFieldToError());
+				error += "• enter a number of visitors in range of " + control.minimumVisitorsInReservation + " to "
+						+ control.maximumVisitorsInReservation + "\n";
+				valid = false;
+			}
+		}
+
+		if (!valid)
+			showErrorAlert(ScreenManager.getInstance().getStage(), error);
+		return valid;
+	}
+
+	/**
+	 * This method gets a park and returns its element from the park list
+	 * 
+	 * @param park
+	 * @return the park if exists, null if not
+	 */
+	private Park getParkFromList(Park park) {
+		for (int i = 0; i < parksList.size(); i++) {
+			if (parksList.get(i).getParkId() == park.getParkId()) {
+				return parksList.get(i);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * This method is called to check if the user changed any of the deatils of his
+	 * reservation
+	 * 
+	 * @return true if changed, false if not
+	 */
+	private boolean checkIfChanged() {
+		// checking the park
+		if (!parksList.get(parkComboBox.getSelectionModel().getSelectedIndex()).equals(booking.getParkBooked())) {
+			return true;
+		}
+		if (!datePicker.getValue().equals(booking.getDayOfVisit())) {
+			return true;
+		}
+		if (!hourCombobox.getValue().equals(booking.getTimeOfVisit())) {
+			return true;
+		}
+		if (!visitorsTxt.getText().equals(booking.getNumberOfVisitors() + "")) {
+			return true;
+		}
+		return false;
+	}
+
+	/// HAVAFX ANF FXML METHODS ///
+
 	@Override
 	public void initialize() {
 		// setting the park details in the parks combobox
@@ -210,6 +388,9 @@ public class BookingEditingScreenController extends BookingScreenController {
 		parkComboBox.getStyleClass().add("combo-box-text");
 		hourCombobox.getStyleClass().add("combo-box-text");
 
+		// setting the visitors text field to recognize digits only
+		setupTextFieldToDigitsOnly(visitorsTxt);
+
 		// setting the back button image
 		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
 		backImage.setFitHeight(30);
@@ -219,22 +400,13 @@ public class BookingEditingScreenController extends BookingScreenController {
 		backButton.setPadding(new Insets(1, 1, 1, 1));
 	}
 
-	private Park getParkIndex(Park park) {
-		for (int i = 0; i < parksList.size(); i++) {
-			if (parksList.get(i).getParkId() == park.getParkId()) {
-				return parksList.get(i);
-			}
-		}
-		return null;
-	}
-
 	@Override
 	public void loadBefore(Object information) {
 		if (information instanceof Booking) {
 			booking = (Booking) information;
 			// setting all the info into the components of the screen
 			bookingLbl.setText("Booking ID: " + booking.getBookingId());
-			parkComboBox.getSelectionModel().select(parksList.indexOf(getParkIndex(booking.getParkBooked())));
+			parkComboBox.getSelectionModel().select(parksList.indexOf(getParkFromList(booking.getParkBooked())));
 			datePicker.setValue(booking.getDayOfVisit());
 			hourCombobox.setValue(booking.getTimeOfVisit());
 			visitorsTxt.setText(((Integer) booking.getNumberOfVisitors()).toString());
