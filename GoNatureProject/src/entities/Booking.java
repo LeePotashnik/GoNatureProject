@@ -26,6 +26,7 @@ public class Booking {
 	private LocalTime reminderArrivalTime;
 	private Park parkBooked;
 	private int waitingListPriority;
+	private String status;
 
 	/**
 	 * 
@@ -48,6 +49,7 @@ public class Booking {
 	 * @param reminderArrivalTime
 	 * @param parkBooked
 	 */
+	
 	public Booking(String bookingId, LocalDate dayOfVisit, LocalTime timeOfVisit, LocalDate dayOfBooking,
 			VisitType visitType, int numberOfVisitors, String idNumber, String firstName, String lastName,
 			String emailAddress, String phoneNumber, int finalPrice, boolean paid, boolean confirmed,
@@ -74,6 +76,15 @@ public class Booking {
 		this.parkBooked = parkBooked;
 	}
 	
+	/**
+	 * A constructor for waiting list booking
+	 * @param bookingId
+	 * @param timeOfVisit
+	 * @param dayOfBooking
+	 * @param waitingListPriority
+	 * @param visitType
+	 * @param numberOfVisitor
+	 */
 	public Booking(String bookingId, LocalTime timeOfVisit, LocalDate dayOfBooking, int waitingListPriority, VisitType visitType, int numberOfVisitor) {
 		this.bookingId = bookingId;
 		this.timeOfVisit = timeOfVisit;
@@ -84,7 +95,21 @@ public class Booking {
 	}
 	
 	/**
-	 * @return
+	 * @return the booking status
+	 */
+	public String getStatus() {
+		return status;
+	}
+
+	/**
+	 * @param status
+	 */
+	public void setStatus(String status) {
+		this.status = status;
+	}
+	
+	/**
+	 * @return the id number of the booker
 	 */
 	public String getIdNumber() {
 		return idNumber;

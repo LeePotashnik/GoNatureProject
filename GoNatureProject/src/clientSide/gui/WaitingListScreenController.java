@@ -97,7 +97,6 @@ public class WaitingListScreenController extends AbstractScreen {
 		try {
 			ScreenManager.getInstance().goToPreviousScreen(true, true);
 		} catch (ScreenException | StatefulException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

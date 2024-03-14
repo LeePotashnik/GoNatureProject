@@ -53,11 +53,12 @@ public class BookingController {
 	 */
 	public final int maximumVisitorsInReservation = 15;
 
-	// for saving and restoring purposes of the screen
+	// for saving and restoring purposes of the screens
 	private Booking booking;
 	private int parkIndexInCombobox;
 	private ParkVisitor visitor;
 	private boolean isSavedState = false;
+	private Pair<ObservableList<Booking>, ObservableList<Booking>> pair;
 
 	/**
 	 * An empty and private controller, for the singelton design pattern
@@ -118,6 +119,7 @@ public class BookingController {
 		// pre-setting data for request
 		Communication availabilityRequest = new Communication(CommunicationType.QUERY_REQUEST);
 		Park parkOfBooking = booking.getParkBooked();
+		@SuppressWarnings("static-access")
 		String parkTableName = ParkController.getInstance().nameOfTable(parkOfBooking)
 				+ availabilityRequest.activeBookings;
 		int parkTimeLimit = parkOfBooking.getTimeLimit();
@@ -202,6 +204,7 @@ public class BookingController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
+		@SuppressWarnings("static-access")
 		String parkTableName = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
 				+ insertRequest.activeBookings;
 		insertRequest.setTables(Arrays.asList(parkTableName));
@@ -249,6 +252,7 @@ public class BookingController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
+		@SuppressWarnings("static-access")
 		String parkTableName = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
 				+ insertRequest.waitingList;
 		insertRequest.setTables(Arrays.asList(parkTableName));
@@ -283,6 +287,7 @@ public class BookingController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
+		@SuppressWarnings("static-access")
 		String parkTableName = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
 				+ waitingListRequest.waitingList;
 		waitingListRequest.setTables(Arrays.asList(parkTableName));
@@ -315,6 +320,7 @@ public class BookingController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
+		@SuppressWarnings("static-access")
 		String parkTableName = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
 				+ waitingListRequest.waitingList;
 		waitingListRequest.setTables(Arrays.asList(parkTableName));
@@ -359,6 +365,7 @@ public class BookingController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
+		@SuppressWarnings("static-access")
 		String parkTableName = ParkController.getInstance().nameOfTable(updateBooking.getParkBooked())
 				+ updateRequest.activeBookings;
 		updateRequest.setTables(Arrays.asList(parkTableName));
@@ -389,6 +396,7 @@ public class BookingController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
+		@SuppressWarnings("static-access")
 		String parkTableName = ParkController.getInstance().nameOfTable(deleteBooking.getParkBooked())
 				+ deleteRequest.activeBookings;
 		deleteRequest.setTables(Arrays.asList(parkTableName));
@@ -443,9 +451,18 @@ public class BookingController {
 		return available;
 	}
 
+	/**
+	 * Thus method gets a time slot to check its availability in a specific park
+	 * 
+	 * @param parkToCheck
+	 * @param slot
+	 * @param numberOfVisitors
+	 * @return true if available, false if not
+	 */
 	private boolean isSpecificTimeAvailable(Park parkToCheck, AvailableSlot slot, int numberOfVisitors) {
 		// pre-setting data for request
 		Communication availabilityRequest = new Communication(CommunicationType.QUERY_REQUEST);
+		@SuppressWarnings("static-access")
 		String parkTableName = ParkController.getInstance().nameOfTable(parkToCheck)
 				+ availabilityRequest.activeBookings;
 		int parkTimeLimit = parkToCheck.getTimeLimit();
@@ -476,6 +493,77 @@ public class BookingController {
 		return parkToCheck.getMaximumOrders() - countVisitors - numberOfVisitors > 0;
 	}
 
+	/**
+	 * This method gets a visitor and returns all his active/cancelled/done bookings
+	 * in all parks
+	 * 
+	 * @param visitorCheck
+	 * @param tableEnding  determines if checking in the active/cancelled/done
+	 *                     tables
+	 * @return the bookings list
+	 */
+	@SuppressWarnings("static-access")
+	public ObservableList<Booking> getVisitorBookings(ParkVisitor visitorCheck, String tableEnding) {
+		ObservableList<Booking> returnList = FXCollections.observableArrayList();
+		// creating the requests for the bookings retrieval
+		if (parkList == null)
+			fetchParks();
+		for (Park park : parkList) {
+			String tableName = ParkController.getInstance().nameOfTable(park) + tableEnding;
+			Communication availabilityRequest = new Communication(CommunicationType.QUERY_REQUEST);
+			try {
+				availabilityRequest.setQueryType(QueryType.SELECT);
+			} catch (CommunicationException e) {
+				e.printStackTrace();
+			}
+			availabilityRequest.setTables(Arrays.asList(tableName));
+			availabilityRequest.setSelectColumns(Arrays.asList("*"));
+			availabilityRequest.setWhereConditions(Arrays.asList("idNumber"), Arrays.asList("="),
+					Arrays.asList(visitorCheck.getIdNumber()));
+			// sending the request to the server side
+			GoNatureClientUI.client.accept(availabilityRequest);
+			// getting the result from the server side
+			if (!availabilityRequest.getResultList().isEmpty()) {
+				for (Object[] row : availabilityRequest.getResultList()) {
+					Booking addBooking;
+					// if this is the active booking table to check in
+					if (tableEnding == availabilityRequest.activeBookings) {
+						addBooking = new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
+								((Time) row[2]).toLocalTime(), ((Date) row[3]).toLocalDate(),
+								((String) row[4]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL,
+								(Integer) row[5], (String) row[6], (String) row[7], (String) row[8], (String) row[9],
+								(String) row[10], (Integer) row[11], (Integer) row[12] == 0 ? false : true,
+								(Integer) row[13] == 0 ? false : true,
+								((Time) row[14]) == null ? null : ((Time) row[14]).toLocalTime(),
+								((Time) row[15]) == null ? null : ((Time) row[15]).toLocalTime(),
+								(Integer) row[16] == 0 ? false : true,
+								((Time) row[17]) == null ? null : ((Time) row[17]).toLocalTime(), park);
+					} else if (tableEnding == availabilityRequest.cancelledBookings) {
+						// if this is the cancelled booking table to check in
+						addBooking = new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
+								((Time) row[2]).toLocalTime(), ((Date) row[3]).toLocalDate(),
+								((String) row[4]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL,
+								(Integer) row[5], (String) row[6], (String) row[7], (String) row[8], (String) row[9],
+								(String) row[10], -1, false, false, null, null, false, null, park);
+						addBooking.setStatus("Cancelled");
+					} else {
+						// if this is the done booking table to check in
+						addBooking = new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
+								((Time) row[2]).toLocalTime(), ((Date) row[3]).toLocalDate(),
+								((String) row[4]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL,
+								(Integer) row[5], (String) row[6], (String) row[7], (String) row[8], (String) row[9],
+								(String) row[10], (Integer) row[11], false, false,
+								((Time) row[12]) == null ? null : ((Time) row[12]).toLocalTime(),
+								((Time) row[13]) == null ? null : ((Time) row[13]).toLocalTime(), false, null, park);
+						addBooking.setStatus("Finished");
+					}
+					returnList.add(addBooking);
+				}
+			}
+		}
+		return returnList;
+	}
+
 	/// GETTERS ///
 	/**
 	 * @return the saved booking
@@ -503,6 +591,13 @@ public class BookingController {
 	 */
 	public ParkVisitor getVisitor() {
 		return visitor;
+	}
+
+	/**
+	 * @return the saved observable lists pair
+	 */
+	public Pair<ObservableList<Booking>, ObservableList<Booking>> getPair() {
+		return pair;
 	}
 
 	/// SETTERS ///
@@ -544,6 +639,14 @@ public class BookingController {
 		booking = null;
 		parkIndexInCombobox = -1;
 		visitor = null;
+	}
+	
+	/**
+	 * 
+	 * @param pair of observable lists
+	 */
+	public void setPair(Pair<ObservableList<Booking>, ObservableList<Booking>> pair) {
+		this.pair = pair;
 	}
 
 }

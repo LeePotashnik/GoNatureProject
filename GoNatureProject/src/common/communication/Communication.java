@@ -16,24 +16,24 @@ public class Communication implements Serializable {
 
 	/// TABLES NAMES ///
 	// tables in context of a specific park
-	public final String activeBookings = "_park_active_booking";
-	public final String cancelledBookings = "_park_cencelled_booking";
-	public final String doneBokkings = "_park_done_booking";
-	public final String parkEmployees = "_park_employees";
-	public final String parkReport = "_park_report";
-	public final String waitingList = "_park_waiting_list";
+	public static final String activeBookings = "_park_active_booking";
+	public static final String cancelledBookings = "_park_cancelled_booking";
+	public static final String doneBookings = "_park_done_booking";
+	public static final String parkEmployees = "_park_employees";
+	public static final String parkReport = "_park_report";
+	public static final String waitingList = "_park_waiting_list";
 	// tables in context of stakeholders
-	public final String departmentManager = "department_manager";
-	public final String parkManager = "park_manager";
-	public final String traveller = "traveller";
-	public final String griupGuide = "group_guide";
-	public final String representative = "representative";
+	public static final String departmentManager = "department_manager";
+	public static final String parkManager = "park_manager";
+	public static final String traveller = "traveller";
+	public static final String griupGuide = "group_guide";
+	public static final String representative = "representative";
 	// tables in context of management
-	public final String invoice = "invoice";
-	public final String park = "park";
-	public final String pendingAdjustment = "pending_adjustment";
-	public final String viewedAdjustment = "viewed_adjustment";
-	public final String pricing = "pricing";
+	public static final String invoice = "invoice";
+	public static final String park = "park";
+	public static final String pendingAdjustment = "pending_adjustment";
+	public static final String viewedAdjustment = "viewed_adjustment";
+	public static final String pricing = "pricing";
 
 	// the communication type
 	public enum CommunicationType {

@@ -207,12 +207,6 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 				e.printStackTrace();
 			}
 			break;
-//			// should move to the reschedule screen
-//			datePicker.setValue(null);
-//			hourCombobox.setValue(null);
-//			datePicker.setStyle(setFieldToError());
-//			hourCombobox.setStyle(setFieldToError());
-//			break;
 		}
 
 		// chose to enter the waiting list
@@ -709,7 +703,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 * This method sets the hours combo box with the relevant hours for visiting
 	 */
 	@SuppressWarnings("unused")
-	private void setHours() {
+	protected void setHours() {
 		ArrayList<LocalTime> hoursString = new ArrayList<>();
 		for (int hour = control.openHour; hour <= control.closeHour; hour++) {
 			hoursString.add(LocalTime.of(hour, 0));
