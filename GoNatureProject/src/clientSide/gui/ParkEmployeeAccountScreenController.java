@@ -11,6 +11,7 @@ import common.controllers.ScreenManager;
 import common.controllers.StageSettings;
 import common.controllers.Stateful;
 import common.controllers.StatefulException;
+import entities.Park;
 import entities.ParkEmployee;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -26,7 +27,7 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
 	
 	private GoNatureUsersController userControl;
 	private ParkController parkControl;
-
+	private Park park;
 	private ParkEmployee parkEmployee;
 
     @FXML
@@ -114,9 +115,19 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
 		ParkEmployee PE = (ParkEmployee)information;
 		setParkEmployee(PE);
 		setParkTable();	
+		setPark(PE.getWorkingIn());
+		String[] returnsVal = new String[4]; 
+		returnsVal = parkControl.checkCurrentCapacity(parkEmployee.getWorkingIn().getParkName());
+		if (returnsVal != null) {
+			//updates park parameters
+			park.setMaximumVisitors(Integer.parseInt(returnsVal[0]));
+			park.setMaximumOrders(Integer.parseInt(returnsVal[1]));
+			park.setTimeLimit(Integer.parseInt(returnsVal[2])); 
+			park.setCurrentCapacity(Integer.parseInt(returnsVal[3])); 
+		}
 		this.privateName.setText("Hello " + parkEmployee.getFirstName() + " " + parkEmployee.getLastName());
 	    this.privateName.underlineProperty();
-		this.Title.setText(getScreenTitle());
+		this.Title.setText(park.getParkName());
 	    this.Title.underlineProperty();
 	}
 
@@ -135,12 +146,20 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
 	public void setParkEmployee(ParkEmployee parkEmployee) {
 		this.parkEmployee = parkEmployee;
 	}
+	
+	public Park getPark() {
+		return park;
+	}
+
+	public void setPark(Park park) {
+		this.park = park;
+	}
 
 	
 	/**
 	 * Activated after the X is clicked on the window.
-	 *  The default is to show a Confirmation Alert with "Yes" and "No" options for the user tochoose. 
-	 * "Yes" will check if the client is connected to the server, disconnectit if from the server and the system.
+	 *  The default is to show a Confirmation Alert with "Yes" and "No" options for the user to choose. 
+	 * "Yes" will check if the client is connected to the server, disconnect it from the server and the system.
 	 */
 	@Override
 	public void handleCloseRequest(WindowEvent event) {
@@ -152,29 +171,28 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
 			logOut(null); //log out from go nature system
     		System.out.println("User logged out");
 			userControl.disconnectClientFromServer(); 
-			//    	if (userControl.checkLogOut() {
-
 		}
 	}
 	
 	@Override
 	public String getScreenTitle() {
-		//return parkEmployee.getWorkingIn().getParkName();
-		return "fdfdsfdssf";
+		return null;
 	}
 
 	@Override
 	public void saveState() {
 		userControl.saveUser(parkEmployee);
+		parkControl.savePark(park);
 	}
 
 	@Override
 	public void restoreState() {
 		parkEmployee = (ParkEmployee) userControl.restoreUser();
 		setParkTable();	
+		this.park = parkControl.restorePark();
 		this.privateName.setText("Hello " + parkEmployee.getFirstName() + " " + parkEmployee.getLastName());
 	    this.privateName.underlineProperty();
-		this.Title.setText(getScreenTitle());
+		this.Title.setText(park.getParkName());
 	    this.Title.underlineProperty();
 	}
 }
