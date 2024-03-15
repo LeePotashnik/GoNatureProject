@@ -21,3 +21,8 @@
     -fx-background-size: cover;
     -fx-opacity: 0.1;
 }
+
+.label-stroke {
+    -fx-effect: dropshadow(gaussian, white, 3, 0, 0, 0)
+                dropshadow(gaussian, white, 3, 0, 0, 0);
+}

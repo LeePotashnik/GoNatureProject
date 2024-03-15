@@ -109,5 +109,12 @@ public class Park {
 		this.currentCapacity = currentCapacity;
 	}
 	
-	
+	@Override
+	/**
+	 * Overriding the equals method to check parks equality
+	 */
+	public boolean equals(Object obj) {
+		Park isEqual = (Park)obj;
+		return this.parkId == isEqual.getParkId();
+	}
 }

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import clientSide.control.BookingController;
+import clientSide.control.ParkController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
@@ -14,6 +15,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -40,7 +42,7 @@ public class WaitingListScreenController extends AbstractScreen {
 	@FXML
 	private ImageView goNatureLogo;
 	@FXML
-	private Button enterWaitingBtn, returnToAccountBtn;
+	private Button enterWaitingBtn, returnToAccountBtn, backButton;
 	@FXML
 	private Pane pane;
 	@FXML
@@ -74,9 +76,9 @@ public class WaitingListScreenController extends AbstractScreen {
 
 			event.consume();
 			showInformationAlert(ScreenManager.getInstance().getStage(), "Your reservation entered the waiting list of "
-					+ booking.getParkBooked().getParkName() + " park successfully."
-							+ "\nWe will notify you if a place will be found for your group.");
+					+ booking.getParkBooked().getParkName() + " park successfully");
 			enterWaitingBtn.setDisable(true);
+			backButton.setDisable(true);
 
 		} else {
 			showErrorAlert(ScreenManager.getInstance().getStage(),
@@ -94,10 +96,18 @@ public class WaitingListScreenController extends AbstractScreen {
 	 */
 	void returnToAccount(ActionEvent event) {
 		// returning to the acount screen
+	}
+
+	@FXML
+	/**
+	 * Returns to the previous screen
+	 * 
+	 * @param event
+	 */
+	void returnToPreviousScreen(ActionEvent event) {
 		try {
 			ScreenManager.getInstance().goToPreviousScreen(true, true);
 		} catch (ScreenException | StatefulException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -130,6 +140,14 @@ public class WaitingListScreenController extends AbstractScreen {
 
 		titleLbl.setAlignment(Pos.CENTER);
 		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
+
+		// setting the back button image
+		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
+		backImage.setFitHeight(30);
+		backImage.setFitWidth(30);
+		backImage.setPreserveRatio(true);
+		backButton.setGraphic(backImage);
+		backButton.setPadding(new Insets(1, 1, 1, 1));
 	}
 
 	@Override
@@ -147,8 +165,22 @@ public class WaitingListScreenController extends AbstractScreen {
 			// checking the current order's priority
 			int priority = waitingList.size() + 1;
 
-			yourOrderLabel.setText("This is the waiting list of " + booking.getParkBooked().getParkName() + " for "
-					+ booking.getDayOfVisit() + ". Your place in the waiting list will be: " + priority);
+			yourOrderLabel.setText("For " + booking.getDayOfVisit() + ", At arround " + booking.getTimeOfVisit()
+					+ ". Your place in the waiting list will be: " + priority);
+
+			// setting the background image
+			ImageView backgroundImage = new ImageView(
+					new Image("/" + ParkController.getInstance().nameOfTable(booking.getParkBooked()) + ".jpg"));
+
+			backgroundImage.fitWidthProperty().bind(ScreenManager.getInstance().getStage().widthProperty());
+			backgroundImage.fitHeightProperty().bind(ScreenManager.getInstance().getStage().heightProperty());
+			backgroundImage.setPreserveRatio(false);
+			backgroundImage.setOpacity(0.2);
+
+			if (pane.getChildren().get(0) instanceof ImageView) {
+				pane.getChildren().remove(0);
+			}
+			pane.getChildren().add(0, backgroundImage);
 
 			// now adding the waiting list to the table view
 			setTable();

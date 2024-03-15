@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.TimeZone;
 
@@ -16,8 +17,9 @@ public class DatabaseController {
 
 	/**
 	 * The constructor establishes a connection to the local MySQL databse
+	 * 
 	 * @param database the local MySQL database path
-	 * @param root the root name
+	 * @param root     the root name
 	 * @param password the database password
 	 * @throws DatabaseException if there is a problem with the connection
 	 */
@@ -37,7 +39,55 @@ public class DatabaseController {
 			throw new DatabaseException("Can't establish connection to database");
 		}
 		System.out.println("Database connection established successfully");
-	}	
+	}
+
+	/**
+	 * This method gets an array list of communication requets. Executes these
+	 * requests as an atomic transaction.
+	 * 
+	 * @param requests
+	 * @return true if all the requests executions succeeded, false otherwise
+	 */
+	public boolean executeTransaction(Communication transaction) {
+		boolean success = false;
+		int i = 0;
+		try {
+			conn.setAutoCommit(false); // disabling auto-commit to manage transactions manually
+			System.out.println(
+					LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+							+ ": Communication Request no. " + transaction.getUniqueId()
+							+ ": Initiating transaction execution");
+			for (i = 0; i < transaction.getRequestsList().size(); i++) {
+				Statement stmt = conn.createStatement();
+				stmt.executeUpdate(transaction.getRequestsList().get(i).combineQuery());
+				System.out.println("        "
+						+ LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(),
+								LocalTime.now().getSecond())
+						+ ": " + transaction.getRequestsList().get(i).getQueryType() + " query execution succeed");
+			}
+
+			conn.commit(); // committing the transaction if all queries succeed
+			success = true;
+		} catch (SQLException | CommunicationException e) {
+			try {
+				System.out.println(LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(),
+						LocalTime.now().getSecond()) + ": Communication Request no. " + transaction.getUniqueId()
+						+ ": Transaction execution failed");
+				System.out.println("        Caused by: " + transaction.getRequestsList().get(i).getQueryType());
+				conn.rollback(); // roll back the transaction on error
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			e.printStackTrace();
+		} finally {
+			try {
+				conn.setAutoCommit(true); // re-enabling auto-commit
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return success;
+	}
 
 	/**
 	 * Gets a communication request (of a SELECT query), executes the query and
@@ -53,11 +103,16 @@ public class DatabaseController {
 			stmt = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			rs = stmt.executeQuery(request.combineQuery());
 		} catch (SQLException | CommunicationException e) {
-			System.out.println("Select query execution failed");
+			System.out.println(
+					LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+							+ ": Communication Request no. " + request.getUniqueId()
+							+ ": SELECT query execution failed");
 			e.printStackTrace();
 			return null;
 		}
-		System.out.println("Select query execution succeed");
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Communication Request no. " + request.getUniqueId() + ": SELECT query execution succeed");
 		return resultSetToList(rs);
 	}
 
@@ -75,10 +130,15 @@ public class DatabaseController {
 			stmt.executeUpdate(request.combineQuery());
 		} catch (SQLException | CommunicationException e) {
 			e.printStackTrace();
-			System.out.println("Update query execution failed");
+			System.out.println(
+					LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+							+ ": Communication Request no. " + request.getUniqueId()
+							+ ": UPDATE query execution failed");
 			return false;
 		}
-		System.out.println("Update query execution succeed");
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Communication Request no. " + request.getUniqueId() + ": UPDATE query execution succeed");
 		return true;
 	}
 
@@ -96,10 +156,15 @@ public class DatabaseController {
 			stmt.executeUpdate(request.combineQuery());
 		} catch (SQLException | CommunicationException e) {
 			e.printStackTrace();
-			System.out.println("Insert query execution failed");
+			System.out.println(
+					LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+							+ ": Communication Request no. " + request.getUniqueId()
+							+ ": INSERT query execution failed");
 			return false;
 		}
-		System.out.println("Insert query execution succeed");
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Communication Request no. " + request.getUniqueId() + ": INSERT query execution succeed");
 		return true;
 	}
 
@@ -117,10 +182,15 @@ public class DatabaseController {
 			stmt.executeUpdate(request.combineQuery());
 		} catch (SQLException | CommunicationException e) {
 			e.printStackTrace();
-			System.out.println("Delete query execution failed");
+			System.out.println(
+					LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+							+ ": Communication Request no. " + request.getUniqueId()
+							+ ": DELETE query execution failed");
 			return false;
 		}
-		System.out.println("Delete query execution succeed");
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Communication Request no. " + request.getUniqueId() + ": DELETE query execution succeed");
 		return true;
 	}
 

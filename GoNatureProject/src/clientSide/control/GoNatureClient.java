@@ -1,6 +1,7 @@
 package clientSide.control;
 
 import java.io.IOException;
+import java.time.LocalTime;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -53,10 +54,22 @@ public class GoNatureClient extends AbstractClient {
 	protected void handleMessageFromServer(Object responseFromServer) {
 		awaitResponse = false;
 		Communication response = (Communication) responseFromServer;
+
+		// finding the original request
 		Communication originalRequest = awaitingRequests.remove(response.getUniqueId());
-		if (originalRequest.getQueryType() == QueryType.SELECT) {
-			originalRequest.setResultList(response.getResultList());
-		} else {
+
+		// if the original request was a single query request
+		if (originalRequest.getCommunicationType() == CommunicationType.QUERY_REQUEST) {
+			if (originalRequest.getQueryType() == QueryType.SELECT) {
+				originalRequest.setResultList(response.getResultList());
+				originalRequest.setQueryResult(true);
+			} else {
+				originalRequest.setQueryResult(response.getQueryResult());
+			}
+		}
+
+		// if the original request was a transaction request
+		if (originalRequest.getCommunicationType() == CommunicationType.TRANSACTION) {
 			originalRequest.setQueryResult(response.getQueryResult());
 		}
 	}
@@ -70,12 +83,16 @@ public class GoNatureClient extends AbstractClient {
 		try {
 			awaitResponse = true;
 			Communication request = (Communication) requestFromClientSide;
-
+			
 			// creating a unique id for the request and adding it to the requests map
 			String uniqueId = UUID.randomUUID().toString();
 			request.setUniqueId(uniqueId);
 			awaitingRequests.put(uniqueId, request);
-
+			
+			System.out.println(
+					LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+							+ ": Sending Communication Request no. " + request.getUniqueId());
+			
 			// if this is a Disconnection request, just closing the connection
 			if (request.getCommunicationType() == CommunicationType.CLIENT_SERVER_MESSAGE) {
 				if (request.getMessageType() == MessageType.DISCONNECT) {

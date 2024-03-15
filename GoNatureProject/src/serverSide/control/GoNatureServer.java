@@ -1,6 +1,7 @@
 package serverSide.control;
 
 import java.io.IOException;
+import java.time.LocalTime;
 import java.util.ArrayList;
 
 import common.communication.Communication;
@@ -24,11 +25,12 @@ public class GoNatureServer extends AbstractServer {
 	public GoNatureServer(int port) {
 		super(port);
 	}
-	
+
 	/**
 	 * Creates a new instance of the database controller
+	 * 
 	 * @param database the local MySQL database path
-	 * @param root the root name
+	 * @param root     the root name
 	 * @param password the database password
 	 * @throws DatabaseException if there is a problem with the connection
 	 */
@@ -88,8 +90,12 @@ public class GoNatureServer extends AbstractServer {
 	 * @param client the ConnectionToClient who sent this request
 	 */
 	protected void handleMessageFromClient(Object msg, ConnectionToClient client) {
-		System.out.println("Message recieved from client " + client.toString());
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Communication recieved from client " + client.toString());
 		Communication request = (Communication) msg;
+		
+		// if this is a regular, single query request
 		if (request.getCommunicationType() == CommunicationType.QUERY_REQUEST) {
 			Communication response = new Communication(CommunicationType.RESPONSE);
 			// making the request and the response communication with the same unique id
@@ -117,6 +123,19 @@ public class GoNatureServer extends AbstractServer {
 			default:
 				return;
 			}
+			try {
+				client.sendToClient(response);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		// if this is a combined query (transaction) request
+		if (request.getCommunicationType() == CommunicationType.TRANSACTION) {
+			Communication response = new Communication(CommunicationType.RESPONSE);
+			response.setUniqueId(request.getUniqueId());
+			boolean transactionResult = db.executeTransaction(request);
+			response.setQueryResult(transactionResult);
 			try {
 				client.sendToClient(response);
 			} catch (IOException e) {
