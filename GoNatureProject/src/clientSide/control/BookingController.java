@@ -79,7 +79,11 @@ public class BookingController {
 		return instance;
 	}
 
+	/////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////
 	///// COMMON METHODS FOR ALL CONTROLLED SCREENS /////
+	/////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////
 
 	/**
 	 * This method requests parks details from the database and returns a pair of
@@ -136,7 +140,41 @@ public class BookingController {
 		return deleteRequest.getQueryResult();
 	}
 
+	/**
+	 * This method gets a park object and returns its updated orders amount and time
+	 * limit parameters from the database
+	 * 
+	 * @param parkToCheck
+	 * @return the updated parameters as a pair: the key is the maximum order
+	 *         amount, the value is the maximum time limit
+	 */
+	private Pair<Integer, Integer> getParkUpdatedParameters(Park parkToCheck) {
+		// creating the request for the booking deletion
+		Communication selectRequest = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			selectRequest.setQueryType(QueryType.SELECT);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		selectRequest.setTables(Arrays.asList("park"));
+		selectRequest.setSelectColumns(Arrays.asList("maximumOrderAmount", "maximumTimeLimit"));
+		selectRequest.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="),
+				Arrays.asList(parkToCheck.getParkName()));
+
+		// sending the request to the server side
+		GoNatureClientUI.client.accept(selectRequest);
+
+		// getting the result from the database
+		Pair<Integer, Integer> pair = new Pair<>((Integer) selectRequest.getResultList().get(0)[0],
+				(Integer) selectRequest.getResultList().get(0)[1]);
+		return pair;
+	}
+
+	/////////////////////////////////////////////////
+	/////////////////////////////////////////////////
 	///// METHODS FOR CONTROLLED BOOKING SCREEN /////
+	/////////////////////////////////////////////////
+	/////////////////////////////////////////////////
 
 	/**
 	 * This method checks the availability for a specific booking, by checking the
@@ -150,10 +188,12 @@ public class BookingController {
 		// pre-setting data for request
 		Communication availabilityRequest = new Communication(CommunicationType.QUERY_REQUEST);
 		Park parkOfBooking = newBooking.getParkBooked();
+		// the pair holds the maximum orders amount, and maximum time limit parameters
+		Pair<Integer, Integer> pair = getParkUpdatedParameters(parkOfBooking);
 		@SuppressWarnings("static-access")
 		String parkTableName = ParkController.getInstance().nameOfTable(parkOfBooking)
 				+ availabilityRequest.activeBookings;
-		int parkTimeLimit = parkOfBooking.getTimeLimit();
+		int parkTimeLimit = pair.getValue();
 		int numberOfVisitors = newBooking.getNumberOfVisitors();
 
 		// creating the request for the availability check
@@ -180,7 +220,7 @@ public class BookingController {
 			countVisitors += (Integer) row[0];
 		}
 		// checking park parameters
-		return parkOfBooking.getMaximumOrders() - countVisitors - numberOfVisitors >= 0;
+		return pair.getKey() - countVisitors - numberOfVisitors >= 0;
 	}
 
 	/**
@@ -220,11 +260,10 @@ public class BookingController {
 	}
 
 	/**
-	 * This method gets a new booking and the booker details and inserts the booking
-	 * into the park booked active bookings table
+	 * This method gets a new booking details and inserts the booking into the park
+	 * booked active bookings table
 	 * 
 	 * @param newBooking the booking to insert
-	 * @param booker     the booker of the booking
 	 * @return true if the insert query succeed, false if not
 	 */
 	public boolean insertNewBookingToActiveTable(Booking newBooking) {
@@ -291,7 +330,11 @@ public class BookingController {
 		return updateRequest.getQueryResult();
 	}
 
+	//////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////
 	///// METHODS FOR CONTROLLED BOOKING MANAGING SCREEN /////
+	//////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////
 
 	/**
 	 * This method gets a visitor and returns all his active/cancelled/done bookings
@@ -326,6 +369,7 @@ public class BookingController {
 			if (!availabilityRequest.getResultList().isEmpty()) {
 				for (Object[] row : availabilityRequest.getResultList()) {
 					Booking addBooking;
+
 					// if this is the active booking table to check in
 					if (tableEnding == availabilityRequest.activeBookings) {
 						addBooking = new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
@@ -338,6 +382,8 @@ public class BookingController {
 								((Time) row[15]) == null ? null : ((Time) row[15]).toLocalTime(),
 								(Integer) row[16] == 0 ? false : true,
 								((Time) row[17]) == null ? null : ((Time) row[17]).toLocalTime(), park);
+						addBooking.setStatus("Active");
+
 					} else if (tableEnding == availabilityRequest.cancelledBookings) {
 						// if this is the cancelled booking table to check in
 						addBooking = new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
@@ -346,7 +392,8 @@ public class BookingController {
 								(Integer) row[5], (String) row[6], (String) row[7], (String) row[8], (String) row[9],
 								(String) row[10], -1, false, false, null, null, false, null, park);
 						addBooking.setStatus("Cancelled");
-					} else {
+
+					} else if (tableEnding == availabilityRequest.doneBookings) {
 						// if this is the done booking table to check in
 						addBooking = new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
 								((Time) row[2]).toLocalTime(), ((Date) row[3]).toLocalDate(),
@@ -356,6 +403,16 @@ public class BookingController {
 								((Time) row[12]) == null ? null : ((Time) row[12]).toLocalTime(),
 								((Time) row[13]) == null ? null : ((Time) row[13]).toLocalTime(), false, null, park);
 						addBooking.setStatus("Finished");
+
+					} else {
+						// if this is the waiting list table to check in
+						addBooking = new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
+								((Time) row[2]).toLocalTime(), ((Date) row[3]).toLocalDate(),
+								((String) row[5]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL,
+								(Integer) row[6], (String) row[7], (String) row[8], (String) row[9], (String) row[10],
+								(String) row[11], -1, false, false, null, null, false, null, park);
+						addBooking.setWaitingListPriority((Integer) row[4]);
+						addBooking.setStatus("Waiting List");
 					}
 					returnList.add(addBooking);
 				}
@@ -367,10 +424,10 @@ public class BookingController {
 	/**
 	 * This method checks the availability for a specific booking, by checking the
 	 * specific park parameters and active bookings on the same date and time range
-	 * of the checked order. The editing booking screen allows user to modify their
+	 * of the checked order. The editing booking screen allows users to modify their
 	 * bookings and check availabilty after the modification. There is a need to, in
 	 * same cases, substract the old booking's number of visitors from the total
-	 * park capacity in otder to return correct and real answer
+	 * park capacity in order to return correct and real answer
 	 * 
 	 * @param oldBooking the old booking that is required to be changed
 	 * @param newBooking the new booking to be checked
@@ -393,7 +450,10 @@ public class BookingController {
 		// if this is the same park and the same date, checking if the time range of the
 		// new booking is overlapping the old booking time
 		// if not: the old one has no effect of the new booking's capacities check
-		int parkTimeLimit = newBooking.getParkBooked().getTimeLimit();
+
+		// the pair holds the maximum orders amount, and maximum time limit parameters
+		Pair<Integer, Integer> pair = getParkUpdatedParameters(newBooking.getParkBooked());
+		int parkTimeLimit = pair.getValue();
 		if (!(newBooking.getTimeOfVisit().compareTo(oldBooking.getTimeOfVisit().minusHours(parkTimeLimit)) > 0
 				&& newBooking.getTimeOfVisit().compareTo(oldBooking.getTimeOfVisit().plusHours(parkTimeLimit)) < 0)) {
 			return checkParkAvailabilityForNewBooking(newBooking);
@@ -433,10 +493,105 @@ public class BookingController {
 			countVisitors += (Integer) row[0];
 		}
 		// checking park parameters
-		return parkOfBooking.getMaximumOrders() - countVisitors - numberOfVisitors >= 0;
+		return pair.getKey() - countVisitors - numberOfVisitors >= 0;
 	}
 
+	/**
+	 * This method gets a booking and inserts the booking into the park cancelled
+	 * bookings table
+	 * 
+	 * @param newBooking the booking to insert
+	 * @return true if the insert query succeed, false if not
+	 */
+	public boolean insertBookingToCancelledTable(Booking cancelledBooking, String reason) {
+		// creating the request for the new booking insert
+		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			insertRequest.setQueryType(QueryType.INSERT);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		@SuppressWarnings("static-access")
+		String parkTableName = ParkController.getInstance().nameOfTable(cancelledBooking.getParkBooked())
+				+ insertRequest.cancelledBookings;
+		insertRequest.setTables(Arrays.asList(parkTableName));
+		insertRequest.setColumnsAndValues(
+				Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType", "numberOfVisitors",
+						"idNumber", "firstName", "lastName", "emailAddress", "phoneNumber", "cancellationReason"),
+				Arrays.asList(cancelledBooking.getBookingId(), cancelledBooking.getDayOfVisit(),
+						cancelledBooking.getTimeOfVisit(), cancelledBooking.getDayOfBooking(),
+						cancelledBooking.getVisitType() == VisitType.GROUP ? "group" : "individual",
+						cancelledBooking.getNumberOfVisitors(), cancelledBooking.getIdNumber(),
+						cancelledBooking.getFirstName(), cancelledBooking.getLastName(),
+						cancelledBooking.getEmailAddress(), cancelledBooking.getPhoneNumber(), reason));
+
+		// sending the request to the server side
+		GoNatureClientUI.client.accept(insertRequest);
+
+		// getting the result from the database
+		return insertRequest.getQueryResult();
+	}
+
+	public boolean updateBooking(Booking oldBooking, Booking newBooking) {
+		Communication transaction = new Communication(CommunicationType.TRANSACTION);
+		// creating the request for the old booking deletion
+		Communication deleteRequest = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			deleteRequest.setQueryType(QueryType.DELETE);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+
+		@SuppressWarnings("static-access")
+		String deleteTable = ParkController.getInstance().nameOfTable(oldBooking.getParkBooked())
+				+ deleteRequest.activeBookings;
+		deleteRequest.setTables(Arrays.asList(deleteTable));
+		deleteRequest.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="),
+				Arrays.asList(oldBooking.getBookingId()));
+
+		// adding the request to the requests list
+		transaction.addRequestToList(deleteRequest);
+
+		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
+		// creating the request for the new booking insert
+		try {
+			insertRequest.setQueryType(QueryType.INSERT);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+
+		@SuppressWarnings("static-access")
+		String insertTable = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
+				+ insertRequest.activeBookings;
+		insertRequest.setTables(Arrays.asList(insertTable));
+		insertRequest.setColumnsAndValues(
+				Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType", "numberOfVisitors",
+						"idNumber", "firstName", "lastName", "emailAddress", "phoneNumber", "finalPrice", "paid",
+						"confirmed", "entryParkTime", "exitParkTime", "isRecievedReminder", "reminderArrivalTime"),
+				Arrays.asList(newBooking.getBookingId(), newBooking.getDayOfVisit(), newBooking.getTimeOfVisit(),
+						newBooking.getDayOfBooking(),
+						newBooking.getVisitType() == VisitType.GROUP ? "group" : "individual",
+						newBooking.getNumberOfVisitors(), newBooking.getIdNumber(), newBooking.getFirstName(),
+						newBooking.getLastName(), newBooking.getEmailAddress(), newBooking.getPhoneNumber(),
+						newBooking.getFinalPrice(), newBooking.isPaid() == false ? 0 : 1,
+						newBooking.isConfirmed() == false ? 0 : 1, newBooking.getEntryParkTime(),
+						newBooking.getExitParkTime(), newBooking.isRecievedReminder() == false ? 0 : 1,
+						newBooking.getReminderArrivalTime()));
+
+		// adding the request to the requests list
+		transaction.addRequestToList(insertRequest);
+		// sending the requests list to the server side
+		GoNatureClientUI.client.accept(transaction);
+
+		// getting the results from the database
+		return transaction.getQueryResult();
+	}
+
+	////////////////////////////////////////////////////
+	////////////////////////////////////////////////////
 	///// METHODS FOR CONTROLLED RESCHEDULE SCREEN /////
+	////////////////////////////////////////////////////
+	////////////////////////////////////////////////////
 
 	/**
 	 * This method is used for showing all the slots available in a specific park
@@ -493,7 +648,9 @@ public class BookingController {
 		@SuppressWarnings("static-access")
 		String parkTableName = ParkController.getInstance().nameOfTable(parkToCheck)
 				+ availabilityRequest.activeBookings;
-		int parkTimeLimit = parkToCheck.getTimeLimit();
+		// the pair holds the maximum orders amount, and maximum time limit parameters
+		Pair<Integer, Integer> pair = getParkUpdatedParameters(parkToCheck);
+		int parkTimeLimit = pair.getValue();
 
 		// creating the request for the availability check
 		try {
@@ -518,24 +675,23 @@ public class BookingController {
 			countVisitors += (Integer) row[0];
 		}
 		// checking park parameters
-		return parkToCheck.getMaximumOrders() - countVisitors - numberOfVisitors > 0;
+		return pair.getKey() - countVisitors - numberOfVisitors > 0;
 	}
 
+	//////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////
 	///// METHODS FOR CONTROLLED WAITING LIST SCREEN /////
+	//////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////
 
 	/**
-	 * This method gets a new booking and the booker details and inserts the booking
-	 * into the park booked waiting list table
+	 * This method gets a new booking details and inserts the booking into the park
+	 * booked waiting list table
 	 * 
 	 * @param newBooking the booking to insert
-	 * @param booker     the booker of the booking
 	 * @return true if the insert query succeed, false if not
 	 */
 	public boolean insertBookingToWaitingList(Booking newBooking) {
-		System.out.println(newBooking.toString());
-		System.out.println(newBooking.getTimeOfVisit() + " " + newBooking.getDayOfBooking());
-		System.out
-				.println(Time.valueOf(newBooking.getTimeOfVisit()) + " " + Date.valueOf(newBooking.getDayOfBooking()));
 		// checking the waiting list for the specific date and time
 		// this is done in order to determine the new booking's waiting list priority
 		int bookingPriority = checkBookingWaitingListPriority(newBooking);
@@ -586,7 +742,10 @@ public class BookingController {
 				+ waitingListRequest.waitingList;
 		waitingListRequest.setTables(Arrays.asList(parkTableName));
 		waitingListRequest.setSelectColumns(Arrays.asList("dayOfVisit", "timeOfVisit"));
-		int parkTimeLimit = newBooking.getParkBooked().getTimeLimit();
+
+		// the pair holds the maximum orders amount, and maximum time limit parameters
+		Pair<Integer, Integer> pair = getParkUpdatedParameters(newBooking.getParkBooked());
+		int parkTimeLimit = pair.getValue();
 		waitingListRequest.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit"),
 				Arrays.asList("=", "AND", ">", "AND", "<"),
 				Arrays.asList(newBooking.getDayOfVisit(), newBooking.getTimeOfVisit().minusHours(parkTimeLimit),
@@ -620,7 +779,10 @@ public class BookingController {
 		waitingListRequest.setTables(Arrays.asList(parkTableName));
 		waitingListRequest.setSelectColumns(Arrays.asList("bookingId", "timeOfVisit", "dayOfBooking",
 				"waitingListOrder", "visitType", "numberOfVisitors"));
-		int parkTimeLimit = newBooking.getParkBooked().getTimeLimit();
+
+		// the pair holds the maximum orders amount, and maximum time limit parameters
+		Pair<Integer, Integer> pair = getParkUpdatedParameters(newBooking.getParkBooked());
+		int parkTimeLimit = pair.getValue();
 		waitingListRequest.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit"),
 				Arrays.asList("=", "AND", ">", "AND", "<"),
 				Arrays.asList(newBooking.getDayOfVisit(), newBooking.getTimeOfVisit().minusHours(parkTimeLimit),
@@ -636,15 +798,102 @@ public class BookingController {
 					((String) row[4]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL, (Integer) row[5]);
 			waitingListBookings.add(addToList);
 		}
-
-		System.out.println(Time.valueOf(LocalTime.now()));
-		System.out.println(LocalTime.now());
-		System.out.println(Date.valueOf(LocalDate.now()));
-
 		return FXCollections.observableArrayList(waitingListBookings);
 	}
 
+	/**
+	 * This method gets a booking and the booker details and deletes the booking
+	 * from the park waiting list table
+	 * 
+	 * @param newBooking the booking to insert
+	 * @param booker     the booker of the booking
+	 * @return true if the insert query succeed, false if not
+	 */
+	@SuppressWarnings("static-access")
+	public boolean deleteBookingFromWaitingList(Booking deleteBooking) {
+		// the pair holds the maximum orders amount, and maximum time limit parameters
+		Pair<Integer, Integer> pair = getParkUpdatedParameters(deleteBooking.getParkBooked());
+		int parkTimeLimit = pair.getValue();
+
+		// first getting all relevant waiting list bookings with lower priority from the
+		// booking that about to be deleted
+		Communication selectQuery = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			selectQuery.setQueryType(QueryType.SELECT);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		String parkTableName = ParkController.getInstance().nameOfTable(deleteBooking.getParkBooked())
+				+ selectQuery.waitingList;
+		selectQuery.setTables(Arrays.asList(parkTableName));
+		selectQuery.setSelectColumns(Arrays.asList("bookingId", "waitingListOrder"));
+		selectQuery.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit", "waitingListOrder"),
+				Arrays.asList("=", "AND", ">", "AND", "<", "AND", ">"),
+				Arrays.asList(deleteBooking.getDayOfVisit(), deleteBooking.getTimeOfVisit().minusHours(parkTimeLimit),
+						deleteBooking.getTimeOfVisit().plusHours(parkTimeLimit),
+						deleteBooking.getWaitingListPriority()));
+
+		// sending the request to the server side
+		GoNatureClientUI.client.accept(selectQuery);
+
+		ArrayList<Pair<String, Integer>> idNumbers = new ArrayList<>();
+		for (Object[] row : selectQuery.getResultList()) {
+			idNumbers.add(new Pair<String, Integer>((String)row[0], (Integer)row[1]));
+		}
+
+		// creating the request for the booking deletion
+		// the request is a transaction: first deleting the booking
+		// and then updating all higher-priority waiting list bookings' priorities
+		Communication transaction = new Communication(CommunicationType.TRANSACTION);
+
+		// creating the delete request
+		Communication deleteRequest = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			deleteRequest.setQueryType(QueryType.DELETE);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		deleteRequest.setTables(Arrays.asList(parkTableName));
+		deleteRequest.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="),
+				Arrays.asList(deleteBooking.getBookingId()));
+
+		// adding the delete request to the transaction
+		transaction.addRequestToList(deleteRequest);
+
+		for (Pair<String, Integer> row : idNumbers) {
+			Communication updateRequest = new Communication(CommunicationType.QUERY_REQUEST);
+			try {
+				updateRequest.setQueryType(QueryType.UPDATE);
+			} catch (CommunicationException e) {
+				e.printStackTrace();
+			}
+			updateRequest.setTables(Arrays.asList(parkTableName));
+			updateRequest.setColumnsAndValues(Arrays.asList("waitingListOrder"), Arrays.asList(row.getValue() - 1));
+			updateRequest.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList(row.getKey()));
+			try {
+				System.out.println(updateRequest.combineQuery());
+			} catch (CommunicationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			// adding the update request to the transaction
+			transaction.addRequestToList(updateRequest);
+		}
+		
+
+		// sending the request to the server side
+		GoNatureClientUI.client.accept(transaction);
+
+		// getting the result from the database
+		return transaction.getQueryResult();
+	}
+
+	///////////////
+	///////////////
 	/// GETTERS ///
+	///////////////
+	///////////////
+
 	/**
 	 * @return the saved booking
 	 */
@@ -680,7 +929,12 @@ public class BookingController {
 		return pair;
 	}
 
+	///////////////
+	///////////////
 	/// SETTERS ///
+	///////////////
+	///////////////
+
 	/**
 	 * @param booking the booking to be saved
 	 */

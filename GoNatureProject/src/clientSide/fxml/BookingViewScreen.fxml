@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onKeyPressed="#paneTabPressed" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.BookingViewScreenController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.BookingViewScreenController">
    <children>
       <Button fx:id="backButton" layoutX="14.0" layoutY="15.0" mnemonicParsing="false" onAction="#returnToPreviousScreen" prefHeight="38.0" prefWidth="38.0">
          <font>
@@ -53,21 +53,22 @@
          </columns>
       </TableView>
       <ProgressIndicator fx:id="progressIndicator" layoutX="334.0" layoutY="209.0" prefHeight="100.0" prefWidth="100.0" progress="0.0" />
-      <TableView fx:id="futureTable" layoutX="27.0" layoutY="156.0" prefHeight="161.0" prefWidth="647.0">
-         <columns>
-            <TableColumn fx:id="bookingIdFutureColumn" editable="false" prefWidth="83.33334541320801" sortable="false" text="Booking ID" />
-            <TableColumn fx:id="parkFutureColumn" editable="false" prefWidth="200.79998016357422" sortable="false" text="Park" />
-            <TableColumn fx:id="dateFutureColumn" editable="false" prefWidth="68.0" text="Date" />
-            <TableColumn fx:id="timeFutureColumn" editable="false" prefWidth="60.79998779296875" sortable="false" text="Time" />
-            <TableColumn fx:id="sizeFutureColumn" editable="false" prefWidth="83.99996948242188" sortable="false" text="Group Size" />
-            <TableColumn fx:id="priceFutureColumn" editable="false" minWidth="0.0" prefWidth="87.33331298828125" sortable="false" text="Final Price" />
-            <TableColumn fx:id="paidFutureColumn" editable="false" minWidth="3.3333740234375" prefWidth="60.6666259765625" sortable="false" text="Paid" />
-         </columns>
-      </TableView>
       <Label fx:id="waitLabel" layoutX="21.0" layoutY="296.0" prefHeight="75.0" prefWidth="656.0" text="Booking Managing">
          <font>
             <Font name="Cambria" size="20.0" />
          </font>
       </Label>
+      <TableView fx:id="futureTable" layoutX="26.0" layoutY="157.0" prefHeight="163.0" prefWidth="647.0">
+         <columns>
+            <TableColumn fx:id="bookingIdFutureColumn" editable="false" prefWidth="75.0" sortable="false" text="Booking ID" />
+            <TableColumn fx:id="parkFutureColumn" editable="false" prefWidth="136.80004119873047" sortable="false" text="Park" />
+            <TableColumn fx:id="dateFutureColumn" editable="false" prefWidth="75.199951171875" text="Date" />
+            <TableColumn fx:id="timeFutureColumn" editable="false" prefWidth="51.0" sortable="false" text="Time" />
+            <TableColumn fx:id="sizeFutureColumn" editable="false" prefWidth="71.0" sortable="false" text="Group Size" />
+            <TableColumn fx:id="priceFutureColumn" editable="false" prefWidth="66.0" sortable="false" text="Final Price" />
+            <TableColumn fx:id="paidFutureColumn" editable="false" prefWidth="46.0" sortable="false" text="Paid" />
+            <TableColumn fx:id="statusFutureColumn" editable="false" prefWidth="102.0" sortable="false" text="Status" />
+         </columns>
+      </TableView>
    </children>
 </Pane>

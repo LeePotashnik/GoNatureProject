@@ -14,23 +14,34 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.util.Pair;
 
+/**
+ * The ConfirmationScreenController is called after a booking if successfully
+ * proccessed, showing a confirmation to the user.
+ */
 public class ConfirmationScreenController extends AbstractScreen {
 	private ParkVisitor visitor;
 
+	// GUI COMPONENTS
 	@FXML
 	private Label bookingIdLabel, dateLabel, emailLabel, holderLabel, isPaidLabel, parkAddressLabel, parkNameLabel,
 			phoneLabel, priceLabel, timeLabel, visitorsLabel;
-
 	@FXML
 	private ImageView goNatureLogo, parkImage;
-
 	@FXML
 	private Button returnToAccountBtn;
-
 	@FXML
 	private Pane pane;
 
+	/////////////////////
+	/// EVENT METHODS ///
+	/////////////////////
+
 	@FXML
+	/**
+	 * This method is called after the user clicked on "Return to Account" button
+	 * 
+	 * @param event
+	 */
 	void returnToAccount(ActionEvent event) {
 		if (visitor == null) { // is not connected to the system, entered only with id
 			showInformationAlert(ScreenManager.getInstance().getStage(), "Now returning to main screen.");
@@ -39,7 +50,14 @@ public class ConfirmationScreenController extends AbstractScreen {
 		}
 	}
 
+	///////////////////////////////
+	/// JAVAFX AND FXML METHODS ///
+	///////////////////////////////
+
 	@Override
+	/**
+	 * This method initialized all the fxml and javafx components
+	 */
 	public void initialize() {
 		// initializing the image component and centering it
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
@@ -83,6 +101,9 @@ public class ConfirmationScreenController extends AbstractScreen {
 	}
 
 	@Override
+	/**
+	 * Returns the screen's title
+	 */
 	public String getScreenTitle() {
 		return "Reservation Confirmation";
 	}

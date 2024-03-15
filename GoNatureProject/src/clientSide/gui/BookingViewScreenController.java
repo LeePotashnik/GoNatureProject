@@ -17,7 +17,6 @@ import entities.Park;
 import entities.ParkVisitor;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -33,24 +32,32 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.shape.Circle;
 import javafx.util.Pair;
 
+/**
+ * The BookingViewScreenController is called after the visitor clicks on edit
+ * bookings button in his account screen. This screen shows all the
+ * active/cancelled/done/waiting list bookings of the visitor, and lets him do
+ * operations on these bookings.
+ */
 public class BookingViewScreenController extends AbstractScreen implements Stateful {
 	private BookingController control; // controller
 	private Booking booking;
-	private ObservableList<Booking> pastBookings = FXCollections.observableArrayList();
-	private ObservableList<Booking> futureBookings = FXCollections.observableArrayList();
+	private ObservableList<Booking> pastBookings = null;
+	private ObservableList<Booking> futureBookings = null;
 	private ParkVisitor visitor;
 
+	/**
+	 * The constructor gets the instance of the booking controller
+	 */
 	public BookingViewScreenController() {
 		control = BookingController.getInstance();
 	}
 
+	// past bookings (done/cancelled) table view
 	@FXML
 	private TableView<Booking> pastTable;
 	@FXML
@@ -70,6 +77,7 @@ public class BookingViewScreenController extends AbstractScreen implements State
 	@FXML
 	private TableColumn<Booking, String> statusPastColumn;
 
+	// future bookings (active/in waiting list) table view
 	@FXML
 	private TableView<Booking> futureTable;
 	@FXML
@@ -83,48 +91,207 @@ public class BookingViewScreenController extends AbstractScreen implements State
 	@FXML
 	private TableColumn<Booking, Integer> sizeFutureColumn;
 	@FXML
-	private TableColumn<Booking, Integer> priceFutureColumn;
+	private TableColumn<Booking, String> priceFutureColumn;
 	@FXML
 	private TableColumn<Booking, String> paidFutureColumn;
+	@FXML
+	private TableColumn<Booking, String> statusFutureColumn;
 
+	// other GUI components
 	@FXML
 	private Button backButton;
-
 	@FXML
 	private Label titleLbl, doubleClickLabel, futureLabel, pastLabel, waitLabel;
-
 	@FXML
 	private Separator seperator1, seperator2;
-
 	@FXML
 	private ImageView goNatureLogo;
-
 	@FXML
 	private Pane pane;
-
-	@FXML
-	private Circle circle;
-
 	@FXML
 	private ProgressIndicator progressIndicator;
 
+	/////////////////////
+	/// EVENT METHODS ///
+	/////////////////////
+
 	@FXML
+	/**
+	 * Sets the focus to the pane when clicked
+	 * 
+	 * @param event
+	 */
 	void paneClicked(MouseEvent event) {
 		pane.requestFocus();
 
 	}
 
 	@FXML
-	void paneTabPressed(KeyEvent event) {
-
-	}
-
-	@FXML
+	/**
+	 * Returns to the previous screen
+	 * 
+	 * @param event
+	 */
 	void returnToPreviousScreen(ActionEvent event) {
-
+		try {
+			// was not shown once, the previous screen is the account screen which needs to
+			// restore its state
+			ScreenManager.getInstance().goToPreviousScreen(false, false);
+		} catch (ScreenException | StatefulException e) {
+			e.printStackTrace();
+		}
 	}
+
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
+
+	/**
+	 * This method gets a chosen booking from the table (a row from the table) and
+	 * checks the next steps the user wants to do with this booking
+	 * 
+	 * @param chosenBooking
+	 */
+	private void bookingClicked(Booking chosenBooking) {
+		// first checking if the chosen booking is an active booking (which can be
+		// edited) or a waiting list booking (which can only be cancelled)
+		if (chosenBooking.getStatus().equals("Active")) { // IF ACTIVE
+			// creating a pop up message for the user to choose what to do next
+			int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+					"Edit booking to " + chosenBooking.getParkBooked().getParkName() + " park for "
+							+ chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit(),
+					Arrays.asList("Return", "Edit"));
+			switch (choise) {
+			// chose to return
+			case 1: {
+				return;
+			}
+			// chose to edit
+			case 2: {
+				try {
+					booking = chosenBooking;
+					ScreenManager.getInstance().showScreen("BookingEditingScreenController",
+							"/clientSide/fxml/BookingEditingScreen.fxml", true, true,
+							StageSettings.defaultSettings("Booking Editing"),
+							new Pair<Booking, ParkVisitor>(booking, visitor));
+				} catch (StatefulException | ScreenException e) {
+					e.printStackTrace();
+				}
+			}
+			}
+		} else { // IF WAITING LIST
+			int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+					"Cancel waiting list spot to " + chosenBooking.getParkBooked().getParkName() + " park for "
+							+ chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit()
+							+ "\nThis action can't be undone",
+					Arrays.asList("Return", "Cancel"));
+			switch (choise) {
+			// chose to return
+			case 1: {
+				return;
+			}
+			// chose to cancel
+			case 2: {
+				if (!control.deleteBookingFromWaitingList(chosenBooking)) {
+					showErrorAlert(ScreenManager.getInstance().getStage(),
+							"We were unable to cancel your waiting list spot.\nPlease try again later.");
+					return;
+				} else {
+					showInformationAlert(ScreenManager.getInstance().getStage(),
+							"Your waiting list booking to " + chosenBooking.getParkBooked().getParkName() + " Park for "
+									+ chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit()
+									+ " was cancelled successfully");
+					futureTable.getItems().remove(chosenBooking);
+				}
+			}
+			}
+		}
+	}
+
+	/**
+	 * This method sets the tables and their columns with the retrieved data
+	 */
+	private void setTables() {
+		// setting the past bookings table
+		bookingIdPastColumn.setCellValueFactory(new PropertyValueFactory<>("bookingId"));
+		parkPastColumn.setCellValueFactory(cellData -> {
+			Booking booking = cellData.getValue();
+			Park park = booking.getParkBooked();
+			String parkName = park.getParkName();
+			return new ReadOnlyStringWrapper(parkName);
+		});
+		datePastColumn.setCellValueFactory(new PropertyValueFactory<>("dayOfVisit"));
+		timePastColumn.setCellValueFactory(new PropertyValueFactory<>("timeOfVisit"));
+		sizePastColumn.setCellValueFactory(new PropertyValueFactory<>("numberOfVisitors"));
+		pricePastColumn.setCellValueFactory(cellData -> {
+			Booking booking = cellData.getValue();
+			String price = booking.getFinalPrice() == -1 ? "N/A" : booking.getFinalPrice() + "$";
+			return new ReadOnlyStringWrapper(price);
+		});
+		paidPastColumn.setCellValueFactory(cellData -> {
+			Booking booking = cellData.getValue();
+			String paid = booking.getFinalPrice() == -1 ? "N/A" : (booking.isPaid() ? "Yes" : "No");
+			return new ReadOnlyStringWrapper(paid);
+		});
+		statusPastColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+		pastTable.setItems(pastBookings);
+		pastTable.getSortOrder().add(datePastColumn);
+
+		// setting the future bookings table
+		bookingIdFutureColumn.setCellValueFactory(new PropertyValueFactory<>("bookingId"));
+		parkFutureColumn.setCellValueFactory(cellData -> {
+			Booking booking = cellData.getValue();
+			Park park = booking.getParkBooked();
+			String parkName = park.getParkName();
+			return new ReadOnlyStringWrapper(parkName);
+		});
+		dateFutureColumn.setCellValueFactory(new PropertyValueFactory<>("dayOfVisit"));
+		timeFutureColumn.setCellValueFactory(new PropertyValueFactory<>("timeOfVisit"));
+		sizeFutureColumn.setCellValueFactory(new PropertyValueFactory<>("numberOfVisitors"));
+		priceFutureColumn.setCellValueFactory(cellData -> {
+			Booking booking = cellData.getValue();
+			String price = booking.getFinalPrice() == -1 ? "N/A" : booking.getFinalPrice() + "$";
+			return new ReadOnlyStringWrapper(price);
+		});
+		paidFutureColumn.setCellValueFactory(cellData -> {
+			Booking booking = cellData.getValue();
+			String paid = booking.getFinalPrice() == -1 ? "N/A" : (booking.isPaid() ? "Yes" : "No");
+			return new ReadOnlyStringWrapper(paid);
+		});
+		statusFutureColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+		futureTable.setItems(futureBookings);
+		futureTable.getSortOrder().add(dateFutureColumn);
+	}
+
+	/**
+	 * This method is used to hide/show all elements but the progress indicator and
+	 * its label
+	 * 
+	 * @param visible
+	 */
+	private void setVisible(boolean visible) {
+		progressIndicator.setVisible(!visible);
+		waitLabel.setVisible(!visible);
+		pastTable.setVisible(visible);
+		futureTable.setVisible(visible);
+		futureLabel.setVisible(visible);
+		pastLabel.setVisible(visible);
+		seperator1.setVisible(visible);
+		seperator2.setVisible(visible);
+		doubleClickLabel.setVisible(visible);
+		backButton.setVisible(visible);
+	}
+
+	///////////////////////////////////////////////////////
+	/// JAVAFX, FXML, ABSTRACT SCREEN, STATEFUL METHODS ///
+	///////////////////////////////////////////////////////
 
 	@Override
+	/**
+	 * This method initialized all the fxml and javafx components
+	 */
 	public void initialize() {
 		// initializing the image component and labels, and centering them
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
@@ -156,14 +323,14 @@ public class BookingViewScreenController extends AbstractScreen implements State
 		sizeFutureColumn.setResizable(false);
 		priceFutureColumn.setResizable(false);
 		paidFutureColumn.setResizable(false);
+		statusFutureColumn.setResizable(false);
 
 		// setting the empty-table labels
 		futureTable.setPlaceholder(new Label(
 				"You don't have any upcoming bookings.\nYou can always reserve a new booking by returning to you account screen\nand click on the Reserve a New Booking button"));
 		pastTable.setPlaceholder(new Label("No past bookings"));
 
-		// setting what will occur when double-clicking on a row of the future bookings
-		// table
+		// setting what will occur when double-clicking on a row of the future table
 		futureTable.setRowFactory(tv -> {
 			TableRow<Booking> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
@@ -175,6 +342,7 @@ public class BookingViewScreenController extends AbstractScreen implements State
 			return row;
 		});
 
+		// setting what will occur when double-clicking on a row of the past table
 		pastTable.setRowFactory(tv -> {
 			TableRow<Booking> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
@@ -185,7 +353,7 @@ public class BookingViewScreenController extends AbstractScreen implements State
 			return row;
 		});
 
-		// setting the porgress indicators, hiding other elements
+		// setting the porgress indicator, hiding other elements
 		progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
 		progressIndicator.layoutXProperty()
 				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
@@ -204,128 +372,10 @@ public class BookingViewScreenController extends AbstractScreen implements State
 		backButton.setPadding(new Insets(1, 1, 1, 1));
 	}
 
-	private void bookingClicked(Booking chosenBooking) {
-		// creating a pop up message for the user to choose what to do next
-		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
-				"You are about to edit your " + chosenBooking.getParkBooked().getParkName() + " park booking for "
-						+ chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit(),
-				Arrays.asList("Cancel", "Continue"));
-		switch (choise) {
-		// chose to cancel
-		case 1: {
-			return;
-		}
-		// chose to continue
-		case 2: {
-			try {
-				booking = chosenBooking;
-				ScreenManager.getInstance().showScreen("BookingEditingScreenController",
-						"/clientSide/fxml/BookingEditingScreen.fxml", true, true,
-						StageSettings.defaultSettings("Booking Editing"), booking);
-			} catch (StatefulException | ScreenException e) {
-				e.printStackTrace();
-			}
-		}
-		}
-	}
-
 	@Override
-	public void loadBefore(Object information) {
-		if (information instanceof ParkVisitor) {
-			visitor = (ParkVisitor) information;
-
-			new Thread(() -> {
-				// performing database operations
-				pastBookings = control.getVisitorBookings(visitor, Communication.doneBookings);
-				pastBookings.addAll(control.getVisitorBookings(visitor, Communication.cancelledBookings));
-				futureBookings = control.getVisitorBookings(visitor, Communication.activeBookings);
-
-				Platform.runLater(() -> {
-					setTables(); // updating the table views with the fetched data
-					setVisible(true); // showing gui elements, hiding progress indicator
-				});
-			}).start();
-
-		}
-	}
-
 	/**
-	 * This method is used to hide/show all elements but the progress indicator and
-	 * its label
-	 * 
-	 * @param visible
+	 * Saving relevant information from the screen for future restoring
 	 */
-	private void setVisible(boolean visible) {
-		progressIndicator.setVisible(!visible);
-		waitLabel.setVisible(!visible);
-		pastTable.setVisible(visible);
-		futureTable.setVisible(visible);
-		futureLabel.setVisible(visible);
-		pastLabel.setVisible(visible);
-		seperator1.setVisible(visible);
-		seperator2.setVisible(visible);
-		doubleClickLabel.setVisible(visible);
-		backButton.setVisible(visible);
-	}
-
-	/**
-	 * This method sets the tables and their columns with the retrieved data
-	 */
-	private void setTables() {
-		// setting the past bookings table
-		bookingIdPastColumn.setCellValueFactory(new PropertyValueFactory<>("bookingId"));
-		parkPastColumn.setCellValueFactory(cellData -> {
-			Booking booking = cellData.getValue();
-			Park park = booking.getParkBooked();
-			String parkName = park.getParkName();
-			return new ReadOnlyStringWrapper(parkName);
-		});
-		datePastColumn.setCellValueFactory(new PropertyValueFactory<>("dayOfVisit"));
-		timePastColumn.setCellValueFactory(new PropertyValueFactory<>("timeOfVisit"));
-		sizePastColumn.setCellValueFactory(new PropertyValueFactory<>("numberOfVisitors"));
-		pricePastColumn.setCellValueFactory(cellData -> {
-			Booking booking = cellData.getValue();
-			String price = booking.getFinalPrice() == -1 ? "N/A" : booking.getFinalPrice() + "";
-			return new ReadOnlyStringWrapper(price);
-		});
-		paidPastColumn.setCellValueFactory(cellData -> {
-			Booking booking = cellData.getValue();
-			String paid = booking.getFinalPrice() == -1 ? "N/A" : (booking.isPaid() ? "Yes" : "No");
-			return new ReadOnlyStringWrapper(paid);
-		});
-		statusPastColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
-
-		pastTable.setItems(pastBookings);
-		pastTable.getSortOrder().add(datePastColumn);
-
-		// setting the future bookings table
-		bookingIdFutureColumn.setCellValueFactory(new PropertyValueFactory<>("bookingId"));
-		parkFutureColumn.setCellValueFactory(cellData -> {
-			Booking booking = cellData.getValue();
-			Park park = booking.getParkBooked();
-			String parkName = park.getParkName();
-			return new ReadOnlyStringWrapper(parkName);
-		});
-		dateFutureColumn.setCellValueFactory(new PropertyValueFactory<>("dayOfVisit"));
-		timeFutureColumn.setCellValueFactory(new PropertyValueFactory<>("timeOfVisit"));
-		sizeFutureColumn.setCellValueFactory(new PropertyValueFactory<>("numberOfVisitors"));
-		priceFutureColumn.setCellValueFactory(new PropertyValueFactory<>("finalPrice"));
-		paidFutureColumn.setCellValueFactory(cellData -> {
-			Booking booking = cellData.getValue();
-			String paid = booking.isPaid() ? "Yes" : "No";
-			return new ReadOnlyStringWrapper(paid);
-		});
-
-		futureTable.setItems(futureBookings);
-		futureTable.getSortOrder().add(dateFutureColumn);
-	}
-
-	@Override
-	public String getScreenTitle() {
-		return "Booking View";
-	}
-
-	@Override
 	public void saveState() {
 		Pair<ObservableList<Booking>, ObservableList<Booking>> pair = new Pair<>(pastBookings, futureBookings);
 		control.setPair(pair);
@@ -334,12 +384,49 @@ public class BookingViewScreenController extends AbstractScreen implements State
 	}
 
 	@Override
+	/**
+	 * Restoring past saved information
+	 */
 	public void restoreState() {
 		Pair<ObservableList<Booking>, ObservableList<Booking>> pair = control.getPair();
 		pastBookings = pair.getKey();
 		futureBookings = pair.getValue();
 		booking = control.getBooking();
 		control.setSavedState(false);
+		setTables(); // updating the table views with the saved data
+		setVisible(true); // showing gui elements, hiding progress indicator
 	}
 
+	@Override
+	/**
+	 * When the screen called with the information object, putting its properties in
+	 * the GUI components
+	 */
+	public void loadBefore(Object information) {
+		if (information instanceof ParkVisitor) {
+			visitor = (ParkVisitor) information;
+			if (pastBookings == null || futureBookings == null) {
+				new Thread(() -> {
+					// performing database operations
+					pastBookings = control.getVisitorBookings(visitor, Communication.doneBookings);
+					pastBookings.addAll(control.getVisitorBookings(visitor, Communication.cancelledBookings));
+					futureBookings = control.getVisitorBookings(visitor, Communication.activeBookings);
+					futureBookings.addAll(control.getVisitorBookings(visitor, Communication.waitingList));
+
+					Platform.runLater(() -> {
+						setTables(); // updating the table views with the fetched data
+						setVisible(true); // showing gui elements, hiding progress indicator
+					});
+				}).start();
+			}
+		}
+	}
+
+	@Override
+	/**
+	 * Returns the screen's title
+	 */
+	public String getScreenTitle() {
+		return "Booking View";
+	}
 }

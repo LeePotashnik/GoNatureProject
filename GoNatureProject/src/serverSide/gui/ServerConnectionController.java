@@ -9,7 +9,6 @@ import common.controllers.ScreenManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -22,14 +21,13 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.WindowEvent;
 
 public class ServerConnectionController extends AbstractScreen {
 
 	@FXML
-	private Button connectBtn, disconnectBtn;
+	private Button connectBtn, disconnectBtn, clearBtn;
 	@FXML
 	private ImageView goNatureLogo;
 	@FXML
@@ -89,10 +87,21 @@ public class ServerConnectionController extends AbstractScreen {
 		if (disconnect()) {
 			showInformationAlert(ScreenManager.getInstance().getStage(), "Server is disconnected");
 			disconnectBtn.setDisable(true);
+			pane.requestFocus();
+			statusLabel.setText("Disconnected");
+			statusLabel.setStyle("-fx-background-color: #ffe6e6; -fx-text-alignment: center;");
 		}
-		pane.requestFocus();
-		statusLabel.setText("Disconnected");
-		statusLabel.setStyle("-fx-background-color: #ffe6e6; -fx-text-alignment: center;");
+	}
+
+	@FXML
+	/**
+	 * This method is called after the Clear button is clicked. Clears the server
+	 * console text area.
+	 * 
+	 * @param event
+	 */
+	void clearBtnClicked(ActionEvent event) {
+		consoleArea.setText("");
 	}
 
 	/**
@@ -260,7 +269,7 @@ public class ServerConnectionController extends AbstractScreen {
 		rootLbl.setStyle("-fx-alignment: center-right;");
 		passwordLbl.setStyle("-fx-alignment: center-right;");
 		databaseTxtField.setText("jdbc:mysql://localhost/go_nature?serverTimezone=Asia/Jerusalem");
-		
+
 		statusLabel.setText("Disconnected");
 		statusLabel.setStyle("-fx-background-color: #ffe6e6; -fx-text-alignment: center;");
 

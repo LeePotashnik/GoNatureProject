@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import clientSide.control.BookingController;
 import clientSide.control.ParkController;
+import common.communication.Communication;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StageSettings;
@@ -14,8 +15,6 @@ import entities.Booking;
 import entities.Booking.VisitType;
 import entities.Park;
 import entities.ParkVisitor;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -34,6 +33,12 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.util.Pair;
 
+/**
+ * The BookingEditingScreenController is called after the visitor chose a
+ * reservation to edit/cancel from the table view in the
+ * BookingViewScreenController. In this screen, the visitor can modify his
+ * reservation, check park availability and cancel his reservation.
+ */
 public class BookingEditingScreenController extends BookingScreenController {
 	private BookingController control; // controller
 	private ObservableList<Park> parksList; // list of the parks
@@ -73,45 +78,59 @@ public class BookingEditingScreenController extends BookingScreenController {
 	@FXML
 	private Pane pane;
 
-	/// BUTTONS EVENTS ///
+	/////////////////////
+	/// EVENT METHODS ///
+	/////////////////////
 
 	@FXML
+	/**
+	 * This method is called after the user clicked on "Cancel Reservation" button
+	 * 
+	 * @param event
+	 */
 	void cancelReservation(ActionEvent event) {
 		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
 				"You are about to cancel your " + booking.getParkBooked().getParkName() + "Park reservation for "
-						+ booking.getDayOfVisit() + ", " + booking.getTimeOfVisit()
-						+ ".\nThis action can't be undone.",
+						+ booking.getDayOfVisit() + ", " + booking.getTimeOfVisit() + ".\nThis action can't be undone.",
 				Arrays.asList("Don't Cancel", "Continue and Cancel"));
-		
+
 		switch (choise) {
-		case 1: // chose not to cancel
+		case 1: // chose not to cancel the reservation
 			event.consume();
 			return;
-		
+
 		case 2: // chose to cancel
 			if (control.deleteBookingFromActiveTable(booking)) {
-				// showing the cancellation screen
-				try {
-					ScreenManager.getInstance().showScreen("CancellationScreenController",
-							"/clientSide/fxml/CancellationScreen.fxml", true, false,
-							StageSettings.defaultSettings("Cancellation"), new Pair<Booking, ParkVisitor>(booking, visitor));
-				} catch (StatefulException | ScreenException e) {
-					e.printStackTrace();
+				if (control.insertBookingToCancelledTable(booking, Communication.userCancelled)) {
+					// showing the cancellation screen
+					try {
+						ScreenManager.getInstance().showScreen("CancellationScreenController",
+								"/clientSide/fxml/CancellationScreen.fxml", true, false,
+								StageSettings.defaultSettings("Cancellation"),
+								new Pair<Booking, ParkVisitor>(booking, visitor));
+					} catch (StatefulException | ScreenException e) {
+						e.printStackTrace();
+					}
 				}
-			}
-			else {
-				
+			} else {
+
 			}
 			event.consume();
 		}
 	}
 
 	@FXML
+	/**
+	 * This method is called after the user clicked on "Check Park Availability"
+	 * button
+	 * 
+	 * @param event
+	 */
 	void availabilityClicked(ActionEvent event) {
 		// first checking if the user changed any detail before sending a query request
 		if (!checkIfChanged()) {
 			showInformationAlert(ScreenManager.getInstance().getStage(),
-					"You need to change one/more of the details in order to check park availability");
+					"You need to change one/more of the details in order to update your booking");
 		} else { // if changed any of the details
 			if (!validateDetails()) { // if details are not valid
 				return;
@@ -122,11 +141,12 @@ public class BookingEditingScreenController extends BookingScreenController {
 				clone.setDayOfVisit(datePicker.getValue());
 				clone.setTimeOfVisit(hourCombobox.getValue());
 				clone.setNumberOfVisitors(Integer.parseInt(visitorsTxt.getText()));
+
 				if (control.checkParkAvailabilityForExistingBooking(booking, clone)) {
-					showInformationAlert(ScreenManager.getInstance().getStage(), parkDesired.getParkName()
-							+ " Park is available for " + clone.getNumberOfVisitors() + " visitors on "
-							+ clone.getDayOfVisit() + ", " + clone.getTimeOfVisit()
-							+ "\nPlease make sure the availability can change quickly due to high volume of orders");
+					showInformationAlert(ScreenManager.getInstance().getStage(),
+							parkDesired.getParkName() + " Park is available for " + clone.getNumberOfVisitors()
+									+ " visitors on " + clone.getDayOfVisit() + ", " + clone.getTimeOfVisit()
+									+ "\nAvailability can change quickly due to high volume of orders");
 				} else {
 					showInformationAlert(ScreenManager.getInstance().getStage(),
 							"Unfortunately, " + parkDesired.getParkName() + " Park is not available for "
@@ -138,16 +158,99 @@ public class BookingEditingScreenController extends BookingScreenController {
 	}
 
 	@FXML
+	/**
+	 * This method is called after the user clicked on the "Update Reservation"
+	 * button
+	 * 
+	 * @param event
+	 */
 	void updateReservation(ActionEvent event) {
+		if (!checkIfChanged()) {
+			showInformationAlert(ScreenManager.getInstance().getStage(),
+					"You need to change one/more of the details in order to check park availability");
+			return;
+		}
 
+		// making sure the user wants to replace his old booking with the new one
+		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+				"You are about to update your " + booking.getParkBooked().getParkName() + "Park reservation for "
+						+ booking.getDayOfVisit() + ", " + booking.getTimeOfVisit() + ".\nThis action can't be undone.",
+				Arrays.asList("Don't Update", "Ok, Continue"));
+
+		switch (choise) {
+		case 1: // chose not to update
+			event.consume();
+			return;
+
+		case 2: // chose to update
+
+			// first checking if the user changed any detail before sending a query request
+
+			// if the user changed any of the details
+			if (!validateDetails()) { // if details are not valid
+				return;
+			} else { // if details are valid
+				Booking newBooking = booking.cloneBooking();
+				Park parkDesired = parksList.get(parkComboBox.getSelectionModel().getSelectedIndex());
+				newBooking.setParkBooked(parkDesired);
+				newBooking.setDayOfVisit(datePicker.getValue());
+				newBooking.setTimeOfVisit(hourCombobox.getValue());
+				newBooking.setNumberOfVisitors(Integer.parseInt(visitorsTxt.getText()));
+				boolean isAvailable = control.checkParkAvailabilityForExistingBooking(booking, newBooking);
+
+				if (!isAvailable) { // if the entered date and time are not available
+
+					dateIsNotAvailable(newBooking);
+				}
+
+				else { // if the date and time are available
+
+					dateIsAvailable(newBooking);
+				}
+			}
+		}
 	}
 
 	@FXML
+	/**
+	 * Returns to the previous screen
+	 * 
+	 * @param event
+	 */
 	void returnToPreviousScreen(ActionEvent event) {
+		try {
+			ScreenManager.getInstance().goToPreviousScreen(true, true);
+		} catch (ScreenException | StatefulException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@FXML
+	/**
+	 * This method is called after an event of a value chosen inside the park combo
+	 * box has occured
+	 */
+	void parkChosen(ActionEvent event) {
+		parkIndexInCombobox = parkComboBox.getSelectionModel().getSelectedIndex();
+		Park parkChosen = parksList.get(parkIndexInCombobox);
+		ImageView backgroundImage = new ImageView(
+				new Image("/" + ParkController.getInstance().nameOfTable(parkChosen) + ".jpg"));
+
+		backgroundImage.fitWidthProperty().bind(ScreenManager.getInstance().getStage().widthProperty());
+		backgroundImage.fitHeightProperty().bind(ScreenManager.getInstance().getStage().heightProperty());
+		backgroundImage.setPreserveRatio(false);
+		backgroundImage.setOpacity(0.2);
+
+		if (pane.getChildren().get(0) instanceof ImageView) {
+			pane.getChildren().remove(0);
+		}
+		pane.getChildren().add(0, backgroundImage);
 
 	}
 
-	/// JAVAFX FLOW METHODS ///
+	//////////////////////////////////////
+	/// JAVAFX COMPONENTS FLOW METHODS ///
+	//////////////////////////////////////
 
 	@FXML
 	/**
@@ -193,14 +296,9 @@ public class BookingEditingScreenController extends BookingScreenController {
 		}
 	}
 
-	@FXML
 	/**
-	 * the pane takes the focus from any other component when clicked
+	 * tranfers the focus from the button to the pane
 	 */
-	void paneClicked(MouseEvent event) {
-		pane.requestFocus();
-	}
-
 	@FXML
 	void btnTabPressed(KeyEvent event) {
 		if (event.getCode() == KeyCode.TAB) {
@@ -210,32 +308,26 @@ public class BookingEditingScreenController extends BookingScreenController {
 	}
 
 	@FXML
+	/**
+	 * the pane takes the focus from any other component when clicked
+	 */
+	void paneClicked(MouseEvent event) {
+		pane.requestFocus();
+	}
+
+	@FXML
+	/**
+	 * Ignores tab pressed when on the pane
+	 */
 	void paneTabPressed(KeyEvent event) {
 		if (event.getCode() == KeyCode.TAB) {
 			event.consume();
 		}
 	}
 
-	@FXML
-	void parkChosen(ActionEvent event) {
-		parkIndexInCombobox = parkComboBox.getSelectionModel().getSelectedIndex();
-		Park parkChosen = parksList.get(parkIndexInCombobox);
-		ImageView backgroundImage = new ImageView(
-				new Image("/" + ParkController.getInstance().nameOfTable(parkChosen) + ".jpg"));
-
-		backgroundImage.fitWidthProperty().bind(ScreenManager.getInstance().getStage().widthProperty());
-		backgroundImage.fitHeightProperty().bind(ScreenManager.getInstance().getStage().heightProperty());
-		backgroundImage.setPreserveRatio(false);
-		backgroundImage.setOpacity(0.2);
-
-		if (pane.getChildren().get(0) instanceof ImageView) {
-			pane.getChildren().remove(0);
-		}
-		pane.getChildren().add(0, backgroundImage);
-
-	}
-
+	////////////////////////
 	/// INSTANCE METHODS ///
+	////////////////////////
 
 	/**
 	 * This method is called after the button for make reservations is clicked
@@ -355,9 +447,138 @@ public class BookingEditingScreenController extends BookingScreenController {
 		return false;
 	}
 
-	/// HAVAFX ANF FXML METHODS ///
+	/**
+	 * This method is called in case the chosen date and time are available at the
+	 * chosen park
+	 * 
+	 * @param event
+	 */
+	private void dateIsAvailable(Booking newBooking) {
+		// first inserting the new booking to the database to update capacities and save
+		// the visitor's spot
+		boolean result = control.updateBooking(booking, newBooking);
+		if (!result) {
+			showErrorAlert(ScreenManager.getInstance().getStage(),
+					"There was an issue with updating your reservation. Please try again later");
+			return;
+		}
+
+		// calculating the final price for the booking. Sending visitor's type cause the
+		// price defers between regular and guided groups
+		int finalPrice = control.calculateFinalRegularPrice(newBooking, visitor.getVisitorType());
+		int discountPrice = control.calculateFinalDiscountPrice(newBooking, visitor.getVisitorType());
+
+		// creating the pop up message
+		String payMessage = "Woohoo! You're almost set.";
+		payMessage += booking.isPaid() ? "\nYour old booking is fully refunded." : "";
+		payMessage += "\nPay now and get a special discount for pre-ordering:";
+		payMessage += "\n        Your new reservation's final price: " + finalPrice + "$";
+		payMessage += "\n        Your new reservetion's price after the special discount: " + discountPrice + "$";
+		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
+				Arrays.asList("Pay Now and Get Discount", "Pay Upon Arrival", "Exit Reservations"));
+
+		switch (choise) {
+		// chose to pay now and get discount
+		case 1: {
+			newBooking.setPaid(true);
+			newBooking.setFinalPrice(discountPrice);
+			// updating the payment columns in the database
+			control.updateBookingPayment(newBooking);
+			// showing the confirmation screen
+			try {
+				ScreenManager.getInstance().showScreen("LoadingScreenController", "/clientSide/fxml/LoadingScreen.fxml",
+						true, false, StageSettings.defaultSettings("Payment"),
+						new Pair<Booking, ParkVisitor>(newBooking, visitor));
+			} catch (StatefulException | ScreenException e) {
+				e.printStackTrace();
+			}
+			return;
+		}
+
+		// chose to pay upon arrival
+		case 2: {
+			newBooking.setPaid(false);
+			newBooking.setFinalPrice(finalPrice);
+			// updating the payment columns in the database
+			control.updateBookingPayment(newBooking);
+			break;
+		}
+
+		// chose to cancel
+		case 3: {
+			// deleting the new booking from the database cause it wat inserted in order to
+			// save the spot for the visitor, and returning to acount screen
+			control.deleteBookingFromActiveTable(newBooking);
+			returnToPreviousScreen(null);
+			return;
+		}
+		}
+
+		// showing the confirmation screen
+		try {
+			ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+					"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
+					StageSettings.defaultSettings("Confirmation"), new Pair<Booking, ParkVisitor>(newBooking, visitor));
+		} catch (StatefulException | ScreenException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * This method is called in case the chosen date and time are not available at
+	 * the chosen park
+	 * 
+	 * @param event
+	 */
+	private void dateIsNotAvailable(Booking newBooking) {
+		// creating a pop up message for the user to choose what to do next
+		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+				"We care for your experience in " + newBooking.getParkBooked().getParkName()
+						+ " Park, so we limit the volume of visitors in the park."
+						+ "\nUnfortunately, the date and time you chose are not available at this moment.",
+				Arrays.asList("Exit", "See Available Dates and Times", "Have a Peek on the Waiting List"));
+		switch (choise) {
+		// chose to exit
+		case 1: {
+			returnToPreviousScreen(null);
+			break;
+		}
+
+		// chose to reschedule (see available dates and times)
+		case 2: {
+			try {
+				ScreenManager.getInstance().showScreen("RescheduleScreenController",
+						"/clientSide/fxml/RescheduleScreen.fxml", true, true,
+						StageSettings.defaultSettings("Reschedule"),
+						new Pair<Booking, ParkVisitor>(newBooking, visitor));
+			} catch (StatefulException | ScreenException e) {
+				e.printStackTrace();
+			}
+			break;
+		}
+
+		// chose to enter the waiting list
+		case 3: {
+			// showing the waiting list screen
+			try {
+				ScreenManager.getInstance().showScreen("WaitingListScreenController",
+						"/clientSide/fxml/WaitingListScreen.fxml", true, true,
+						StageSettings.defaultSettings("Waiting List"), newBooking);
+			} catch (StatefulException | ScreenException e) {
+				e.printStackTrace();
+			}
+		}
+		}
+	}
+
+	/////////////////////////////////////////////
+	/// JAVAFX, FXML, ABSTRACT SCREEN METHODS ///
+	/////////////////////////////////////////////
 
 	@Override
+	/**
+	 * This method initialized all the fxml and javafx components
+	 */
 	public void initialize() {
 		// setting the park details in the parks combobox
 		Pair<ObservableList<Park>, ObservableList<String>> pair = control.fetchParks();
@@ -401,9 +622,16 @@ public class BookingEditingScreenController extends BookingScreenController {
 	}
 
 	@Override
+	/**
+	 * When the screen called with the information object, putting its properties in
+	 * the GUI components
+	 */
 	public void loadBefore(Object information) {
-		if (information instanceof Booking) {
-			booking = (Booking) information;
+		if (information instanceof Pair) {
+			@SuppressWarnings("unchecked")
+			Pair<Booking, ParkVisitor> pair = (Pair<Booking, ParkVisitor>) information;
+			booking = pair.getKey();
+			visitor = pair.getValue();
 			// setting all the info into the components of the screen
 			bookingLbl.setText("Booking ID: " + booking.getBookingId());
 			parkComboBox.getSelectionModel().select(parksList.indexOf(getParkFromList(booking.getParkBooked())));
@@ -418,9 +646,10 @@ public class BookingEditingScreenController extends BookingScreenController {
 	}
 
 	@Override
+	/**
+	 * Returns the screen's title
+	 */
 	public String getScreenTitle() {
-		// TODO Auto-generated method stub
-		return null;
+		return "Booking Editing";
 	}
-
 }

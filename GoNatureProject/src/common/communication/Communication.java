@@ -35,12 +35,19 @@ public class Communication implements Serializable {
 	public static final String viewedAdjustment = "viewed_adjustment";
 	public static final String pricing = "pricing";
 
+	/// CNCELLATION REASONS ///
+	public static final String userCancelled = "User Cancelled";
+	public static final String userDidNotArrive = "User Did Not Arrive";
+
 	// the communication type
 	public enum CommunicationType {
-		QUERY_REQUEST, CLIENT_SERVER_MESSAGE, RESPONSE;
+		QUERY_REQUEST, TRANSACTION, CLIENT_SERVER_MESSAGE, RESPONSE;
 	}
 
 	private CommunicationType communicationType;
+
+	/// A LIST OF COMMUNICATIONS TO EXECUTE AS A TRANSACTION ///
+	private ArrayList<Communication> requestsList = null;
 
 	/**
 	 * Constructor of a Communication object
@@ -390,6 +397,8 @@ public class Communication implements Serializable {
 				return ret;
 			} else if (value instanceof Number) {
 				return ((Number) value).toString();
+			} else if (value instanceof String && (((String) value).matches("[a-zA-Z]+\\s[-+]\\s\\d+") || ((String)value).charAt(0) == '(')) {
+				return (String) value;
 			} else {
 				return "'" + value.toString() + "'";
 			}
@@ -421,6 +430,44 @@ public class Communication implements Serializable {
 			}
 		}
 		return where;
+	}
+
+	/**
+	 * This method is called in order to add a request to a list of requests to be
+	 * executed as a transaction
+	 * 
+	 * @param request
+	 */
+	public void addRequestToList(Communication request) {
+		if (requestsList == null) {
+			requestsList = new ArrayList<Communication>();
+		}
+		requestsList.add(request);
+	}
+
+	/**
+	 * This method returns the requests list of a transaction communication
+	 * 
+	 * @return the requests list
+	 */
+	public ArrayList<Communication> getRequestsList() {
+		if (getCommunicationType() == CommunicationType.TRANSACTION) {
+			return requestsList;
+		}
+		return null;
+	}
+
+	/**
+	 * This method returns the result of the transaction
+	 * 
+	 * @return true if all queries succeed, false otherwise
+	 */
+	public boolean getTransactionResult() {
+		for (Communication request : requestsList) {
+			if (!request.getQueryResult())
+				return false;
+		}
+		return true;
 	}
 
 	///// --- METHODS FOR HANDLING THE SECOND TYPE OF COMMUNICAIONS --- /////

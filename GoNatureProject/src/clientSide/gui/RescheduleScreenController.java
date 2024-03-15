@@ -15,43 +15,40 @@ import entities.Booking;
 import entities.ParkVisitor;
 import entities.ParkVisitor.VisitorType;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.util.Pair;
 
 public class RescheduleScreenController extends AbstractScreen {
 	private BookingController control;
 	private Booking booking;
 	private ParkVisitor visitor;
-	private ObservableList<AvailableSlot> availableSlots;
-	private AvailableSlot chosenSlot = null;
-	private Stage loadingStage;
 
 	public RescheduleScreenController() {
 		control = BookingController.getInstance();
 	}
+	
+	////////////////////////////////////
+	/// INNER CLASS - AVAILABLE SLOT ///
+	////////////////////////////////////
 
 	/**
 	 * A class for holding an available slot
@@ -110,7 +107,7 @@ public class RescheduleScreenController extends AbstractScreen {
 	private TableColumn<AvailableSlot, LocalTime> arrivalColumn;
 
 	@FXML
-	private Button backButton, showBtn, makeReservationBtn;
+	private Button backButton, showBtn;
 
 	@FXML
 	private ImageView goNatureLogo;
@@ -119,17 +116,15 @@ public class RescheduleScreenController extends AbstractScreen {
 	private Pane pane;
 
 	@FXML
-	private Label titleLbl, typeLbl, bookingLbl;
+	private Label titleLbl, typeLbl, bookingLbl, waitLabel, instructionsLbl;
 
 	@FXML
 	private DatePicker fromDate, toDate;
 
-	///// EVENT METHODS /////
-
 	@FXML
-	void btnTabPressed(KeyEvent event) {
+	private ProgressIndicator progressIndicator;
 
-	}
+	///// EVENT METHODS /////
 
 	@FXML
 	void showClicked(ActionEvent event) {
@@ -138,7 +133,7 @@ public class RescheduleScreenController extends AbstractScreen {
 			return;
 		} else {
 			// showing the loading dialog
-			showLoadingDialog();
+			setVisible(false);
 
 			// moving the data fetching operation to a background thread
 			new Thread(() -> {
@@ -150,15 +145,119 @@ public class RescheduleScreenController extends AbstractScreen {
 				Platform.runLater(() -> {
 					availableTable.setItems(newSlots);
 					// closing the loading dialog after updating the table
-					closeLoadingDialog();
+					setVisible(true);
 				});
 			}).start();
-			makeReservationBtn.setDisable(false);
+			availableTable.setDisable(false);
 		}
 	}
 
 	@FXML
-	void makeReservation(ActionEvent event) {
+	void paneClicked(MouseEvent event) {
+		pane.requestFocus();
+	}
+
+	@FXML
+	void paneTabPressed(KeyEvent event) {
+		event.consume();
+	}
+
+	@FXML
+	/**
+	 * Returns to the previous screen
+	 * 
+	 * @param event
+	 */
+	void returnToPreviousScreen(ActionEvent event) {
+		try {
+			ScreenManager.getInstance().goToPreviousScreen(true, true);
+		} catch (ScreenException | StatefulException e) {
+			e.printStackTrace();
+		}
+	}
+
+	///// INSTANCE METHODS /////
+
+	/**
+	 * This method validates the entered dates for the date range
+	 * 
+	 * @return true if valid, false if not
+	 */
+	private boolean validate() {
+		// set styles to regular
+		fromDate.setStyle(setFieldToRegular());
+		toDate.setStyle(setFieldToRegular());
+
+		// validating the entered dates
+		String error = "Please make sure you:\n";
+		boolean valid = true;
+
+		// checking the 'from' date
+		if (fromDate.getValue() == null) {
+			fromDate.setStyle(setFieldToError());
+			error += "• enter a 'from' date";
+			valid = false;
+		} else {
+			if (fromDate.getValue().compareTo(LocalDate.now()) < 0) { // past
+				fromDate.setStyle(setFieldToError());
+				error += "• choose a 'from' date that is " + LocalDate.now() + " and on\n";
+				valid = false;
+			} else { // future
+				// calculating the date that is in the future allowed range
+				LocalDate maximumFutureRange = (LocalDate.now()).plusMonths(control.futureBookingsRange);
+
+				if (fromDate.getValue().compareTo(maximumFutureRange) > 0) {
+					fromDate.setStyle(setFieldToError());
+					error += "• choose a 'from' date that is before " + maximumFutureRange + "\n";
+					valid = false;
+				}
+			}
+		}
+
+		// checking the 'to' date
+		if (toDate.getValue() == null) {
+			toDate.setStyle(setFieldToError());
+			error += "• enter a 'to' date";
+			valid = false;
+		} else {
+			if (toDate.getValue().compareTo(LocalDate.now()) < 0) { // past
+				toDate.setStyle(setFieldToError());
+				error += "• choose a 'to' date that is " + LocalDate.now() + " and on\n";
+				valid = false;
+			} else { // future
+				// calculating the date that is in the future allowed range
+				LocalDate maximumFutureRange = (LocalDate.now()).plusMonths(control.futureBookingsRange);
+
+				if (toDate.getValue().compareTo(maximumFutureRange) > 0) {
+					toDate.setStyle(setFieldToError());
+					error += "• choose a 'to' date that is before " + maximumFutureRange + "\n";
+					valid = false;
+				}
+			}
+		}
+
+		// checking that 'from' is smaller than 'to'
+		if (fromDate.getValue() != null && toDate.getValue() != null) {
+			if (toDate.getValue().compareTo(fromDate.getValue()) < 0) {
+				fromDate.setStyle(setFieldToError());
+				toDate.setStyle(setFieldToError());
+				error += "• the 'to' date must be later than the 'from' date\n";
+				valid = false;
+			}
+		}
+
+		if (!valid)
+			showErrorAlert(ScreenManager.getInstance().getStage(), error);
+
+		return valid;
+	}
+
+	/**
+	 * This method is called after the user double clicked on a slot from the table
+	 * 
+	 * @param event
+	 */
+	public void slotClicked(AvailableSlot chosenSlot) {
 		if (chosenSlot == null) {
 			showErrorAlert(ScreenManager.getInstance().getStage(),
 					"Please choose a row from the table in order to proceed");
@@ -170,7 +269,6 @@ public class RescheduleScreenController extends AbstractScreen {
 
 			switch (choise) {
 			case 1: {
-				event.consume();
 				return;
 			}
 
@@ -249,129 +347,6 @@ public class RescheduleScreenController extends AbstractScreen {
 		}
 	}
 
-	@FXML
-	void paneClicked(MouseEvent event) {
-		pane.requestFocus();
-	}
-
-	@FXML
-	void paneTabPressed(KeyEvent event) {
-		event.consume();
-	}
-
-	@FXML
-	void returnToPreviousScreen(ActionEvent event) {
-
-	}
-
-	private void showLoadingDialog() {
-		// Run later on the JavaFX thread
-		Platform.runLater(() -> {
-			Label loadingLabel = new Label("Loading information from " + booking.getParkBooked().getParkName()
-					+ " park\nIt could take several seconds...");
-			loadingLabel.setStyle("-fx-font-size: 16px; -fx-font-family: 'Calibri'; -fx-font-weight: bold;");
-			StackPane layout = new StackPane(loadingLabel);
-			layout.setStyle(
-					"-fx-padding: 20; -fx-background-color: white; -fx-border-color: black; -fx-border-width: 2;");
-			Scene scene = new Scene(layout);
-
-			loadingStage = new Stage();
-			loadingStage.setWidth(400);
-			loadingStage.setHeight(200);
-			loadingStage.initModality(Modality.APPLICATION_MODAL);
-			loadingStage.initStyle(StageStyle.UNDECORATED);
-			loadingStage.setScene(scene);
-
-			loadingStage.show();
-		});
-	}
-
-	/**
-	 * Closing the loading dialog message
-	 */
-	private void closeLoadingDialog() {
-		Platform.runLater(() -> {
-			if (loadingStage != null) {
-				loadingStage.close();
-			}
-		});
-	}
-
-	///// INSTANCE METHODS /////
-
-	/**
-	 * This method validates the entered dates for the date range
-	 * @return true if valid, false if not
-	 */
-	private boolean validate() {
-		// set styles to regular
-		fromDate.setStyle(setFieldToRegular());
-		toDate.setStyle(setFieldToRegular());
-
-		// validating the entered dates
-		String error = "Please make sure you:\n";
-		boolean valid = true;
-
-		// checking the 'from' date
-		if (fromDate.getValue() == null) {
-			fromDate.setStyle(setFieldToError());
-			error += "• enter a 'from' date";
-			valid = false;
-		} else {
-			if (fromDate.getValue().compareTo(LocalDate.now()) < 0) { // past
-				fromDate.setStyle(setFieldToError());
-				error += "• choose a 'from' date that is " + LocalDate.now() + " and on\n";
-				valid = false;
-			} else { // future
-				// calculating the date that is in the future allowed range
-				LocalDate maximumFutureRange = (LocalDate.now()).plusMonths(control.futureBookingsRange);
-
-				if (fromDate.getValue().compareTo(maximumFutureRange) > 0) {
-					fromDate.setStyle(setFieldToError());
-					error += "• choose a 'from' date that is before " + maximumFutureRange + "\n";
-					valid = false;
-				}
-			}
-		}
-
-		// checking the 'to' date
-		if (toDate.getValue() == null) {
-			toDate.setStyle(setFieldToError());
-			error += "• enter a 'to' date";
-			valid = false;
-		} else {
-			if (toDate.getValue().compareTo(LocalDate.now()) < 0) { // past
-				toDate.setStyle(setFieldToError());
-				error += "• choose a 'to' date that is " + LocalDate.now() + " and on\n";
-				valid = false;
-			} else { // future
-				// calculating the date that is in the future allowed range
-				LocalDate maximumFutureRange = (LocalDate.now()).plusMonths(control.futureBookingsRange);
-
-				if (toDate.getValue().compareTo(maximumFutureRange) > 0) {
-					toDate.setStyle(setFieldToError());
-					error += "• choose a 'to' date that is before " + maximumFutureRange + "\n";
-					valid = false;
-				}
-			}
-		}
-
-		// checking that 'from' is smaller than 'to'
-		if (fromDate.getValue() != null && toDate.getValue() != null) {
-			if (toDate.getValue().compareTo(fromDate.getValue()) < 0) {
-				fromDate.setStyle(setFieldToError());
-				toDate.setStyle(setFieldToError());
-				error += "• the 'to' date must be later than the 'from' date\n";
-				valid = false;
-			}
-		}
-
-		if (!valid)
-			showErrorAlert(ScreenManager.getInstance().getStage(), error);
-
-		return valid;
-	}
-
 	///// JAVA-FX AND FXML METHODS /////
 
 	@Override
@@ -388,7 +363,7 @@ public class RescheduleScreenController extends AbstractScreen {
 
 		titleLbl.setAlignment(Pos.CENTER);
 		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
-		makeReservationBtn.setDisable(true);
+//		makeReservationBtn.setDisable(true);
 		bookingLbl.getStyleClass().add("label-center-right");
 
 		// setting the back button image
@@ -403,17 +378,54 @@ public class RescheduleScreenController extends AbstractScreen {
 		dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
 		arrivalColumn.setCellValueFactory(new PropertyValueFactory<>("time"));
 
-		// setting a listener for the table view
-		availableTable.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<AvailableSlot>() {
-			@Override
-			public void changed(ObservableValue<? extends AvailableSlot> observable, AvailableSlot oldValue,
-					AvailableSlot newValue) {
-				if (newValue != null) {
-					// newValue is the selected Person instance
-					chosenSlot = newValue;
+		// setting the empty-table labels
+		availableTable.setPlaceholder(new Label("Select dates range in order to proceed"));
+
+		// setting what will occur when double-clicking on a row of the future bookings
+		// table
+		availableTable.setRowFactory(tv -> {
+			TableRow<AvailableSlot> row = new TableRow<>();
+			row.setOnMouseClicked(event -> {
+				if (!row.isEmpty() && event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
+					AvailableSlot clickedRowData = row.getItem();
+					slotClicked(clickedRowData);
 				}
-			}
+			});
+			return row;
 		});
+
+		availableTable.setDisable(true);
+		instructionsLbl.setVisible(false);
+		progressIndicator.setVisible(false);
+		waitLabel.setVisible(false);
+
+		// setting the labels
+		waitLabel.setAlignment(Pos.CENTER);
+		waitLabel.layoutXProperty().bind(pane.widthProperty().subtract(waitLabel.widthProperty()).divide(2));
+		waitLabel.setText("We are looking for available slots for your group\nThis could take several seconds...");
+		waitLabel.setStyle("-fx-text-alignment: center;");
+		instructionsLbl.setAlignment(Pos.CENTER);
+		instructionsLbl.layoutXProperty().bind(pane.widthProperty().subtract(waitLabel.widthProperty()).divide(2));
+		instructionsLbl.setStyle("-fx-text-alignment: center;");
+		instructionsLbl.getStyleClass().add("label-stroke");
+
+		// setting the porgress indicator
+		progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+		progressIndicator.layoutXProperty()
+				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
+	}
+
+	/**
+	 * This method is used to hide/show all elements but the progress indicator and
+	 * its label
+	 * 
+	 * @param visible
+	 */
+	private void setVisible(boolean visible) {
+		progressIndicator.setVisible(!visible);
+		waitLabel.setVisible(!visible);
+		availableTable.setVisible(visible);
+		instructionsLbl.setVisible(visible);
 	}
 
 	///// ABSTRACT SCREEN METHODS /////
@@ -432,6 +444,7 @@ public class RescheduleScreenController extends AbstractScreen {
 			// setting the booking id
 			bookingLbl.setText("Booking ID: " + booking.getBookingId());
 
+			// setting the background image
 			ImageView backgroundImage = new ImageView(
 					new Image("/" + ParkController.getInstance().nameOfTable(booking.getParkBooked()) + ".jpg"));
 

@@ -103,16 +103,20 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 		if (!isAvailable) { // if the entered date and time are not available
 
-			dateIsNotAvailable(event);
+			dateIsNotAvailable();
 		}
 
 		else { // if the date and time are available
 
-			dateIsAvailable(event);
+			dateIsAvailable();
 		}
 	}
 
-	private void dateIsAvailable(ActionEvent event) {
+	/**
+	 * This method is called in case the chosen date and time are available at the
+	 * chosen park
+	 */
+	private void dateIsAvailable() {
 		// first inserting the new booking to the database to update capacities and save
 		// the visitor's spot
 		control.insertNewBookingToActiveTable(booking);
@@ -127,8 +131,8 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		// creating the pop up message
 		String payMessage = "Woohoo! You're almost set.";
 		payMessage += "\nPay now and get a special discount for pre-ordering:";
-		payMessage += "\n        Your reservation final price: " + finalPrice + "$";
-		payMessage += "\n        Your reservetion price after the special discount: " + discountPrice + "$";
+		payMessage += "\n        Your reservation's final price: " + finalPrice + "$";
+		payMessage += "\n        Your reservetion's price after the special discount: " + discountPrice + "$";
 		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
 				Arrays.asList("Pay Now and Get Discount", "Pay Upon Arrival", "Exit Reservations"));
 
@@ -182,10 +186,8 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	/**
 	 * This method is called in case the chosen date and time are not available at
 	 * the chosen park
-	 * 
-	 * @param event
 	 */
-	private void dateIsNotAvailable(ActionEvent event) {
+	private void dateIsNotAvailable() {
 		// creating a pop up message for the user to choose what to do next
 		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
 				"We care for your experience in " + booking.getParkBooked().getParkName()
@@ -599,9 +601,10 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 		return titleCase.toString();
 	}
-	
+
 	/**
 	 * This method gets a text field and makes it recoginze digits only
+	 * 
 	 * @param textField
 	 */
 	protected void setupTextFieldToDigitsOnly(TextField textField) {
@@ -614,9 +617,10 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			}
 		});
 	}
-	
+
 	/**
 	 * This method gets a text field and makes it recoginze letters/spaces only
+	 * 
 	 * @param textField
 	 */
 	protected void setupTextFieldToLettersOnly(TextField textField) {
@@ -629,7 +633,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			}
 		});
 	}
-	
+
 	/// ABSTRACT SCREEN AND STATEFUL METHODS ///
 
 	@Override
@@ -721,7 +725,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		backImage.setPreserveRatio(true);
 		backButton.setGraphic(backImage);
 		backButton.setPadding(new Insets(1, 1, 1, 1));
-		
+
 		// setting text fields to recognize specific chars
 		setupTextFieldToDigitsOnly(visitorsTxt);
 		setupTextFieldToDigitsOnly(phoneTxt);

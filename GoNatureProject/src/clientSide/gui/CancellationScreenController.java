@@ -14,25 +14,36 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.util.Pair;
 
+/**
+ * The CancellationScreenController is called after a booking if successfully
+ * cancelled, showing a cancellation confirmation to the user.
+ */
 public class CancellationScreenController extends AbstractScreen {
 	private ParkVisitor visitor;
 
+	// GUI COMPONENTS
 	@FXML
 	private Label bookingIdLabel, dateLabel, emailLabel, holderLabel, isPaidLabel, parkAddressLabel, parkNameLabel,
 			phoneLabel, priceLabel, timeLabel, visitorsLabel;
-
 	@FXML
 	private ImageView goNatureLogo, parkImage;
-
 	@FXML
 	private Button returnToAccountBtn;
-
 	@FXML
 	private Pane pane;
 
+	/////////////////////
+	/// EVENT METHODS ///
+	/////////////////////
+
 	@FXML
+	/**
+	 * This method is called after the user clicked on "Return to Account" button
+	 * 
+	 * @param event
+	 */
 	void returnToAccount(ActionEvent event) {
-		///HERE: only connected visitors arrive!
+		/// HERE: only connected visitors arrive!
 		if (visitor == null) { // is not connected to the system, entered only with id
 			showInformationAlert(ScreenManager.getInstance().getStage(), "Now returning to main screen.");
 		} else {
@@ -40,7 +51,14 @@ public class CancellationScreenController extends AbstractScreen {
 		}
 	}
 
+	///////////////////////////////
+	/// JAVAFX AND FXML METHODS ///
+	///////////////////////////////
+
 	@Override
+	/**
+	 * This method initialized all the fxml and javafx components
+	 */
 	public void initialize() {
 		// initializing the image component and centering it
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
@@ -72,7 +90,7 @@ public class CancellationScreenController extends AbstractScreen {
 			visitorsLabel.setText("Group Size: " + booking.getNumberOfVisitors() + "");
 			priceLabel.setText("Final Price: " + booking.getFinalPrice() + "$");
 			if (booking.isPaid()) {
-				isPaidLabel.setText("Your reservation was paid. We will initiate a refund in the new 48 hours.");
+				isPaidLabel.setText("Your reservation was paid. We will initiate a refund in the next 48 hours.");
 			} else {
 				isPaidLabel.setText("Your reservation was not paid.");
 			}
@@ -84,6 +102,9 @@ public class CancellationScreenController extends AbstractScreen {
 	}
 
 	@Override
+	/**
+	 * Returns the screen's title
+	 */
 	public String getScreenTitle() {
 		return "Reservation Confirmation";
 	}
