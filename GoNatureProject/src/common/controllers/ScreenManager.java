@@ -24,7 +24,7 @@ import javafx.stage.StageStyle;
 
 public class ScreenManager {
 	private static ScreenManager instance;
-
+	private boolean isActive = false;
 	private final Stage stage;
 	private Stage conquerprStage;
 	private final Map<String, AbstractScreen> screensMap = new HashMap<>();
@@ -78,6 +78,9 @@ public class ScreenManager {
 	 */
 	public void showScreen(String screenName, String fxmlResource, boolean showOnce, boolean saveState,
 			StageSettings settings, Object information) throws StatefulException, ScreenException {
+		if (!isActive) {
+			isActive = true;
+		}
 		System.out.println("screensStack: " + screensStack);
 		System.out.println("screensMap: " + screensMap);
 		// checking if the saveState flag is true. In this case, calling the saveState()
@@ -245,5 +248,12 @@ public class ScreenManager {
 				conquerprStage.close();
 			}
 		});
+	}
+	
+	/**
+	 * @return if there's a stage active right now
+	 */
+	public boolean isActive() {
+		return isActive;
 	}
 }

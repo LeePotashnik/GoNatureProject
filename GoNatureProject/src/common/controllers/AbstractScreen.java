@@ -7,8 +7,8 @@ import java.util.Optional;
 
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
+import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
-import common.communication.Communication.MessageType;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
@@ -61,7 +61,7 @@ public abstract class AbstractScreen {
 			} else { // if the client is connected to the server
 				// creating a communication request for disconnecting from the server port
 				Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
-				message.setMessageType(MessageType.DISCONNECT);
+				message.setClientMessageType(ClientMessageType.DISCONNECT);
 				GoNatureClientUI.client.accept(message);
 			}
 		}

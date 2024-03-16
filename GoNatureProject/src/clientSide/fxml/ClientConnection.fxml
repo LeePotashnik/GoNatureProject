@@ -4,36 +4,68 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.paint.Color?>
+<?import javafx.scene.paint.LinearGradient?>
+<?import javafx.scene.paint.Stop?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ClientConnectionController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ClientConnectionController">
    <children>
-      <ImageView fx:id="goNatureLogo" fitHeight="200.0" fitWidth="400.0" layoutX="100.0" layoutY="23.0" pickOnBounds="true" preserveRatio="true" />
-      <Label layoutX="187.0" layoutY="230.0" text="Client Connection">
+      <ImageView fx:id="goNatureLogo" fitHeight="79.0" fitWidth="470.0" layoutX="115.0" layoutY="24.0" pickOnBounds="true" preserveRatio="true" />
+      <Label fx:id="titleLbl" layoutX="3.0" layoutY="305.0" prefHeight="38.0" prefWidth="694.0" text="Client Connection">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <Label layoutX="58.0" layoutY="268.0" text="Please enter host and port number to connect to the server:" textAlignment="CENTER">
+      <Label fx:id="instrLbl" layoutX="4.0" layoutY="343.0" prefHeight="23.0" prefWidth="694.0" text="Please enter host and port number to connect to the server:" textAlignment="CENTER">
          <font>
             <Font name="Calibri Light" size="20.0" />
          </font>
       </Label>
-      <TextField fx:id="hostTxtField" layoutX="145.0" layoutY="308.0" onKeyPressed="#hostTabPressed" prefHeight="29.0" prefWidth="150.0">
+      <TextField fx:id="hostTxtField" layoutX="190.0" layoutY="369.0" onKeyPressed="#hostTabPressed" prefHeight="29.0" prefWidth="150.0">
          <font>
             <Font name="Calibri Light" size="16.0" />
          </font>
       </TextField>
-      <Button fx:id="connectBtn" layoutX="231.0" layoutY="345.0" mnemonicParsing="false" onAction="#connectToServer" onKeyPressed="#btnTabPressed" text="Connect to Server">
+      <Button fx:id="connectBtn" layoutX="282.0" layoutY="413.0" mnemonicParsing="false" onAction="#connectToServer" onKeyPressed="#btnTabPressed" text="Connect to Server">
          <font>
             <Font name="Calibri" size="16.0" />
          </font>
       </Button>
-      <TextField fx:id="portTxtField" layoutX="305.0" layoutY="308.0" onKeyPressed="#portTabPressed" prefHeight="29.0" prefWidth="150.0">
+      <TextField fx:id="portTxtField" layoutX="360.0" layoutY="369.0" onKeyPressed="#portTabPressed" prefHeight="29.0" prefWidth="150.0">
          <font>
             <Font name="Calibri Light" size="16.0" />
          </font>
       </TextField>
+      <HBox fx:id="hbox" layoutX="111.0" layoutY="110.0" prefHeight="150.0" prefWidth="470.0">
+         <children>
+            <ImageView fx:id="image1" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="150.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+            <ImageView fx:id="image2" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="150.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+            <ImageView fx:id="image3" fitHeight="150.0" fitWidth="159.0" pickOnBounds="true" preserveRatio="true" />
+         </children>
+      </HBox>
+      <Rectangle fx:id="rectangle" arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="171.0" layoutX="90.0" layoutY="291.0" strokeLineCap="ROUND" strokeLineJoin="ROUND" strokeType="OUTSIDE" width="522.0">
+         <stroke>
+            <LinearGradient endX="1.0" endY="1.0">
+               <stops>
+                  <Stop>
+                     <color>
+                        <Color />
+                     </color>
+                  </Stop>
+                  <Stop offset="1.0">
+                     <color>
+                        <Color red="1.0" green="1.0" blue="1.0" />
+                     </color>
+                  </Stop>
+               </stops>
+            </LinearGradient>
+         </stroke>
+      </Rectangle>
    </children>
 </Pane>

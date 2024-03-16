@@ -5,15 +5,17 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 
 import common.communication.Communication;
+import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
-import common.communication.Communication.MessageType;
+import common.communication.Communication.ServerMessageType;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
 import serverSide.jdbc.DatabaseController;
 import serverSide.jdbc.DatabaseException;
 
 public class GoNatureServer extends AbstractServer {
-	private DatabaseController db;
+	private DatabaseController database;
+	private BackgroundManager backgroundManager;
 	private ArrayList<ConnectionToClient> clientsConnected = new ArrayList<>();
 
 	/**
@@ -35,7 +37,21 @@ public class GoNatureServer extends AbstractServer {
 	 * @throws DatabaseException if there is a problem with the connection
 	 */
 	public void connectToDatabase(String databae, String root, String password) throws DatabaseException {
-		db = new DatabaseController(databae, root, password); // creates a new instance of the db connector
+		database = new DatabaseController(databae, root, password); // creates a new instance of the db connector
+	}
+	
+	/**
+	 * This method creates a new instance of the background tasks manager
+	 */
+	public void initiateBackgroundManager() {
+		if (database == null)
+			throw new NullPointerException();
+		backgroundManager = new BackgroundManager(database);
+		try {
+			backgroundManager.updateActiveTables();
+		} catch (DatabaseException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -94,30 +110,31 @@ public class GoNatureServer extends AbstractServer {
 				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
 						+ ": Communication recieved from client " + client.toString());
 		Communication request = (Communication) msg;
-		
+
 		// if this is a regular, single query request
 		if (request.getCommunicationType() == CommunicationType.QUERY_REQUEST) {
-			Communication response = new Communication(CommunicationType.RESPONSE);
+			Communication response = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
+			response.setServerMessageType(ServerMessageType.RESPONSE);
 			// making the request and the response communication with the same unique id
 			response.setUniqueId(request.getUniqueId());
 
 			// checking which type of query is request
 			switch (request.getQueryType()) {
 			case SELECT:
-				ArrayList<Object[]> resultList = db.executeSelectQuery(request);
+				ArrayList<Object[]> resultList = database.executeSelectQuery(request);
 				if (resultList != null)
 					response.setResultList(resultList);
 				break;
 			case UPDATE:
-				boolean updateQueryResult = db.executeUpdateQuery(request);
+				boolean updateQueryResult = database.executeUpdateQuery(request);
 				response.setQueryResult(updateQueryResult);
 				break;
 			case INSERT:
-				boolean insertQueryResult = db.executeInsertQuery(request);
+				boolean insertQueryResult = database.executeInsertQuery(request);
 				response.setQueryResult(insertQueryResult);
 				break;
 			case DELETE:
-				boolean deleteQueryResult = db.executeDeleteQuery(request);
+				boolean deleteQueryResult = database.executeDeleteQuery(request);
 				response.setQueryResult(deleteQueryResult);
 				break;
 			default:
@@ -132,9 +149,9 @@ public class GoNatureServer extends AbstractServer {
 
 		// if this is a combined query (transaction) request
 		if (request.getCommunicationType() == CommunicationType.TRANSACTION) {
-			Communication response = new Communication(CommunicationType.RESPONSE);
+			Communication response = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
 			response.setUniqueId(request.getUniqueId());
-			boolean transactionResult = db.executeTransaction(request);
+			boolean transactionResult = database.executeTransaction(request);
 			response.setQueryResult(transactionResult);
 			try {
 				client.sendToClient(response);
@@ -144,7 +161,7 @@ public class GoNatureServer extends AbstractServer {
 		}
 
 		if (request.getCommunicationType() == CommunicationType.CLIENT_SERVER_MESSAGE) {
-			if (request.getMessageType() == MessageType.DISCONNECT) {
+			if (request.getClientMessageType() == ClientMessageType.DISCONNECT) {
 				clientDisconnected(client);
 			}
 		}
