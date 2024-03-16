@@ -10,7 +10,7 @@ import serverSide.control.GoNatureServer;
 import serverSide.jdbc.DatabaseException;
 
 public class GoNatureServerUI extends Application {
-	protected static GoNatureServer server;
+	public static GoNatureServer server;
 
 	/**
 	 * This method runs the server with the entered port number (from the text field
@@ -27,13 +27,19 @@ public class GoNatureServerUI extends Application {
 		} catch (Exception ex) {
 			return "Error: Could not listen for clients!";
 		}
-		
+
 		try {
 			server.connectToDatabase(database, root, password);
 		} catch (DatabaseException e) {
 			return e.getMessage();
 		}
-		
+
+		try {
+			server.initiateBackgroundManager();
+		} catch (NullPointerException e) {
+			return e.getMessage();
+		}
+
 		return "Server is connected to port " + portNumber;
 	}
 
@@ -62,9 +68,8 @@ public class GoNatureServerUI extends Application {
 	 * Runs the server-side connection screen
 	 */
 	public void start(Stage primaryStage) throws Exception {
-		ScreenManager.getInstance().showScreen("ServerConnectionController",
-				"/serverSide/fxml/ServerConnection.fxml", true, false,
-				StageSettings.defaultSettings("GoNature System - Server Connection"), null);
+		ScreenManager.getInstance().showScreen("ServerConnectionController", "/serverSide/fxml/ServerConnection.fxml",
+				true, false, StageSettings.defaultSettings("GoNature System - Server Connection"), null);
 	}
 
 	public static void main(String[] args) {

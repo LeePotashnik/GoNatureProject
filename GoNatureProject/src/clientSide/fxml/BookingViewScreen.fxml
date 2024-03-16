@@ -45,11 +45,11 @@
             <TableColumn fx:id="bookingIdPastColumn" editable="false" prefWidth="75.0" sortable="false" text="Booking ID" />
             <TableColumn fx:id="parkPastColumn" editable="false" prefWidth="136.80004119873047" sortable="false" text="Park" />
             <TableColumn fx:id="datePastColumn" editable="false" prefWidth="75.199951171875" text="Date" />
-            <TableColumn fx:id="timePastColumn" editable="false" prefWidth="64.0" sortable="false" text="Time" />
-            <TableColumn fx:id="sizePastColumn" editable="false" prefWidth="79.20001220703125" sortable="false" text="Group Size" />
-            <TableColumn fx:id="pricePastColumn" editable="false" prefWidth="68.00003051757812" sortable="false" text="Final Price" />
-            <TableColumn fx:id="paidPastColumn" editable="false" prefWidth="54.39996337890625" sortable="false" text="Paid" />
-            <TableColumn fx:id="statusPastColumn" editable="false" prefWidth="86.4000244140625" sortable="false" text="Status" />
+            <TableColumn fx:id="timePastColumn" editable="false" prefWidth="53.0" sortable="false" text="Time" />
+            <TableColumn fx:id="sizePastColumn" editable="false" prefWidth="69.0" sortable="false" text="Group Size" />
+            <TableColumn fx:id="pricePastColumn" editable="false" prefWidth="68.0" sortable="false" text="Final Price" />
+            <TableColumn fx:id="paidPastColumn" editable="false" prefWidth="45.0" sortable="false" text="Paid" />
+            <TableColumn fx:id="statusPastColumn" editable="false" prefWidth="100.0" sortable="false" text="Status" />
          </columns>
       </TableView>
       <ProgressIndicator fx:id="progressIndicator" layoutX="334.0" layoutY="209.0" prefHeight="100.0" prefWidth="100.0" progress="0.0" />

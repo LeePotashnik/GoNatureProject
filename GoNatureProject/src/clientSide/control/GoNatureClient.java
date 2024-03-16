@@ -2,13 +2,14 @@ package clientSide.control;
 
 import java.io.IOException;
 import java.time.LocalTime;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import common.communication.Communication;
+import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
-import common.communication.Communication.MessageType;
 import common.communication.Communication.QueryType;
+import common.communication.Communication.ServerMessageType;
+import common.controllers.ScreenManager;
 import ocsf.client.AbstractClient;
 
 public class GoNatureClient extends AbstractClient {
@@ -46,31 +47,43 @@ public class GoNatureClient extends AbstractClient {
 
 	/**
 	 * Gets a Communication response from the server and updates the Communication
-	 * request with the result
+	 * request with the result, or conquers the focus using ScreenManager
 	 * 
 	 * @param responseFromServer a Communication object from the server-side
 	 */
 	@Override
 	protected void handleMessageFromServer(Object responseFromServer) {
 		awaitResponse = false;
-		Communication response = (Communication) responseFromServer;
+		Communication serverMessage = (Communication) responseFromServer;
 
-		// finding the original request
-		Communication originalRequest = awaitingRequests.remove(response.getUniqueId());
+		if (serverMessage.getServerMessageType() == ServerMessageType.RESPONSE) {
 
-		// if the original request was a single query request
-		if (originalRequest.getCommunicationType() == CommunicationType.QUERY_REQUEST) {
-			if (originalRequest.getQueryType() == QueryType.SELECT) {
-				originalRequest.setResultList(response.getResultList());
-				originalRequest.setQueryResult(true);
-			} else {
-				originalRequest.setQueryResult(response.getQueryResult());
+			// finding the original request
+			Communication originalRequest = awaitingRequests.remove(serverMessage.getUniqueId());
+
+			// if the original request was a single query request
+			if (originalRequest.getCommunicationType() == CommunicationType.QUERY_REQUEST) {
+				if (originalRequest.getQueryType() == QueryType.SELECT) {
+					originalRequest.setResultList(serverMessage.getResultList());
+					originalRequest.setQueryResult(true);
+				} else {
+					originalRequest.setQueryResult(serverMessage.getQueryResult());
+				}
 			}
+
+			// if the original request was a transaction request
+			if (originalRequest.getCommunicationType() == CommunicationType.TRANSACTION) {
+				originalRequest.setQueryResult(serverMessage.getQueryResult());
+			}
+			return;
 		}
 
-		// if the original request was a transaction request
-		if (originalRequest.getCommunicationType() == CommunicationType.TRANSACTION) {
-			originalRequest.setQueryResult(response.getQueryResult());
+		// if this is a conquer message type, then the server side requires conquering
+		// the focus of the current stage
+		if (serverMessage.getServerMessageType() == ServerMessageType.CONQUER) {
+			if (ScreenManager.getInstance().isActive()) {
+				// ScreenManager.getInstance().conquerFocus(serverMessage.getServerMessageContent());
+			}
 		}
 	}
 
@@ -83,19 +96,17 @@ public class GoNatureClient extends AbstractClient {
 		try {
 			awaitResponse = true;
 			Communication request = (Communication) requestFromClientSide;
-			
+
 			// creating a unique id for the request and adding it to the requests map
-			String uniqueId = UUID.randomUUID().toString();
-			request.setUniqueId(uniqueId);
-			awaitingRequests.put(uniqueId, request);
-			
+			awaitingRequests.put(request.getUniqueId(), request);
+
 			System.out.println(
 					LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
 							+ ": Sending Communication Request no. " + request.getUniqueId());
-			
+
 			// if this is a Disconnection request, just closing the connection
 			if (request.getCommunicationType() == CommunicationType.CLIENT_SERVER_MESSAGE) {
-				if (request.getMessageType() == MessageType.DISCONNECT) {
+				if (request.getClientMessageType() == ClientMessageType.DISCONNECT) {
 					sendToServer(request);
 					try {
 						Thread.sleep(100);

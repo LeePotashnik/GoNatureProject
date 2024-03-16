@@ -56,6 +56,7 @@ public class ServerConnectionController extends AbstractScreen {
 		if (validate()) {
 			String result = GoNatureServerUI.runServer(Integer.parseInt(portTxtField.getText()),
 					databaseTxtField.getText(), rootTxtField.getText(), passwordTxtField.getText());
+			System.out.println("RESULT: " + result);
 			if (result.contains("Error")) {
 				showErrorAlert(ScreenManager.getInstance().getStage(), result);
 				System.out.println(result);
@@ -85,7 +86,6 @@ public class ServerConnectionController extends AbstractScreen {
 	 */
 	void disconnectFromServer(ActionEvent event) {
 		if (disconnect()) {
-			showInformationAlert(ScreenManager.getInstance().getStage(), "Server is disconnected");
 			disconnectBtn.setDisable(true);
 			pane.requestFocus();
 			statusLabel.setText("Disconnected");
@@ -118,6 +118,7 @@ public class ServerConnectionController extends AbstractScreen {
 			return false;
 		} else {
 			GoNatureServerUI.disconnectServer();
+			showInformationAlert(ScreenManager.getInstance().getStage(), "Server is disconnected");
 			return true;
 		}
 	}
@@ -273,10 +274,11 @@ public class ServerConnectionController extends AbstractScreen {
 		statusLabel.setText("Disconnected");
 		statusLabel.setStyle("-fx-background-color: #ffe6e6; -fx-text-alignment: center;");
 
-		consoleArea.setEditable(false);
-		ConsoleOutput consoleOutput = new ConsoleOutput(consoleArea);
-		System.setOut(new PrintStream(consoleOutput, true));
-		System.setErr(new PrintStream(consoleOutput, true));
+		// for later use
+//		consoleArea.setEditable(false);
+//		ConsoleOutput consoleOutput = new ConsoleOutput(consoleArea);
+//		System.setOut(new PrintStream(consoleOutput, true));
+//		System.setErr(new PrintStream(consoleOutput, true));
 	}
 
 	public static class ConsoleOutput extends OutputStream {
@@ -302,6 +304,8 @@ public class ServerConnectionController extends AbstractScreen {
 		boolean disconnectionResult = disconnect();
 		if (!disconnectionResult)
 			event.consume();
+		else {
+		}
 	}
 
 	@Override
