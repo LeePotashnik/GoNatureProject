@@ -27,8 +27,11 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen{
 	private  final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
 	private  final String USERNAME_REGEX = "^(?=.*[a-zA-Z])[A-Za-z\\d.]{1,45}$";
 	private  final String PASSWORD_REGEX = "^(?=.*[a-zA-Z])(?=.*\\d).{8,45}$";
-	
 	private RegistrationController registerController = (RegistrationController) RegistrationController.getInstance();
+	
+	//////////////////////////////////
+	/// FXML AND JAVAFX COMPONENTS ///
+	//////////////////////////////////
 	@FXML
 	private Button backButton, registerbtn;
 	@FXML
@@ -44,6 +47,13 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen{
 	@FXML
     private Button checkIDbtn;
 
+
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
+
+	
+	
 	/**
      * Handles ID check action. Validates the ID field and performs necessary validation
      * and state updates based on ID existence and validity.
@@ -154,36 +164,11 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen{
 
     }
 
-    /**
-     * Initializes the screen state and sets up initial UI elements.
-     */
-	@Override
-	public void initialize() {
-		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
-		// setting the back button image
-		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
-		backImage.setFitHeight(30);
-		backImage.setFitWidth(30);
-		backImage.setPreserveRatio(true);
-		backButton.setGraphic(backImage);
-		backButton.setPadding(new Insets(1, 1, 1, 1));
-	    hideAllExceptIDAndCheckID();
 
-	}
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
 
-	
-	/**
-     * Loads any necessary information before the screen is displayed.
-     * Currently not implemented.
-     *
-     * @param information optional information that might be needed for initialization.
-     */
-	@Override
-	public void loadBefore(Object information) {
-		// TODO Auto-generated method stub
-		
-	}
-	
 	
 	/**
      * Validates the existence of the provided ID across different registration tables except 'traveller'.
@@ -410,15 +395,54 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen{
 		UserNameTxt.setText((String) details[3]);
 		passwordTxt.clear();
 	}
+	
+	  
 
-	/**
-     * Returns the screen title for this controller.
-     *
-     * @return the title of the screen.
-     */
-	@Override
-	public String getScreenTitle() {
-		return "Group guide Registration";
-	}
+		///////////////////////////////
+		/// ABSTRACT SCREEN METHODS ///
+		///////////////////////////////
+	    
+	    /**
+	     * Initializes the screen state and sets up initial UI elements.
+	     */
+		@Override
+		public void initialize() {
+			goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
+			// setting the back button image
+			ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
+			backImage.setFitHeight(30);
+			backImage.setFitWidth(30);
+			backImage.setPreserveRatio(true);
+			backButton.setGraphic(backImage);
+			backButton.setPadding(new Insets(1, 1, 1, 1));
+		    hideAllExceptIDAndCheckID();
+
+		}
+
+		
+		/**
+	     * Loads any necessary information before the screen is displayed.
+	     * Currently not implemented.
+	     *
+	     * @param information optional information that might be needed for initialization.
+	     */
+		@Override
+		public void loadBefore(Object information) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+		/**
+	     * Returns the screen title for this controller.
+	     *
+	     * @return the title of the screen.
+	     */
+		@Override
+		public String getScreenTitle() {
+			return "Group guide Registration";
+		}
+		
+
+	
 
 }

@@ -32,6 +32,12 @@ public class TravellerRegistrationScreenController extends AbstractScreen {
 	public TravellerRegistrationScreenController() {
 		this.registerController=RegistrationController.getInstance();
 	}
+	
+
+	//////////////////////////////////
+	/// FXML AND JAVAFX COMPONENTS ///
+	//////////////////////////////////
+	
 	@FXML
 	private Button backButton, registerbtn;
 	@FXML
@@ -43,6 +49,12 @@ public class TravellerRegistrationScreenController extends AbstractScreen {
 	@FXML
 	private ImageView goNatureLogo;
 
+
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
+
+	
 	/**
      * Handles the registration process for a new traveller. Validates input details and,
      * if validation passes, attempts to insert the new traveller into the database.
@@ -79,6 +91,25 @@ public class TravellerRegistrationScreenController extends AbstractScreen {
 			}
 		}
 	}
+	
+	/**
+     * Returns the user to the previous screen.
+     *
+     * @param event ActionEvent triggered by clicking the back button.
+     * @throws ScreenException If an error occurs during screen transition.
+     * @throws StatefulException If an error related to state management occurs.
+     */
+	@FXML
+	void returnToPreviousScreen(ActionEvent event) throws ScreenException, StatefulException {
+		ScreenManager.getInstance().goToPreviousScreen(false,false);
+	}
+	
+	
+
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
+
 	
 	/**
      * Validates the input fields for the registration form.
@@ -211,17 +242,11 @@ public class TravellerRegistrationScreenController extends AbstractScreen {
 		return valid;
 	}
 
-	/**
-     * Returns the user to the previous screen.
-     *
-     * @param event ActionEvent triggered by clicking the back button.
-     * @throws ScreenException If an error occurs during screen transition.
-     * @throws StatefulException If an error related to state management occurs.
-     */
-	@FXML
-	void returnToPreviousScreen(ActionEvent event) throws ScreenException, StatefulException {
-		ScreenManager.getInstance().goToPreviousScreen(false,false);
-	}
+
+
+	///////////////////////////////
+	/// ABSTRACT SCREEN METHODS ///
+	///////////////////////////////
 
 	/**
      * Initializes the controller class. Sets up necessary UI elements such as images and
