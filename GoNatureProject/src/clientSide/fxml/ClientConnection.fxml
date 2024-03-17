@@ -14,6 +14,24 @@
 
 <Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ClientConnectionController">
    <children>
+      <Rectangle fx:id="rectangle" arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="171.0" layoutX="90.0" layoutY="291.0" strokeLineCap="ROUND" strokeLineJoin="ROUND" strokeType="OUTSIDE" width="522.0">
+         <stroke>
+            <LinearGradient endX="1.0" endY="1.0">
+               <stops>
+                  <Stop>
+                     <color>
+                        <Color />
+                     </color>
+                  </Stop>
+                  <Stop offset="1.0">
+                     <color>
+                        <Color red="1.0" green="1.0" blue="1.0" />
+                     </color>
+                  </Stop>
+               </stops>
+            </LinearGradient>
+         </stroke>
+      </Rectangle>
       <ImageView fx:id="goNatureLogo" fitHeight="79.0" fitWidth="470.0" layoutX="115.0" layoutY="24.0" pickOnBounds="true" preserveRatio="true" />
       <Label fx:id="titleLbl" layoutX="3.0" layoutY="305.0" prefHeight="38.0" prefWidth="694.0" text="Client Connection">
          <font>
@@ -49,23 +67,5 @@
             <ImageView fx:id="image3" fitHeight="150.0" fitWidth="159.0" pickOnBounds="true" preserveRatio="true" />
          </children>
       </HBox>
-      <Rectangle fx:id="rectangle" arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="171.0" layoutX="90.0" layoutY="291.0" strokeLineCap="ROUND" strokeLineJoin="ROUND" strokeType="OUTSIDE" width="522.0">
-         <stroke>
-            <LinearGradient endX="1.0" endY="1.0">
-               <stops>
-                  <Stop>
-                     <color>
-                        <Color />
-                     </color>
-                  </Stop>
-                  <Stop offset="1.0">
-                     <color>
-                        <Color red="1.0" green="1.0" blue="1.0" />
-                     </color>
-                  </Stop>
-               </stops>
-            </LinearGradient>
-         </stroke>
-      </Rectangle>
    </children>
 </Pane>
