@@ -3,7 +3,10 @@ package clientSide.gui;
 import java.util.ArrayList;
 
 import common.controllers.AbstractScreen;
+import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
+import common.controllers.StatefulException;
+import common.controllers.TemporaryRunner;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -21,8 +24,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
@@ -112,15 +113,12 @@ public class ClientConnectionController extends AbstractScreen {
 	 * successfully. Starts the client-side Main Screen.
 	 */
 	public void runClientSide() {
-
-//		startSlideshow();
-
-//		// DO NOT TOUCH PLEASE
-//		try {
-//			new TemporaryRunner().showScreen();
-//		} catch (StatefulException | ScreenException e) {
-//			e.printStackTrace();
-//		}
+		// DO NOT TOUCH PLEASE
+		try {
+			new TemporaryRunner().showScreen();
+		} catch (StatefulException | ScreenException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void startSlideshow() {
@@ -161,31 +159,6 @@ public class ClientConnectionController extends AbstractScreen {
 	}
 
 	private void setRectangleStroke() {
-//		LinearGradient gradient = new LinearGradient(0, 0, 1, 0, true,
-//                javafx.scene.paint.CycleMethod.NO_CYCLE,
-//                new Stop(0, javafx.scene.paint.Color.WHITE),
-//                new Stop(1, javafx.scene.paint.Color.BLACK));
-//
-//        // Create the rectangle
-//        rectangle = new Rectangle(100, 50, 300, 100);
-//        rectangle.setStroke(gradient);
-//        rectangle.setStrokeWidth(4);
-//        rectangle.setFill(null); // No fill for the rectangle
-//
-//        // The dash array defines the pattern of the stroke
-//        rectangle.getStrokeDashArray().addAll(25d, 20d, 5d, 20d);
-//        
-//        // The offset defines where the stroke pattern starts
-//        final double maxOffset = rectangle.getStrokeDashArray().stream()
-//                .reduce(0d, Double::sum);
-//
-//        // Create a Timeline animation to spin the stroke
-//        Timeline timeline = new Timeline(
-//                new KeyFrame(Duration.ZERO, new KeyValue(rectangle.strokeDashOffsetProperty(), 0)),
-//                new KeyFrame(Duration.seconds(2), new KeyValue(rectangle.strokeDashOffsetProperty(), maxOffset))
-//        );
-//        timeline.setCycleCount(Timeline.INDEFINITE);
-//        timeline.play();
 		rectangle.getStrokeDashArray().addAll(25d, 25d, 25d, 25d);
 
 		// Calculate the sum of the stroke dash array which is the length of the entire
@@ -225,7 +198,10 @@ public class ClientConnectionController extends AbstractScreen {
 		}
 	}
 
-	///// --- FXML / JAVA FX METHODS --- /////
+	////////////////////////////////////////////////
+	/// ABSTRACT SCREEN, FXML AND JAVAFX METHODS ///
+	////////////////////////////////////////////////
+	
 	@FXML
 	/**
 	 * This method initializes the JavaFX components
@@ -273,7 +249,10 @@ public class ClientConnectionController extends AbstractScreen {
 		return "Client Connection";
 	}
 
+	/////////////////////////////////////
 	/// TEXT FIELDS TABS FLOW METHODS ///
+	/////////////////////////////////////
+	
 	@FXML
 	/**
 	 * transfers the focus from hostTxtField to portTxtField
