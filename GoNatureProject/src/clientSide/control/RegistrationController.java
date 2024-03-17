@@ -31,7 +31,13 @@ public class RegistrationController {
 			instance = new RegistrationController();
 		return instance;
 	}
-
+	
+	
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
+	
+	
 	 /**
      * Sets the flag indicating whether the ID of a traveler exists.
      * 
@@ -39,6 +45,15 @@ public class RegistrationController {
      */
 	public void SetIsIdOfTravelerExists(boolean isIdOfTravelerExists) {
 		this.isIdOfTravelerExists = isIdOfTravelerExists;
+	}
+	
+	/**
+     * Checks if the ID of a traveler exists in the system.
+     * 
+     * @return true if the ID exists, false otherwise.
+     */
+	public boolean isIdOfTravelerExists() {
+	    return this.isIdOfTravelerExists;
 	}
 
 	/**
@@ -63,6 +78,11 @@ public class RegistrationController {
 			return "employeeId";
 		}
 	}
+	
+	
+	////////////////////////////////////
+	/// DB EXISTENCE CHEKING METHODS ///
+	////////////////////////////////////
 	
 	/**
      * Checks for the existence of a traveler's registration details (userName, email, ID) in a specified table.
@@ -172,7 +192,9 @@ public class RegistrationController {
 		}
 	}
 	
- 
+	//////////////////////////////////
+	/// DB FETCHING DETAILS METHOD ///
+	//////////////////////////////////
 
 
 	/**
@@ -198,6 +220,10 @@ public class RegistrationController {
 		return result;
 
 	}
+	
+	////////////////////////////////////
+	/// DB DELETING TRAVELLER METHOD ///
+	////////////////////////////////////
 
 	/**
      * Deletes a traveler's information from the database based on the provided ID.
@@ -222,6 +248,12 @@ public class RegistrationController {
 		return true;
 	}
 
+	
+	/////////////////////////
+	/// DB INSERT METHODS ///
+	/////////////////////////
+	
+	
 	/**
      * Inserts a new traveler into the database with the provided details.
      * 
@@ -289,13 +321,6 @@ public class RegistrationController {
 	}
 	
 	
-	/**
-     * Checks if the ID of a traveler exists in the system.
-     * 
-     * @return true if the ID exists, false otherwise.
-     */
-	public boolean isIdOfTravelerExists() {
-	    return this.isIdOfTravelerExists;
-	}
+	
 
 }
