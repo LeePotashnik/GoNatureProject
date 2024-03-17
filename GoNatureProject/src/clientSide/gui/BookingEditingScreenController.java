@@ -60,7 +60,10 @@ public class BookingEditingScreenController extends BookingScreenController {
 		control = BookingController.getInstance();
 	}
 
-	/// FXML AND JAVAFX COMPONENTS
+	//////////////////////////////////
+	/// FXML AND JAVAFX COMPONENTS ///
+	//////////////////////////////////
+
 	@FXML
 	private Label dateLbl, hourLbl, parkLbl, visitorsLbl, titleLbl, bookingLbl, typeLbl;
 	@FXML
@@ -78,9 +81,9 @@ public class BookingEditingScreenController extends BookingScreenController {
 	@FXML
 	private Pane pane;
 
-	/////////////////////
-	/// EVENT METHODS ///
-	/////////////////////
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
 
 	@FXML
 	/**
@@ -100,7 +103,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 			return;
 
 		case 2: // chose to cancel
-			if (control.deleteBookingFromActiveTable(booking)) {
+			if (control.deleteBooking(booking, Communication.activeBookings)) {
 				if (control.insertBookingToCancelledTable(booking, Communication.userCancelled)) {
 					// showing the cancellation screen
 					try {
@@ -173,7 +176,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 
 		// making sure the user wants to replace his old booking with the new one
 		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
-				"You are about to update your " + booking.getParkBooked().getParkName() + "Park reservation for "
+				"You are about to update your " + booking.getParkBooked().getParkName() + " Park reservation for "
 						+ booking.getDayOfVisit() + ", " + booking.getTimeOfVisit() + ".\nThis action can't be undone.",
 				Arrays.asList("Don't Update", "Ok, Continue"));
 
@@ -183,10 +186,6 @@ public class BookingEditingScreenController extends BookingScreenController {
 			return;
 
 		case 2: // chose to update
-
-			// first checking if the user changed any detail before sending a query request
-
-			// if the user changed any of the details
 			if (!validateDetails()) { // if details are not valid
 				return;
 			} else { // if details are valid
@@ -199,12 +198,8 @@ public class BookingEditingScreenController extends BookingScreenController {
 				boolean isAvailable = control.checkParkAvailabilityForExistingBooking(booking, newBooking);
 
 				if (!isAvailable) { // if the entered date and time are not available
-
 					dateIsNotAvailable(newBooking);
-				}
-
-				else { // if the date and time are available
-
+				} else { // if the date and time are available
 					dateIsAvailable(newBooking);
 				}
 			}
@@ -395,12 +390,28 @@ public class BookingEditingScreenController extends BookingScreenController {
 			error += "• enter a digit-only number of visitors\n";
 			valid = false;
 		} else {
-			if (Integer.parseInt(visitorsTxt.getText()) < control.minimumVisitorsInReservation
-					|| Integer.parseInt(visitorsTxt.getText()) > control.maximumVisitorsInReservation) {
-				visitorsTxt.setStyle(setFieldToError());
-				error += "• enter a number of visitors in range of " + control.minimumVisitorsInReservation + " to "
-						+ control.maximumVisitorsInReservation + "\n";
-				valid = false;
+			if (isGroupReservation) {
+				if (Integer.parseInt(visitorsTxt.getText()) < control.minimumVisitorsInReservation
+						|| Integer.parseInt(visitorsTxt.getText()) > control.maximumVisitorsInGroupReservation) {
+					visitorsTxt.setStyle(setFieldToError());
+					error += "• enter a number of visitors in range of " + control.minimumVisitorsInReservation + " to "
+							+ control.maximumVisitorsInGroupReservation + "\n";
+					valid = false;
+				}
+			} else {
+				parkIndexInCombobox = parkComboBox.getSelectionModel().getSelectedIndex();
+				Park parkDesired = parksList.get(parkIndexInCombobox);
+				if (Integer.parseInt(visitorsTxt.getText()) < control.minimumVisitorsInReservation) {
+					visitorsTxt.setStyle(setFieldToError());
+					error += "• group reservations have to have at least " + control.minimumVisitorsInReservation
+							+ " visitors\n";
+					valid = false;
+				}
+				if (Integer.parseInt(visitorsTxt.getText()) > parkDesired.getMaximumOrders()) {
+					visitorsTxt.setStyle(setFieldToError());
+					error += "• reservations can't exceed a total of " + parkDesired.getMaximumOrders() + " visitors\n";
+					valid = false;
+				}
 			}
 		}
 
@@ -465,26 +476,37 @@ public class BookingEditingScreenController extends BookingScreenController {
 
 		// calculating the final price for the booking. Sending visitor's type cause the
 		// price defers between regular and guided groups
-		int finalPrice = control.calculateFinalRegularPrice(newBooking, visitor.getVisitorType());
-		int discountPrice = control.calculateFinalDiscountPrice(newBooking, visitor.getVisitorType());
+		int discountPrice = control.calculateFinalDiscountPrice(booking, isGroupReservation, false);
+		int preOrderPrice = control.calculateFinalDiscountPrice(booking, true, true);
 
 		// creating the pop up message
 		String payMessage = "Woohoo! You're almost set.";
-		payMessage += booking.isPaid() ? "\nYour old booking is fully refunded." : "";
-		payMessage += "\nPay now and get a special discount for pre-ordering:";
-		payMessage += "\n        Your new reservation's final price: " + finalPrice + "$";
-		payMessage += "\n        Your new reservetion's price after the special discount: " + discountPrice + "$";
+		if (isGroupReservation) {
+			payMessage += "\nPay now and get a special discount for paying ahead:";
+			payMessage += "\n        Your reservation's final price: " + discountPrice + "$";
+			payMessage += "\n        Your reservetion's price after paying ahead discount: " + preOrderPrice + "$";
+		} else {
+			payMessage += "\nYour reservation's final price (after pre-order discount) is: " + discountPrice + "$";
+		}
+		
+		if (booking.isPaid()) {
+			payMessage += "\nYour old booking was paid. This payment will be refunded.";
+		}
+
 		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
-				Arrays.asList("Pay Now and Get Discount", "Pay Upon Arrival", "Exit Reservations"));
+				Arrays.asList("Pay Now", "Pay Upon Arrival", "Cancel Reservation"));
 
 		switch (choise) {
-		// chose to pay now and get discount
+		// chose to pay now
 		case 1: {
 			newBooking.setPaid(true);
-			newBooking.setFinalPrice(discountPrice);
+			newBooking.setFinalPrice(isGroupReservation ? preOrderPrice : discountPrice);
 			// updating the payment columns in the database
+			///////////////////////////////////////////////////
+			///// maybe transfer it to the payment screen /////
+			///////////////////////////////////////////////////
 			control.updateBookingPayment(newBooking);
-			// showing the confirmation screen
+			// showing the payment screen
 			try {
 				ScreenManager.getInstance().showScreen("LoadingScreenController", "/clientSide/fxml/LoadingScreen.fxml",
 						true, false, StageSettings.defaultSettings("Payment"),
@@ -498,29 +520,30 @@ public class BookingEditingScreenController extends BookingScreenController {
 		// chose to pay upon arrival
 		case 2: {
 			newBooking.setPaid(false);
-			newBooking.setFinalPrice(finalPrice);
+			newBooking.setFinalPrice(discountPrice);
 			// updating the payment columns in the database
 			control.updateBookingPayment(newBooking);
-			break;
+			// showing the confirmation screen
+			try {
+				ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+						"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
+						StageSettings.defaultSettings("Confirmation"),
+						new Pair<Booking, ParkVisitor>(newBooking, visitor));
+			} catch (StatefulException | ScreenException e) {
+				e.printStackTrace();
+			}
+			return;
 		}
 
-		// chose to cancel
+		// chose to cancel reservation
 		case 3: {
 			// deleting the new booking from the database cause it wat inserted in order to
 			// save the spot for the visitor, and returning to acount screen
-			control.deleteBookingFromActiveTable(newBooking);
+			control.deleteBooking(newBooking, Communication.activeBookings);
+			/// SHOULD BE RETURNING TO ACCOUNT SCREEN ///
 			returnToPreviousScreen(null);
 			return;
 		}
-		}
-
-		// showing the confirmation screen
-		try {
-			ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-					"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
-					StageSettings.defaultSettings("Confirmation"), new Pair<Booking, ParkVisitor>(newBooking, visitor));
-		} catch (StatefulException | ScreenException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -571,9 +594,9 @@ public class BookingEditingScreenController extends BookingScreenController {
 		}
 	}
 
-	/////////////////////////////////////////////
-	/// JAVAFX, FXML, ABSTRACT SCREEN METHODS ///
-	/////////////////////////////////////////////
+	///////////////////////////////
+	/// ABSTRACT SCREEN METHODS ///
+	///////////////////////////////
 
 	@Override
 	/**

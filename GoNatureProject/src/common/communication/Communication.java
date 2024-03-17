@@ -15,7 +15,10 @@ public class Communication implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String uniqueId; // will hold a unique id for client-server identification
 
+	////////////////////
 	/// TABLES NAMES ///
+	////////////////////
+
 	// tables in context of a specific park
 	public static final String activeBookings = "_park_active_booking";
 	public static final String cancelledBookings = "_park_cancelled_booking";
@@ -41,14 +44,22 @@ public class Communication implements Serializable {
 	public static final String userDidNotArrive = "User Did Not Arrive";
 
 	// the communication type
+	/**
+	 * QUERY_REQUEST: a client-server message for executing a single query
+	 * 
+	 * TRANSACTION: a client-server message for multiple queries
+	 * 
+	 * CLIENT_SERVER_MESSAGE: a client-server message that is not a query
+	 * 
+	 * SERVER_CLIENT_MESSAGE: a server-client message
+	 * 
+	 * SELF: an inner-server query request
+	 */
 	public enum CommunicationType {
 		QUERY_REQUEST, TRANSACTION, CLIENT_SERVER_MESSAGE, SERVER_CLIENT_MESSAGE, SELF;
 	}
 
-	private CommunicationType communicationType;
-
-	/// A LIST OF COMMUNICATIONS TO EXECUTE AS A TRANSACTION ///
-	private ArrayList<Communication> requestsList = null;
+	private CommunicationType communicationType; // the communication type
 
 	/**
 	 * Constructor of a Communication object
@@ -78,7 +89,10 @@ public class Communication implements Serializable {
 		}
 	}
 
-	// --- TYPE 1 OF COMMUNICATION: SQL QUERY REQUEST ---
+	/////////////////////////////////////////////////////////////////////
+	/// SQL QUERY AND TRANSACTION COMMUNICATION REQUESTS - PROPERTIES ///
+	/////////////////////////////////////////////////////////////////////
+
 	// determines the type of the SQL requested query
 	public enum QueryType {
 		SELECT, UPDATE, INSERT, DELETE, NONE;
@@ -101,14 +115,23 @@ public class Communication implements Serializable {
 	private ArrayList<String> columns;
 	private ArrayList<Object> values;
 
-	// --- TYPE 2 OF COMMUNICATION: CLIENT-SERVER MESSAGES
+	// a list of communications to execute as a transaction
+	private ArrayList<Communication> requestsList = null;
+
+	/////////////////////////////////////////////////////////
+	/// CLIENT-SERVER MESSAGES COMMUNICATION - PROPERTIES ///
+	/////////////////////////////////////////////////////////
+
 	public enum ClientMessageType {
 		CONNECT, DISCONNECT, NONE;
 	}
 
 	private ClientMessageType clientMessageType;
 
-	// --- TYPE 3 OF COMMUNICATION: RESPONSE FROM SERVER SIDE
+	/////////////////////////////////////////////////////////
+	/// SERVER-CLIENT MESSAGES COMMUNICATION - PROPERTIES ///
+	/////////////////////////////////////////////////////////
+
 	public enum ServerMessageType {
 		RESPONSE, CONQUER, NONE;
 	}
@@ -116,8 +139,21 @@ public class Communication implements Serializable {
 	private ServerMessageType serverMessageType;
 
 	private String serverMessageContent;
-		private ArrayList<Object[]> resultList; // a container for the result set from the database, as ArrayList
+	private ArrayList<Object[]> resultList; // a container for the result set from the database, as ArrayList
 	private boolean queryResult; // holds the result of update/insert/delete queries
+
+	////////////////////////////////////////////////////
+	/// SECONDARY REQUEST COMMUNICATION - PROPERTIES ///
+	////////////////////////////////////////////////////
+
+	public enum SecondaryRequest {
+		SEND_NOTIFICATIONS, UPDATE_WAITING_LIST;
+	}
+
+	private SecondaryRequest secondaryRequest;
+	private int parkId;
+	private LocalDate date;
+	private LocalTime time;
 
 	///////////////////////
 	/// GENERAL METHODS ///
@@ -164,12 +200,39 @@ public class Communication implements Serializable {
 	}
 
 	/**
-	 * This method returns true if the communication is a query request
+	 * This method returns the secondery request if exists
 	 * 
-	 * @return true if the CommunicationType is QUERY_REQUEST, false otherwise
+	 * @return the secondary request, null if does not exist
 	 */
-	public boolean isQuery() {
-		return communicationType == CommunicationType.QUERY_REQUEST;
+	public SecondaryRequest getSecondaryRequest() {
+		return secondaryRequest;
+	}
+
+	/**
+	 * This method returns the secondery request's park id
+	 * 
+	 * @return
+	 */
+	public int getParkId() {
+		return parkId;
+	}
+	
+	/**
+	 * This method returns the secondery request's date
+	 * 
+	 * @return
+	 */
+	public LocalDate getDate() {
+		return date;
+	}
+	
+	/**
+	 * This method returns the secondery request's time
+	 * 
+	 * @return
+	 */
+	public LocalTime getTime() {
+		return time;
 	}
 
 	///////////////
@@ -236,6 +299,39 @@ public class Communication implements Serializable {
 	public void setColumnsAndValues(List<String> columns, List<Object> values) {
 		this.columns = new ArrayList<String>(columns);
 		this.values = new ArrayList<Object>(values);
+	}
+
+	/**
+	 * Thus method sets the secondary request, if relevant
+	 * 
+	 * @param secondaryRequest
+	 */
+	public void setSecondaryRequest(SecondaryRequest secondaryRequest) {
+		this.secondaryRequest = secondaryRequest;
+	}
+	
+	/**
+	 * This method sets the secondary request's park id
+	 * @return
+	 */
+	public void setParkId(int parkId) {
+		this.parkId = parkId;
+	}
+	
+	/**
+	 * This method sets the secondary request's date
+	 * @return
+	 */
+	public void setDate(LocalDate date) {
+		this.date = date;
+	}
+	
+	/**
+	 * This method sets the secondary request's time
+	 * @return
+	 */
+	public void setTime(LocalTime time) {
+		this.time = time;
 	}
 
 	/////////////////////////////////
@@ -492,19 +588,6 @@ public class Communication implements Serializable {
 		return null;
 	}
 
-	/**
-	 * This method returns the result of the transaction
-	 * 
-	 * @return true if all queries succeed, false otherwise
-	 */
-	public boolean getTransactionResult() {
-		for (Communication request : requestsList) {
-			if (!request.getQueryResult())
-				return false;
-		}
-		return true;
-	}
-
 	////////////////////////////////////////////////////////////
 	/// METHODS FOR HANDLING CLIENT TO SERVER COMMUNICATIONS ///
 	////////////////////////////////////////////////////////////
@@ -512,14 +595,6 @@ public class Communication implements Serializable {
 	///////////////
 	/// GETTERS ///
 	///////////////
-
-	/**
-	 * @return true if the Communication is from CLIENT_SERVER_MESSAGE type, false
-	 *         otherwise.
-	 */
-	public boolean isMessage() {
-		return communicationType == CommunicationType.CLIENT_SERVER_MESSAGE;
-	}
 
 	/**
 	 * @return the MessageType, if the Communication is from CLIENT_SERVER_MESSAGE
@@ -571,19 +646,32 @@ public class Communication implements Serializable {
 	public boolean getQueryResult() {
 		return queryResult;
 	}
-	
+
 	/**
 	 * @return the server-client type of message
 	 */
 	public ServerMessageType getServerMessageType() {
 		return serverMessageType;
 	}
-	
+
 	/**
 	 * @return the server message content
 	 */
 	public String getServerMessageContent() {
 		return serverMessageContent;
+	}
+
+	/**
+	 * This method returns the result of the transaction
+	 * 
+	 * @return true if all queries succeed, false otherwise
+	 */
+	public boolean getTransactionResult() {
+		for (Communication request : requestsList) {
+			if (!request.getQueryResult())
+				return false;
+		}
+		return true;
 	}
 
 	///////////////
@@ -612,6 +700,7 @@ public class Communication implements Serializable {
 
 	/**
 	 * Sets the server-client type of message
+	 * 
 	 * @param serverMessageType
 	 */
 	public void setServerMessageType(ServerMessageType serverMessageType) {
@@ -620,6 +709,7 @@ public class Communication implements Serializable {
 
 	/**
 	 * Sets the server message content
+	 * 
 	 * @param serverMessageContent
 	 */
 	public void setServerMessageContent(String serverMessageContent) {
