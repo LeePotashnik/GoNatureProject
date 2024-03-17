@@ -6,20 +6,20 @@ import javafx.geometry.Insets;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class ParametersAdjustingScreen extends AbstractScreen {
+public class ParametersApprovingScreenConrtroller extends AbstractScreen {
 
 
 	@Override
-	public void initialize() {
-		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));		
+	public void initialize() 
+	{
+		/*goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));		
 		//setting the back button image:
 		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
 		backImage.setFitHeight(30);
 		backImage.setFitWidth(30);
 		backImage.setPreserveRatio(true);
 		backButton.setGraphic(backImage);
-		backButton.setPadding(new Insets(1, 1, 1, 1));
-		
+		backButton.setPadding(new Insets(1, 1, 1, 1));*/
 	}
 
 	@Override

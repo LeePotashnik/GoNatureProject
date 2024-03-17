@@ -15,10 +15,10 @@ import javafx.scene.layout.Pane;
 import javafx.util.Pair;
 
 /**
- * The ConfirmationScreenController is called after a booking if successfully
- * proccessed, showing a confirmation to the user.
+ * The CancellationScreenController is called after a booking if successfully
+ * cancelled, showing a cancellation confirmation to the user.
  */
-public class ConfirmationScreenController extends AbstractScreen {
+public class CancellationScreenController extends AbstractScreen {
 	private ParkVisitor visitor;
 
 	// GUI COMPONENTS
@@ -43,6 +43,7 @@ public class ConfirmationScreenController extends AbstractScreen {
 	 * @param event
 	 */
 	void returnToAccount(ActionEvent event) {
+		/// HERE: only connected visitors arrive!
 		if (visitor == null) { // is not connected to the system, entered only with id
 			showInformationAlert(ScreenManager.getInstance().getStage(), "Now returning to main screen.");
 		} else {
@@ -89,9 +90,9 @@ public class ConfirmationScreenController extends AbstractScreen {
 			visitorsLabel.setText("Group Size: " + booking.getNumberOfVisitors() + "");
 			priceLabel.setText("Final Price: " + booking.getFinalPrice() + "$");
 			if (booking.isPaid()) {
-				isPaidLabel.setText("Your reservation is fully paid.");
+				isPaidLabel.setText("Your reservation was paid. We will initiate a refund in the next 48 hours.");
 			} else {
-				isPaidLabel.setText("Your reservation is not paid. You will need to pay at the park entrance.");
+				isPaidLabel.setText("Your reservation was not paid.");
 			}
 
 			String parkImagePath = "/" + ParkController.getInstance().nameOfTable(booking.getParkBooked()) + ".jpg";

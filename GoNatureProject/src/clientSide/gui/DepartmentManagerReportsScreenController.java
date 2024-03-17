@@ -2,6 +2,7 @@ package clientSide.gui;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,8 +21,10 @@ import javafx.geometry.Insets;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.util.Pair;
 
 
 public class DepartmentManagerReportsScreenController extends AbstractScreen implements Stateful{
@@ -45,7 +48,8 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
     private ChoiceBox<String> choiceBoxPark;
     @FXML
     private ChoiceBox<String> choiceBoxYear;
-    
+    @FXML
+    private Label DepartmentName;
     /**
    	 * Constructor, initializes the department manager controller instance
    	 */
@@ -63,19 +67,29 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
     void cancellationReport(ActionEvent event) {
     	String selectedMonth = choiceBoxMonth.getValue();
         String selectedYear = choiceBoxYear.getValue();
-        String selectedPark= choiceBoxPark.getValue();
-     // Validate that month,park and year are selected
-        if (selectedMonth == null || selectedYear == null || selectedPark == null) {
+        String selectedParkName= choiceBoxPark.getValue();
+        // Validate that month,park and year are selected
+        if (selectedMonth == null || selectedYear == null || selectedParkName == null) {
             showErrorAlert(ScreenManager.getInstance().getStage(), "Please select month, year and park before generating the report.");
             return;
-        } 
-//    	try {
-//    	//	HashMap<Integer, Pair<Integer, Integer>> CancellationData = control.generateCancellationReport(selectedMonth, selectedYear,selectedPark,parks);
-//    	//    ScreenManager.getInstance().showScreen("CancellationReport", "/clientSide/fxml/CancellationReport.fxml", true, false, StageSettings.defaultSettings("Cancellation Report"), CancellationData);
-//    	} catch (StatefulException | ScreenException e) {
-//    		e.printStackTrace();
-//    	}
-    }
+        }  
+        try {
+            // Find the Park object that matches the selected park name
+            Park selectedPark = parks.stream()
+                                     .filter(p -> p.getParkName().equals(selectedParkName))
+                                     .findFirst()
+                                     .orElseThrow(() -> new IllegalArgumentException("Selected park not found")); 
+            // Check if data is available for the selected parameters
+            if (!control.isReportDataAvailable(selectedMonth, selectedYear, selectedPark, "cancelled")) {
+            	showErrorAlert(ScreenManager.getInstance().getStage(), "No data available for the selected time period.");                return;
+            }
+            Map<String, List<XYChart.Data<String, Number>>> cancelData= control.generateCancellationReport(selectedMonth, selectedYear,selectedPark);
+    	    ScreenManager.getInstance().showScreen("CancellationReportController", "/clientSide/fxml/CancellationReport.fxml", true, true, StageSettings.defaultSettings("Cancellation Report"), cancelData);
+    	} catch (StatefulException | ScreenException e) {
+    		e.printStackTrace(); 
+    		showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred while generating the report.");
+    	}
+   }
 
     /**
  	 * This method is called after an event of clicking on "Visit report" button
@@ -85,25 +99,30 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
  	 */
     @FXML
     void visitReport(ActionEvent event) {
-    	String selectedMonth = choiceBoxMonth.getValue();
+        String selectedMonth = choiceBoxMonth.getValue();
         String selectedYear = choiceBoxYear.getValue();
         String selectedParkName= choiceBoxPark.getValue();
-    	// Validate that month,park and year are selected
+        // Validate that month, park, and year are selected
         if (selectedMonth == null || selectedYear == null || selectedParkName == null) {
-            showErrorAlert(ScreenManager.getInstance().getStage(), "Please select month, year and park before generating the report.");
+            showErrorAlert(ScreenManager.getInstance().getStage(), "Please select month, year, and park before generating the report.");
             return;
         }  
-    	try {
-    		// Find the Park object that matches the selected park name
+        try {
+            // Find the Park object that matches the selected park name
             Park selectedPark = parks.stream()
                                      .filter(p -> p.getParkName().equals(selectedParkName))
                                      .findFirst()
                                      .orElseThrow(() -> new IllegalArgumentException("Selected park not found"));
-    		Map<String, List<XYChart.Data<Number, Number>>> visitData=control.generateVisitReport(selectedMonth, selectedYear,selectedPark);
- 	        ScreenManager.getInstance().showScreen("VisitReport", "/clientSide/fxml/VisitReport.fxml", true, false, StageSettings.defaultSettings("Visit Report"), visitData);
- 	    } catch (StatefulException | ScreenException e) {
- 			e.printStackTrace();
- 	    }
+            // Check if data is available for the selected parameters
+            if (!control.isReportDataAvailable(selectedMonth, selectedYear, selectedPark, "done")) {
+            	showErrorAlert(ScreenManager.getInstance().getStage(), "No data available for the selected time period.");                
+            	return;
+            }
+            Map<String, List<XYChart.Data<Number, Number>>> visitData = control.generateVisitReport(selectedMonth, selectedYear, selectedPark);
+            ScreenManager.getInstance().showScreen("VisitReportController", "/clientSide/fxml/VisitReport.fxml", true, true, StageSettings.defaultSettings("Visit Report"), visitData);
+        } catch (StatefulException | ScreenException e) {
+            e.printStackTrace();
+        }
     }
 
 	
@@ -116,7 +135,7 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
     @FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(true,false);
+			ScreenManager.getInstance().goToPreviousScreen(false,true);
     	  } catch (ScreenException | StatefulException e) {
     	        e.printStackTrace();
     	  }
@@ -134,16 +153,7 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
 	    // Add all months and years to the ChoiceBox
 	    choiceBoxMonth.getItems().addAll(months);
 	    choiceBoxYear.getItems().addAll(years);
-	    
-	    List<String> Eastern = Arrays.asList("Acadia", "Great Smoky Mountains", "Shenandoah");
-	    List<String> Southern = Arrays.asList("Big Bend", "Congaree", "Everglades");
-	    List<String> Central = Arrays.asList("Gateway Arch", "Hot Springs", "Mammoth Cave");
-	    List<String> Northern = Arrays.asList("Glacier", "Theodore Roosevelt", "Voyageurs");
-	    List<String> Western = Arrays.asList("Grand Canyon", "Yellowstone", "Yosemite");
-	    List<String> Pacific = Arrays.asList("Hawaii Volcanoes", "Olympic");
-	    // Add all months to the ChoiceBox
-	    choiceBoxPark.getItems().addAll(Southern);
-	 // setting the back button image
+	    // setting the back button image
 	 	ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
 	 	backImage.setFitHeight(30);
 	 	backImage.setFitWidth(30);
@@ -157,10 +167,6 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
 	  */
 	@Override
 	public void loadBefore(Object information) {
-//		if (information instanceof DepartmentManager) {
-//			departmentManager = (DepartmentManager)information;
-//			ArrayList<Park> parksInDepartment = control.getDepartmentParks(departmentManager.getManagesDepartment());
-//		}
 		if (information instanceof DepartmentManager) {
 	        departmentManager = (DepartmentManager)information;
 	        parks = control.getDepartmentParks(departmentManager.getManagesDepartment());
@@ -170,6 +176,8 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
 	        for (Park park : parks) {
 	            choiceBoxPark.getItems().add(park.getParkName());
 	        }
+	        DepartmentName.getStyleClass().add("label-center");
+	        DepartmentName.setText("Hello "+departmentManager.getManagesDepartment()+" manager!");
 	    }
 	}
 	/**
@@ -189,7 +197,12 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
 	public void restoreState() {
 		departmentManager = control.restoreDepartmentManager();
 		parks = control.getDepartmentParks(departmentManager.getManagesDepartment());
-		
+		choiceBoxPark.getItems().clear();
+        for (Park park : parks) {
+            choiceBoxPark.getItems().add(park.getParkName());
+        }
+		DepartmentName.getStyleClass().add("label-center");
+	    DepartmentName.setText("Hello "+departmentManager.getManagesDepartment()+" manager!");
 	}
 	/**
 	 * This method returns the screen's name

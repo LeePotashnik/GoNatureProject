@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.text.Font?>
+
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onKeyPressed="#paneTabPressed" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.BookingEditingScreenController">
+   <children>
+      <ComboBox fx:id="parkComboBox" layoutX="128.0" layoutY="173.0" onAction="#parkChosen" onKeyPressed="#parkTabPressed" prefHeight="35.0" prefWidth="489.0" promptText="Choose your park" />
+      <DatePicker fx:id="datePicker" layoutX="128.0" layoutY="230.0" onKeyPressed="#dateTabPressed" prefHeight="35.0" prefWidth="213.0" promptText="Choose date" />
+      <Label fx:id="hourLbl" layoutX="-6.0" layoutY="289.0" prefHeight="25.0" prefWidth="126.0" text="Hour:">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <ComboBox fx:id="hourCombobox" layoutX="128.0" layoutY="284.0" onKeyPressed="#hourTabPressed" prefHeight="35.0" prefWidth="165.0" promptText="Choose hour" />
+      <TextField fx:id="visitorsTxt" layoutX="128.0" layoutY="340.0" onKeyPressed="#visitorsTabPressed" promptText="1-15">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </TextField>
+      <Label fx:id="visitorsLbl" layoutX="-8.0" layoutY="345.0" prefHeight="25.0" prefWidth="126.0" text="Visitors:" textAlignment="RIGHT">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label fx:id="dateLbl" layoutX="-8.0" layoutY="238.0" prefHeight="25.0" prefWidth="126.0" text="Date:" textAlignment="RIGHT">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label fx:id="parkLbl" layoutX="-8.0" layoutY="178.0" prefHeight="25.0" prefWidth="126.0" text="Park:" textAlignment="RIGHT">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Button fx:id="updateReservationBtn" layoutX="456.0" layoutY="429.0" mnemonicParsing="false" onAction="#updateReservation" onKeyPressed="#btnTabPressed" text="Update Reservation">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Button>
+      <Button fx:id="backButton" layoutX="14.0" layoutY="15.0" mnemonicParsing="false" onAction="#returnToPreviousScreen" prefHeight="38.0" prefWidth="38.0">
+         <font>
+            <Font name="Calibri" size="14.0" />
+         </font>
+      </Button>
+      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="191.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />
+      <Label fx:id="titleLbl" layoutX="191.0" layoutY="65.0" prefHeight="38.0" prefWidth="300.0" text="Booking Editing">
+         <font>
+            <Font name="Cambria" size="30.0" />
+         </font>
+      </Label>
+      <Label fx:id="typeLbl" layoutX="26.0" layoutY="120.0" prefHeight="22.0" prefWidth="322.0" text="Label">
+         <font>
+            <Font name="Calibri" size="18.0" />
+         </font>
+      </Label>
+      <Separator layoutX="26.0" layoutY="149.0" prefHeight="7.0" prefWidth="647.0" />
+      <Separator layoutX="18.0" layoutY="413.0" prefHeight="7.0" prefWidth="647.0" />
+      <Label fx:id="bookingLbl" layoutX="364.0" layoutY="120.0" prefHeight="22.0" prefWidth="308.0" text="Label">
+         <font>
+            <Font name="Calibri" size="18.0" />
+         </font>
+      </Label>
+      <Button fx:id="cancelReservationBtn" layoutX="85.0" layoutY="429.0" mnemonicParsing="false" onAction="#cancelReservation" onKeyPressed="#btnTabPressed" text="Cancel Reservation">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Button>
+      <Button fx:id="availabilityBtn" layoutX="258.0" layoutY="429.0" mnemonicParsing="false" onAction="#availabilityClicked" onKeyPressed="#btnTabPressed" text="Check Park Availability">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Button>
+   </children>
+</Pane>

@@ -1,14 +1,18 @@
 package clientSide.control;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
@@ -19,7 +23,6 @@ import entities.DepartmentManager;
 import entities.Park;
 import entities.ParkManager;
 import javafx.scene.chart.XYChart;
-import javafx.scene.chart.XYChart.Data;
 import javafx.util.Pair;
 
 public class ReportsController {
@@ -30,7 +33,7 @@ public class ReportsController {
 	private DepartmentManager savedDepartmentManager;
 
 	/**
-	 * An empty and private controller, for the singelton design pattern
+	 * An empty and private controller, for the singleton design pattern
 	 */
 	private ReportsController() {
 
@@ -47,7 +50,42 @@ public class ReportsController {
 			instance = new ReportsController();
 		return instance;
 	}
+	/**
+	 * Checks if report data is available for a specific park, month, and year. 
+	 *
+	 * @param selectedMonth The month for which the report is to be generated. 
+	 * @param selectedYear The year for which the report is to be generated.
+	 * @param selectedPark The Park object for which the report is to be generated. 
+	 * @param reportType A String representing the type of report to check data availability for. This parameter allows the method
+	 *                   to be flexible and used for different types of reports. 
+	 *
+	 * @return boolean True if data is available for the specified parameters, False otherwise. This allows calling methods
+	 *                 to conditionally proceed with report generation or to inform the user about the lack of data.
+	 *
+	 */
+	public boolean isReportDataAvailable(String selectedMonth, String selectedYear, Park selectedPark, String reportType) {
+	    String parkTableName = ParkController.getInstance().nameOfTable(selectedPark) + "_park_" + reportType + "_booking";
+	    Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
+	    try {
+	        comm.setQueryType(Communication.QueryType.SELECT);
+	        comm.setTables(Arrays.asList(parkTableName));
+	        comm.setSelectColumns(Arrays.asList("COUNT(*)")); 
+	        LocalDate from = LocalDate.of(Integer.parseInt(selectedYear), Integer.parseInt(selectedMonth), 1);
+	        LocalDate to = from.plusMonths(1).minusDays(1);
+	        comm.setWhereConditions(Arrays.asList("dayOfVisit", "dayOfVisit"), Arrays.asList(">=", "AND", "<="), Arrays.asList(from, to));
 
+	        // Sending the request to the server side
+	        GoNatureClientUI.client.accept(comm);
+
+	        // If count is more than 0, data is available
+	        if (!comm.getResultList().isEmpty() && (Long) comm.getResultList().get(0)[0] > 0) {
+	            return true;
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return false;
+	}
 	/**
 	 * Retrieves a Park object from the database based on the provided park name.
 	 * This method constructs a SELECT query to fetch all the details of a park
@@ -86,6 +124,8 @@ public class ReportsController {
 		return park;
 	}
 
+        	
+           
 	/**
 	 * Retrieves a list of Park objects from the database associated with a specific department.
 	 * This method constructs a SELECT query to fetch details of all parks that belong to the specified
@@ -143,9 +183,7 @@ public class ReportsController {
 	 *         visitors for that day.
 	 */
 	 public List<Pair<LocalDate, Integer>> generateUsageReport(String selectedMonth, String selectedYear, Park park) {
-    	// Create a new Communication object for a query request
     	if (park == null) {
-    		System.out.println("null");
     		throw new IllegalArgumentException("Park cannot be null");
     	}
     	String parkTableName=ParkController.getInstance().nameOfTable(park)+"_park_done_booking";
@@ -251,71 +289,108 @@ public class ReportsController {
 	    Pair<Integer, Integer> pairResult = new Pair<>(countIndividual, countGroup);
 		return pairResult;
 	}
-	//????????????????????????????????
-    public  Map<String, List<XYChart.Data<Number, Number>>> generateVisitReport(String selectedMonth, String selectedYear, Park selectedPark) {
-    	 // Check for null park
-        if (selectedPark == null) {
-            throw new IllegalArgumentException("Park cannot be null");
-        }
-		String parkTableName=ParkController.getInstance().nameOfTable(selectedPark)+"_park_done_booking";
+	
+
+/**
+ * Generates a report for park visits within a specified month and year for a given park.
+ * This report differentiates visits by type (e.g., group or individual) and calculates
+ * the visit duration.
+ * 
+ * @param selectedMonth The month for which the report is being generated.
+ * @param selectedYear The year for which the report is being generated.
+ * @param selectedPark The park for which the report is being generated.
+ * @return A map with visit types as keys (e.g., "Group", "Individual Visitor") and lists of XYChart.Data
+ *         objects as values. Each XYChart.Data object represents a visit's entry time and duration.
+ */
+	public Map<String, List<XYChart.Data<Number, Number>>> generateVisitReport(String selectedMonth, String selectedYear, Park selectedPark) {
+    // Ensures the selectedPark parameter is not null.
+		if (selectedPark == null) {
+			throw new IllegalArgumentException("Park cannot be null");
+		}
+
+		// Construct the name of the database table for the park's bookings.
+		String parkTableName = ParkController.getInstance().nameOfTable(selectedPark) + "_park_done_booking";
+
+		// Initialize a new communication request to query the database.
 		Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
-	    // Set the type of the query
-	    try {
+		try {
 			comm.setQueryType(Communication.QueryType.SELECT);
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-	    comm.setTables(Arrays.asList(parkTableName)); 
-	    comm.setSelectColumns(Arrays.asList("entryParkTime", "exitParkTime", "visitType"));   
-	    int month=Integer.parseInt(selectedMonth);
-	    int year=Integer.parseInt(selectedYear);
+
+	    // Set the query parameters including the table name, columns to select, and date range.
+	    comm.setTables(Arrays.asList(parkTableName));
+	    comm.setSelectColumns(Arrays.asList("entryParkTime", "exitParkTime", "visitType"));
+	    int month = Integer.parseInt(selectedMonth);
+	    int year = Integer.parseInt(selectedYear);
 	    LocalDate from = LocalDate.of(year, month, 1);
 	    LocalDate to = from.plusMonths(1).minusDays(1);
-	    comm.setWhereConditions(Arrays.asList("dayOfVisit","dayOfVisit"),Arrays.asList(">=", "AND", "<="), Arrays.asList(from.toString(), to.toString())); 
-	    // sending the request to the server side
+	    comm.setWhereConditions(Arrays.asList("dayOfVisit","dayOfVisit"), Arrays.asList(">=", "AND", "<="), Arrays.asList(from, to));
+	
+	    // Send the request to the server and return the processed data for charting.
 	    GoNatureClientUI.client.accept(comm);
-	    return processFetchedDataForChart(comm.getResultList()); 
-	    
-    }
-    
+	    return processFetchedDataForChart(comm.getResultList());
+}
+	
+	/**
+	 * Processes fetched data for chart visualization. It calculates the duration of each visit
+	 * based on entry and exit times and categorizes them by visit type.
+	 * 
+	 * @param resultList The list of objects arrays fetched from the database, where each array
+	 *                   contains information about a single visit.
+	 * @return A map with keys as visit types and values as lists of XYChart.Data, each representing
+	 *         a point in the chart for a specific visit type and duration.
+	 */
     private Map<String, List<XYChart.Data<Number, Number>>> processFetchedDataForChart(List<Object[]> resultList) {
         List<XYChart.Data<Number, Number>> groupVisits = new ArrayList<>();
-        List<XYChart.Data<Number, Number>> singleVisits = new ArrayList<>();
+        List<XYChart.Data<Number, Number>> individualVisits = new ArrayList<>();
         
         for (Object[] row : resultList) {
             LocalTime entryTime = ((java.sql.Time) row[0]).toLocalTime();
             LocalTime exitTime = ((java.sql.Time) row[1]).toLocalTime();
             String visitType = (String) row[2];
             
-            // Calculate the duration as the difference between exit time and entry time
+            // Calculate visit duration
             long durationInMinutes = Duration.between(entryTime, exitTime).toMinutes();
             double durationInHours = durationInMinutes / 60.0;
             
             // Convert entry time to a decimal format for the scatter chart
             double entryTimeDecimal = entryTime.getHour() + (entryTime.getMinute() / 60.0);
             
-            if ("Group".equals(visitType)) {
+            if ("group".equals(visitType)) {
                 groupVisits.add(new XYChart.Data<>(entryTimeDecimal, durationInHours));
-            } else { // Assuming "Individual" or any other type is treated as single visitor
-                singleVisits.add(new XYChart.Data<>(entryTimeDecimal, durationInHours));
+            } 
+            else if("individual".equals(visitType)) {  
+            	individualVisits.add(new XYChart.Data<>(entryTimeDecimal, durationInHours));
             }
         }
-        
+        // Compile and return the chart data categorized by visit type.
         Map<String, List<XYChart.Data<Number, Number>>> chartData = new HashMap<>();
         chartData.put("Group", groupVisits);
-        chartData.put("Single", singleVisits);
-        
+        chartData.put("Individual Visitor", individualVisits);
+        System.out.println(chartData);
         return chartData;
     }
  
     
-	//????????????????????????????????
-    public HashMap<Integer, Pair<Integer, Integer>> generateCancellationReport(String selectedMonth, String selectedYear, String selectedPark, Park park) {
-		// Create a new Communication object for a query request
-		if (park == null) {
+    /**
+     * Generates a report detailing the reasons for booking cancellations within a specific month and year for a given park.
+     * This report includes average numbers of visitors who either cancelled their booking or did not show up.
+     *
+     * @param selectedMonth The month for which the report is being generated.
+     * @param selectedYear The year for which the report is being generated.
+     * @param selectedPark The park for which the report is being generated.
+     * @return A map with keys representing cancellation reasons and values as lists of XYChart.Data objects.
+     *         Each XYChart.Data object pairs a day of the week with the average number of cancellations for that reason.
+     */
+    public  Map<String, List<XYChart.Data<String, Number>>> generateCancellationReport(String selectedMonth, String selectedYear, Park selectedPark) {
+    	// Ensure the park parameter is not null
+		if (selectedPark == null) {
 		    throw new IllegalArgumentException("Park cannot be null");
 		}
-		String parkTableName=ParkController.getInstance().nameOfTable(park)+"_park_cancelled_booking";
+		// Prepare a database query to select cancellation data for the specified park
+		String parkTableName=ParkController.getInstance().nameOfTable(selectedPark)+"_park_cancelled_booking";
 		Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
 	    // Set the type of the query
 	    try {
@@ -323,42 +398,71 @@ public class ReportsController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
+	    // Configure the query with table name, columns to select, and the date range for filtering.
 	    comm.setTables(Arrays.asList(parkTableName)); 
 	    comm.setSelectColumns(Arrays.asList("dayOfVisit", "cancellationReason", "numberOfVisitors"));   
 	    int month=Integer.parseInt(selectedMonth);
 	    int year=Integer.parseInt(selectedYear);
-	 // Adjust where conditions to filter by month and year
-	    comm.setWhereConditions(Arrays.asList("MONTH(dayOfVisit)", "YEAR(dayOfVisit)"),
-	                            Arrays.asList("=", "AND", "="),
-	                            Arrays.asList(selectedMonth, selectedYear));
-
-	    String res1="Client cancelled the reminder";
-	    String res2="Did not arrive";
-	    //comm.setWhereConditions(Arrays.asList("cancellationReason","cancellationReason"),Arrays.asList("=", "AND", "=") , Arrays.asList(res1,res2));
+	    LocalDate from = LocalDate.of(year, month, 1);
+	    LocalDate to = from.plusMonths(1).minusDays(1);
+	    comm.setWhereConditions(Arrays.asList("dayOfVisit","dayOfVisit"),Arrays.asList(">=", "AND", "<="), Arrays.asList(from, to)); 
+	    // Send the query request to the server and process the returned results for charting
 	    GoNatureClientUI.client.accept(comm);
-	    //dailyCounts map will contain a Pair for each day of the month, where the first item in the Pair is the count of cancellations and the second item is the count of no-shows.
-	    HashMap<Integer, Pair<Integer, Integer>> dailyCounts = new HashMap<>();
-	    if (comm.getResultList() != null) {
-	        for (Object[] row : comm.getResultList()) {
-	            // Extract the day from dayOfVisit
-	            LocalDate date = LocalDate.parse((String)row[0]);
-	            int day = date.getDayOfMonth();
-
-	            Pair<Integer, Integer> counts = dailyCounts.getOrDefault(day, new Pair<>(0, 0));
-
-	            if (((String)row[1]).equals(res1)) {
-	                counts = new Pair<>(counts.getKey() + (Integer)row[2], counts.getValue());
-	            } else if (((String)row[1]).equals(res2)) {
-	                counts = new Pair<>(counts.getKey(), counts.getValue() + (Integer)row[2]);
-	            }
-
-	            dailyCounts.put(day, counts);
-	        }
-	    }
-
-	    return dailyCounts;
+	    return processFetchedCancellationDataForChart(comm.getResultList());
+	  
 	}
+    /**
+     * Processes fetched data to prepare it for visualization in a chart. This method calculates the average number of
+     * visitors for each cancellation reason and organizes the data by days of the week.
+     *
+     * @param resultList A list of object arrays, each representing a row from the database query result.
+     *                   Expected data includes the day of visit, cancellation reason, and number of visitors.
+     * @return A map where keys are cancellation reasons and values are lists of XYChart.Data objects,
+     *         each representing the average number of cancellations for a day of the week.
+     */
+    private Map<String, List<XYChart.Data<String, Number>>> processFetchedCancellationDataForChart(List<Object[]> resultList) {
+    	Map<String, Pair<Integer, Integer>> cancelledOrdersStats = new HashMap<>();
+        Map<String, Pair<Integer, Integer>> noShowVisitorsStats = new HashMap<>();
 
+        // Fill the maps with zeros for each day of the week
+        for (DayOfWeek day : DayOfWeek.values()) {
+            String dayName = day.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+            cancelledOrdersStats.put(dayName, new Pair<>(0, 0)); // (total, count)
+            noShowVisitorsStats.put(dayName, new Pair<>(0, 0)); // (total, count)
+        }
+
+        // Process the results from the database
+        for (Object[] row : resultList) {
+            LocalDate dayOfVisit = ((java.sql.Date) row[0]).toLocalDate();
+            String cancellationReason = (String) row[1];
+            int numberOfVisitors = (int) row[2];
+
+            String dayName = dayOfVisit.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+
+            if ("Client cancelled the reminder".equals(cancellationReason)) {
+                Pair<Integer, Integer> stats = cancelledOrdersStats.get(dayName);
+                cancelledOrdersStats.put(dayName, new Pair<>(stats.getKey() + numberOfVisitors, stats.getValue() + 1));
+            } else if ("Did not arrive".equals(cancellationReason)) {
+                Pair<Integer, Integer> stats = noShowVisitorsStats.get(dayName);
+                noShowVisitorsStats.put(dayName, new Pair<>(stats.getKey() + numberOfVisitors, stats.getValue() + 1));
+            }
+        }
+
+        // Calculate averages and prepare chart data
+        List<XYChart.Data<String, Number>> cancelledOrdersAvgData = cancelledOrdersStats.entrySet().stream()
+              .map(e -> new XYChart.Data<String, Number>(e.getKey(), (Number) (e.getValue().getKey() / (double) e.getValue().getValue())))
+              .collect(Collectors.toList());
+        List<XYChart.Data<String, Number>> noShowVisitorsAvgData = noShowVisitorsStats.entrySet().stream()
+              .map(e -> new XYChart.Data<String, Number>(e.getKey(), (Number) (e.getValue().getKey() / (double) e.getValue().getValue())))
+              .collect(Collectors.toList());
+
+        Map<String, List<XYChart.Data<String, Number>>> chartData = new HashMap<>();
+        chartData.put("Client cancelled the reminder", cancelledOrdersAvgData);
+        chartData.put("Did not arrive", noShowVisitorsAvgData);
+
+        return chartData;
+    }
+    
     /**
 	 * @param savedParkManager the savedParkManager to be saved
 	 */

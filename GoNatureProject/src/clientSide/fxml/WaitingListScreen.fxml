@@ -31,17 +31,22 @@
       <Separator layoutX="25.0" layoutY="413.0" prefHeight="7.0" prefWidth="647.0" />
       <TableView fx:id="waitingListTable" editable="true" layoutX="25.0" layoutY="166.0" prefHeight="233.0" prefWidth="647.0">
         <columns>
-            <TableColumn fx:id="waitingOrderColumn" prefWidth="138.66668128967285" text="Waiting List Order" />
-          <TableColumn fx:id="bookingIdColumn" prefWidth="94.0" sortable="false" text="Booking Id" />
+            <TableColumn fx:id="waitingOrderColumn" prefWidth="125.3333740234375" text="Waiting List Order" />
+          <TableColumn fx:id="bookingIdColumn" prefWidth="92.0" sortable="false" text="Booking Id" />
           <TableColumn fx:id="timeOfVisitColumn" minWidth="0.0" prefWidth="89.0" sortable="false" text="Time of Visit" />
-            <TableColumn fx:id="dayOfBookingColumn" minWidth="0.0" prefWidth="113.0" sortable="false" text="Day of Booking" />
-            <TableColumn fx:id="visitTypeColumn" minWidth="0.0" prefWidth="110.0" sortable="false" text="Visit Type" />
-            <TableColumn fx:id="groupSizeColumn" prefWidth="102.0" sortable="false" text="Group Size" />
+            <TableColumn fx:id="dayOfBookingColumn" minWidth="0.0" prefWidth="114.0" sortable="false" text="Day of Booking" />
+            <TableColumn fx:id="visitTypeColumn" minWidth="0.0" prefWidth="96.0" sortable="false" text="Visit Type" />
+            <TableColumn fx:id="groupSizeColumn" prefWidth="109.0" sortable="false" text="Group Size" />
         </columns>
       </TableView>
       <Button fx:id="returnToAccountBtn" layoutX="198.0" layoutY="432.0" mnemonicParsing="false" onAction="#returnToAccount" text="Return to Account">
          <font>
             <Font size="16.0" />
+         </font>
+      </Button>
+      <Button fx:id="backButton" layoutX="24.0" layoutY="25.0" mnemonicParsing="false" onAction="#returnToPreviousScreen" prefHeight="38.0" prefWidth="38.0">
+         <font>
+            <Font name="Calibri" size="14.0" />
          </font>
       </Button>
    </children>

@@ -51,11 +51,6 @@ public abstract class AbstractScreen {
 	 * @param event the event of clicking on the X of the window
 	 */
 	public void handleCloseRequest(WindowEvent event) {
-		// showing a "Yes" and "No" decision alert
-//		ArrayList<String> buttonsText = new ArrayList<>();
-//		buttonsText.add("Yes");
-//		buttonsText.add("No");
-
 		int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(), "Are you sure you want to leave?",
 				Arrays.asList("Yes", "No"));
 		if (decision == 2) // if the user clicked on "No"

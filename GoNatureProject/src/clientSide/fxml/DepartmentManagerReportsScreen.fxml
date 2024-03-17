@@ -48,5 +48,10 @@
          </font>
       </Label>
       <ChoiceBox fx:id="choiceBoxYear" layoutX="288.0" layoutY="260.0" prefWidth="150.0" />
+      <Label fx:id="DepartmentName" alignment="CENTER" contentDisplay="CENTER" layoutX="221.0" layoutY="126.0" prefHeight="30.0" prefWidth="285.0" textAlignment="CENTER" underline="true">
+         <font>
+            <Font name="Calibri Light" size="20.0" />
+         </font>
+      </Label>
    </children>
 </Pane>

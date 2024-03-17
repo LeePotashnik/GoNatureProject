@@ -1,18 +1,10 @@
 package clientSide.gui;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import clientSide.control.ParkController;
 import clientSide.control.ReportsController;
-import common.communication.Communication;
-import common.communication.Communication.CommunicationType;
-import common.communication.Communication.QueryType;
-import common.communication.CommunicationException;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
@@ -26,6 +18,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Pair;
@@ -49,6 +42,8 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
     private Button UsageReportBtn;
     @FXML
     private Button TotalVisitorsBtn;
+    @FXML
+    private Label parkName;
 
     /**
 	 * Constructor, initializes the park manager controller instance
@@ -56,6 +51,8 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
     public ParkManagerReportScreenController() {
     	control = ReportsController.getInstance();
     }
+    
+    
     /**
 	 * This method is called after an event of clicking on "Total number of visitors report" button
 	 * is occurring
@@ -72,8 +69,12 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
             return;
         }
         try {
+        	  if (!control.isReportDataAvailable(selectedMonth, selectedYear, this.park, "done")) {
+               	showErrorAlert(ScreenManager.getInstance().getStage(), "No data available for the selected time period.");                
+               	return;
+        	   }
             Pair<Integer, Integer> visitorsData = control.generateTotalNumberOfVisitorsReport(selectedMonth, selectedYear, this.park);
-            ScreenManager.getInstance().showScreen("TotalNumberOfVisitorsReportController", "/clientSide/fxml/TotalNumberOfVisitorsReport.fxml",true, false, StageSettings.defaultSettings("Total number of visitors Report"), visitorsData);
+            ScreenManager.getInstance().showScreen("TotalNumberOfVisitorsReportController", "/clientSide/fxml/TotalNumberOfVisitorsReport.fxml",true, true, StageSettings.defaultSettings("Total number of visitors Report"), visitorsData);
         } catch (StatefulException | ScreenException e) {
             e.printStackTrace();
             showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred while generating the report.");
@@ -95,7 +96,11 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
             return;
         }
         try {
-        	List<Pair<LocalDate, Integer>> visitorsData = control.generateUsageReport(selectedMonth, selectedYear, this.park);
+        	if (!control.isReportDataAvailable(selectedMonth, selectedYear, this.park, "done")) {
+               	showErrorAlert(ScreenManager.getInstance().getStage(), "No data available for the selected time period.");                
+               	return;
+        	   }
+           	List<Pair<LocalDate, Integer>> visitorsData = control.generateUsageReport(selectedMonth, selectedYear, this.park);
             ScreenManager.getInstance().showScreen("UsageReportController", "/clientSide/fxml/UsageReport.fxml", true, true, StageSettings.defaultSettings("Total number of visitors Report"), visitorsData);
         } catch (StatefulException | ScreenException e) {
            e.printStackTrace();
@@ -149,7 +154,10 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
     	if (information instanceof ParkManager) {
     		parkManager = (ParkManager)information;
     		park = control.getManagerPark(parkManager.getManages());
+    		parkName.getStyleClass().add("label-center");
+        	parkName.setText("Hello "+parkManager.getManages()+" manager!");
     	}
+    	
     }
     
     /**
@@ -177,6 +185,8 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
 	public void restoreState() {
 		parkManager = control.restoreParkManager();
 		park = control.getManagerPark(parkManager.getManages());
+		parkName.getStyleClass().add("label-center");
+    	parkName.setText("Hello "+parkManager.getManages()+" manager!");
 	}
 	
 }

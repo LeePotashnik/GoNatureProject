@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.chart.ScatterChart?>
 <?import javafx.scene.control.Button?>
@@ -17,7 +16,7 @@
          </font>
       </Button>
       <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
-      <Label fx:id="VisitReport" layoutX="270.0" layoutY="64.0" prefHeight="38.0" prefWidth="230.0" text="Visit Report">
+      <Label fx:id="VisitReport" layoutX="270.0" layoutY="77.0" prefHeight="38.0" prefWidth="230.0" text="Visit Report">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>
@@ -30,5 +29,10 @@
           <NumberAxis fx:id="durationAxis" label="Duration in Park (Hours)" side="LEFT" />
         </yAxis>
       </ScatterChart>
+      <Label fx:id="parkName" alignment="CENTER" contentDisplay="CENTER" layoutX="208.0" layoutY="55.0" prefHeight="30.0" prefWidth="285.0" textAlignment="CENTER" underline="true">
+         <font>
+            <Font name="Calibri Light" size="20.0" />
+         </font>
+      </Label>
    </children>
 </Pane>
