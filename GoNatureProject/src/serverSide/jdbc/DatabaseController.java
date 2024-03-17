@@ -40,6 +40,19 @@ public class DatabaseController {
 		}
 		System.out.println("Database connection established successfully");
 	}
+	
+	public void toggleAutoCommit(boolean toggle) throws SQLException {
+		conn.setAutoCommit(toggle);
+		System.out.println(toggle ? "Database is unlocked: auto commit is on" : "Database is locked: auto commit is off");
+	}
+	
+	public void rollback() throws SQLException {
+		conn.rollback();
+	}
+	
+	public void commit() throws SQLException {
+		conn.commit();
+	}
 
 	/**
 	 * This method gets an array list of communication requets. Executes these

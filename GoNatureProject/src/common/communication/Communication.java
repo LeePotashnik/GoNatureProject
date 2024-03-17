@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * A class for the communications between client-side to server-side Includes
@@ -41,7 +42,7 @@ public class Communication implements Serializable {
 
 	// the communication type
 	public enum CommunicationType {
-		QUERY_REQUEST, TRANSACTION, CLIENT_SERVER_MESSAGE, RESPONSE;
+		QUERY_REQUEST, TRANSACTION, CLIENT_SERVER_MESSAGE, SERVER_CLIENT_MESSAGE, SELF;
 	}
 
 	private CommunicationType communicationType;
@@ -55,14 +56,25 @@ public class Communication implements Serializable {
 	 * @param communicationType the type of the communication
 	 */
 	public Communication(CommunicationType communicationType) { // Constructor
+		uniqueId = UUID.randomUUID().toString();
 		this.communicationType = communicationType;
-		if (communicationType == CommunicationType.QUERY_REQUEST) { // if it's a query request
-			messageType = MessageType.NONE;
+		if (communicationType == CommunicationType.QUERY_REQUEST
+				|| communicationType == CommunicationType.TRANSACTION) { // if it's a query request
+			clientMessageType = ClientMessageType.NONE;
+			setServerMessageType(ServerMessageType.NONE);
+
 		} else if (communicationType == CommunicationType.CLIENT_SERVER_MESSAGE) { // if it's a client-server message
 			queryType = QueryType.NONE;
-		} else { // if it's a response from server-side to client-side
-			messageType = MessageType.NONE;
+			setServerMessageType(ServerMessageType.NONE);
+
+		} else if (communicationType == CommunicationType.SERVER_CLIENT_MESSAGE) { // if it's a message from server-side
+																					// to client-side
+			clientMessageType = ClientMessageType.NONE;
 			queryType = QueryType.NONE;
+
+		} else { // if this is a self-server message
+			clientMessageType = ClientMessageType.NONE;
+			setServerMessageType(ServerMessageType.NONE);
 		}
 	}
 
@@ -90,17 +102,27 @@ public class Communication implements Serializable {
 	private ArrayList<Object> values;
 
 	// --- TYPE 2 OF COMMUNICATION: CLIENT-SERVER MESSAGES
-	public enum MessageType {
+	public enum ClientMessageType {
 		CONNECT, DISCONNECT, NONE;
 	}
 
-	private MessageType messageType;
+	private ClientMessageType clientMessageType;
 
 	// --- TYPE 3 OF COMMUNICATION: RESPONSE FROM SERVER SIDE
-	private ArrayList<Object[]> resultList; // a container for the result set from the database, as ArrayList
+	public enum ServerMessageType {
+		RESPONSE, CONQUER, NONE;
+	}
+
+	private ServerMessageType serverMessageType;
+
+	private String serverMessageContent;
+		private ArrayList<Object[]> resultList; // a container for the result set from the database, as ArrayList
 	private boolean queryResult; // holds the result of update/insert/delete queries
 
-	///// --- GENERAL METHODS --- /////
+	///////////////////////
+	/// GENERAL METHODS ///
+	///////////////////////
+
 	/**
 	 * @return the communication type
 	 */
@@ -124,8 +146,14 @@ public class Communication implements Serializable {
 		this.uniqueId = uniqueId;
 	}
 
-	///// --- METHODS FOR HANDLING THE FIRST TYPE OF COMMUNICAIONS --- /////
-	// --- GETTERS --- //
+	///////////////////////////////////////////////////////////
+	/// METHODS FOR HANDLING QUERY AND TRANSACTION REQUESTS ///
+	///////////////////////////////////////////////////////////
+
+	///////////////
+	/// GETTERS ///
+	///////////////
+
 	/**
 	 * This method returns the QueryType enum of the communication
 	 * 
@@ -144,7 +172,10 @@ public class Communication implements Serializable {
 		return communicationType == CommunicationType.QUERY_REQUEST;
 	}
 
-	// --- SETTERS --- //
+	///////////////
+	/// SETTERS ///
+	///////////////
+
 	/**
 	 * Determines the type of the SQL query requested
 	 * 
@@ -153,7 +184,7 @@ public class Communication implements Serializable {
 	 *                                CommunicationType is not a QUERY_REQUEST
 	 */
 	public void setQueryType(QueryType queryType) throws CommunicationException {
-		if (communicationType != CommunicationType.QUERY_REQUEST) {
+		if (!(communicationType == CommunicationType.QUERY_REQUEST || communicationType == CommunicationType.SELF)) {
 			throw new CommunicationException("The communication type is not a query request");
 		}
 		this.queryType = queryType;
@@ -207,7 +238,10 @@ public class Communication implements Serializable {
 		this.values = new ArrayList<Object>(values);
 	}
 
-	// --- QUERY COMBINATION METHODS --- //
+	/////////////////////////////////
+	/// QUERY COMBINATION METHODS ///
+	/////////////////////////////////
+
 	/**
 	 * This method redirects the query creation to the specific method according to
 	 * the query type
@@ -397,7 +431,8 @@ public class Communication implements Serializable {
 				return ret;
 			} else if (value instanceof Number) {
 				return ((Number) value).toString();
-			} else if (value instanceof String && (((String) value).matches("[a-zA-Z]+\\s[-+]\\s\\d+") || ((String)value).charAt(0) == '(')) {
+			} else if (value instanceof String
+					&& (((String) value).matches("[a-zA-Z]+\\s[-+]\\s\\d+") || ((String) value).charAt(0) == '(')) {
 				return (String) value;
 			} else {
 				return "'" + value.toString() + "'";
@@ -470,8 +505,14 @@ public class Communication implements Serializable {
 		return true;
 	}
 
-	///// --- METHODS FOR HANDLING THE SECOND TYPE OF COMMUNICAIONS --- /////
-	// --- GETTERS --- //
+	////////////////////////////////////////////////////////////
+	/// METHODS FOR HANDLING CLIENT TO SERVER COMMUNICATIONS ///
+	////////////////////////////////////////////////////////////
+
+	///////////////
+	/// GETTERS ///
+	///////////////
+
 	/**
 	 * @return true if the Communication is from CLIENT_SERVER_MESSAGE type, false
 	 *         otherwise.
@@ -484,22 +525,31 @@ public class Communication implements Serializable {
 	 * @return the MessageType, if the Communication is from CLIENT_SERVER_MESSAGE
 	 *         type
 	 */
-	public MessageType getMessageType() {
-		return messageType;
+	public ClientMessageType getClientMessageType() {
+		return clientMessageType;
 	}
 
-	// --- SETTERS --- //
+	///////////////
+	/// SETTERS ///
+	///////////////
+
 	/**
 	 * This method sets the MessageType
 	 * 
 	 * @param messageType the MessageType to be set
 	 */
-	public void setMessageType(MessageType messageType) {
-		this.messageType = messageType;
+	public void setClientMessageType(ClientMessageType clientMessageType) {
+		this.clientMessageType = clientMessageType;
 	}
 
-	///// --- METHODS FOR HANDLING THE THIRD TYPE OF COMMUNICATIONS --- /////
-	///// --- GETTERS --- /////
+	////////////////////////////////////////////////////////////
+	/// METHODS FOR HANDLING SERVER TO CLIENT COMMUNICATIONS ///
+	////////////////////////////////////////////////////////////
+
+	///////////////
+	/// GETTERS ///
+	///////////////
+
 	/**
 	 * This method returns the result list (to use on the client-side), after it was
 	 * inserted by the server-side. The result list is an ArrayList of Object[],
@@ -521,8 +571,25 @@ public class Communication implements Serializable {
 	public boolean getQueryResult() {
 		return queryResult;
 	}
+	
+	/**
+	 * @return the server-client type of message
+	 */
+	public ServerMessageType getServerMessageType() {
+		return serverMessageType;
+	}
+	
+	/**
+	 * @return the server message content
+	 */
+	public String getServerMessageContent() {
+		return serverMessageContent;
+	}
 
-	///// --- SETTERS --- /////
+	///////////////
+	/// SETTERS ///
+	///////////////
+
 	/**
 	 * This method sets the result list to a Communication of RESPONSE type, by the
 	 * server-side to the later use of the client-side.
@@ -541,5 +608,21 @@ public class Communication implements Serializable {
 	 */
 	public void setQueryResult(boolean queryResult) {
 		this.queryResult = queryResult;
+	}
+
+	/**
+	 * Sets the server-client type of message
+	 * @param serverMessageType
+	 */
+	public void setServerMessageType(ServerMessageType serverMessageType) {
+		this.serverMessageType = serverMessageType;
+	}
+
+	/**
+	 * Sets the server message content
+	 * @param serverMessageContent
+	 */
+	public void setServerMessageContent(String serverMessageContent) {
+		this.serverMessageContent = serverMessageContent;
 	}
 }

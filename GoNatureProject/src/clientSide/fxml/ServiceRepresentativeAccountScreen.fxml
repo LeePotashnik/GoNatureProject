@@ -6,25 +6,25 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ServiceRepresentativeAccountScreen">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ServiceRepresentativeAccountScreenController">
    <children>
       <ImageView fx:id="goNatureLogo" fitHeight="260.0" fitWidth="650.0" layoutX="90.0" layoutY="12.0" pickOnBounds="true" preserveRatio="true" />
-      <Label fx:id="Title" layoutX="235.0" layoutY="189.0" prefHeight="38.0" prefWidth="230.0" text="Service Representative">
+      <Label fx:id="Title" layoutX="170.0" layoutY="280.0" prefHeight="50.0" prefWidth="320.0" text="Service Representative">
             <font>
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <Label fx:id="privateName" layoutX="176.0" layoutY="282.0" prefHeight="38.0" prefWidth="252.0" text="Label">
+      <Label fx:id="privateName" layoutX="150.0" layoutY="320.0" prefHeight="38.0" prefWidth="252.0" text="Label">
       <font>
             <Font name="Calibri" size="20.0" />
          </font>
       </Label>
-      <Button fx:id="GuideRegistrationBTN" layoutX="265.0" layoutY="348.0" mnemonicParsing="false" onAction="#GoToGuideRegistrationScreen" text="Group Guide Registration">
+      <Button fx:id="GuideRegistrationBTN" layoutX="265.0" layoutY="400.0" mnemonicParsing="false" onAction="#GoToGuideRegistrationScreen" text="Group Guide Registration">
          <font>
             <Font name="Calibri" size="14.0" />
          </font>
       </Button>
-      <Button fx:id="logOutBTN" layoutX="315.0" layoutY="393.0" mnemonicParsing="false" onAction="#logOut" text="Log Out">
+      <Button fx:id="logOutBTN" layoutX="315.0" layoutY="440.0" mnemonicParsing="false" onAction="#logOut" text="Log Out">
          <font>
             <Font name="Calibri" size="14.0" />
          </font>
