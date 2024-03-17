@@ -108,20 +108,26 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
             return;
         }  
         try {
-            // Find the Park object that matches the selected park name
-            Park selectedPark = parks.stream()
-                                     .filter(p -> p.getParkName().equals(selectedParkName))
-                                     .findFirst()
-                                     .orElseThrow(() -> new IllegalArgumentException("Selected park not found"));
-            // Check if data is available for the selected parameters
-            if (!control.isReportDataAvailable(selectedMonth, selectedYear, selectedPark, "done")) {
-            	showErrorAlert(ScreenManager.getInstance().getStage(), "No data available for the selected time period.");                
-            	return;
+            if ("All Parks".equals(selectedParkName)) {
+                // Assuming generateReportForAllParks is correctly implemented to handle report generation for all parks
+            	 Map<String, Object> allParksData = control.generateReportForAllParks(selectedMonth, selectedYear, "done"); 
+            } else {
+                // Find the Park object that matches the selected park name
+                Park selectedPark = parks.stream()
+                                         .filter(p -> p.getParkName().equals(selectedParkName))
+                                         .findFirst()
+                                         .orElseThrow(() -> new IllegalArgumentException("Selected park not found"));
+                // Check if data is available for the selected parameters
+                if (!control.isReportDataAvailable(selectedMonth, selectedYear, selectedPark, "done")) {
+                    showErrorAlert(ScreenManager.getInstance().getStage(), "No data available for the selected time period.");
+                    return;
+                }
+                Map<String, List<XYChart.Data<Number, Number>>> visitData = control.generateVisitReport(selectedMonth, selectedYear, selectedPark);
+                ScreenManager.getInstance().showScreen("VisitReportController", "/clientSide/fxml/VisitReport.fxml", true, true, StageSettings.defaultSettings("Visit Report"), visitData);
             }
-            Map<String, List<XYChart.Data<Number, Number>>> visitData = control.generateVisitReport(selectedMonth, selectedYear, selectedPark);
-            ScreenManager.getInstance().showScreen("VisitReportController", "/clientSide/fxml/VisitReport.fxml", true, true, StageSettings.defaultSettings("Visit Report"), visitData);
         } catch (StatefulException | ScreenException e) {
             e.printStackTrace();
+            showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred while generating the report.");
         }
     }
 
@@ -173,6 +179,7 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
 
 	        // Clear existing items and add park names managed by this department manager
 	        choiceBoxPark.getItems().clear();
+	        choiceBoxPark.getItems().add("All Parks"); // Add option for all parks
 	        for (Park park : parks) {
 	            choiceBoxPark.getItems().add(park.getParkName());
 	        }

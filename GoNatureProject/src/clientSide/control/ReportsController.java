@@ -86,6 +86,9 @@ public class ReportsController {
 	    }
 	    return false;
 	}
+	public void generateReportForAllParks(String selectedMonth, String selectedYear) {
+	    
+	}
 	/**
 	 * Retrieves a Park object from the database based on the provided park name.
 	 * This method constructs a SELECT query to fetch all the details of a park

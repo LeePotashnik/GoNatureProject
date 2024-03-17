@@ -35,12 +35,12 @@ public class TemporaryRunner {
 		false);
 
 //
-		ScreenManager.getInstance().showScreen("ParkManagerReportScreenController",
-				"/clientSide/fxml/ParkManagerReportScreen.fxml", false, false,
-				StageSettings.defaultSettings("GoNature System - Reservations"),pm);
-//		ScreenManager.getInstance().showScreen("DepartmentManagerReportsScreenController",
-//				"/clientSide/fxml/DepartmentManagerReportsScreen.fxml", false,false,
-//				StageSettings.defaultSettings("GoNature System - Reservations"),dm);
+//		ScreenManager.getInstance().showScreen("ParkManagerReportScreenController",
+//				"/clientSide/fxml/ParkManagerReportScreen.fxml", false, false,
+//				StageSettings.defaultSettings("GoNature System - Reservations"),pm);
+		ScreenManager.getInstance().showScreen("DepartmentManagerReportsScreenController",
+				"/clientSide/fxml/DepartmentManagerReportsScreen.fxml", false,false,
+				StageSettings.defaultSettings("GoNature System - Reservations"),dm);
 		
 		
 //		ParkVisitor visitor = new ParkVisitor("207281874", "Elad", "Krauz", "eladkrauz0905@gmail.com", "0526687878",
