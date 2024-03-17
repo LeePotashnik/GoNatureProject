@@ -12,12 +12,12 @@ import clientSide.gui.RescheduleScreenController.AvailableSlot;
 import common.communication.Communication;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
+import common.communication.Communication.SecondaryRequest;
 import common.communication.CommunicationException;
 import entities.Booking;
 import entities.Booking.VisitType;
 import entities.Park;
 import entities.ParkVisitor;
-import entities.ParkVisitor.VisitorType;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.util.Pair;
@@ -51,7 +51,7 @@ public class BookingController {
 	/**
 	 * maximum visitors in reservation
 	 */
-	public final int maximumVisitorsInReservation = 15;
+	public final int maximumVisitorsInGroupReservation = 15;
 
 	// for saving and restoring purposes of the screens
 	private Booking booking;
@@ -116,9 +116,10 @@ public class BookingController {
 	 * of the specific park
 	 * 
 	 * @param deleteBooking
-	 * @return true if the deletion s
+	 * @param table         the table the booking need to be deleted from
+	 * @return true if the deletion succeed, false if not
 	 */
-	public boolean deleteBookingFromActiveTable(Booking deleteBooking) {
+	public boolean deleteBooking(Booking deleteBooking, String table) {
 		// creating the request for the booking deletion
 		Communication deleteRequest = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
@@ -126,12 +127,19 @@ public class BookingController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		@SuppressWarnings("static-access")
-		String parkTableName = ParkController.getInstance().nameOfTable(deleteBooking.getParkBooked())
-				+ deleteRequest.activeBookings;
+		String parkTableName = ParkController.getInstance().nameOfTable(deleteBooking.getParkBooked()) + table;
 		deleteRequest.setTables(Arrays.asList(parkTableName));
 		deleteRequest.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="),
 				Arrays.asList(deleteBooking.getBookingId()));
+
+		if (table.equals(Communication.activeBookings)) {
+			deleteRequest.setSecondaryRequest(SecondaryRequest.UPDATE_WAITING_LIST);
+		}
+
+		deleteRequest.setSecondaryRequest(SecondaryRequest.UPDATE_WAITING_LIST);
+		deleteRequest.setParkId(deleteBooking.getParkBooked().getParkId());
+		deleteRequest.setDate(deleteBooking.getDayOfVisit());
+		deleteRequest.setTime(deleteBooking.getTimeOfVisit());
 
 		// sending the request to the server side
 		GoNatureClientUI.client.accept(deleteRequest);
@@ -185,30 +193,43 @@ public class BookingController {
 	 * @return true if there's enough place for this group, false if not
 	 */
 	public boolean checkParkAvailabilityForNewBooking(Booking newBooking) {
-		// pre-setting data for request
-		Communication availabilityRequest = new Communication(CommunicationType.QUERY_REQUEST);
-		Park parkOfBooking = newBooking.getParkBooked();
 		// the pair holds the maximum orders amount, and maximum time limit parameters
-		Pair<Integer, Integer> pair = getParkUpdatedParameters(parkOfBooking);
-		@SuppressWarnings("static-access")
-		String parkTableName = ParkController.getInstance().nameOfTable(parkOfBooking)
-				+ availabilityRequest.activeBookings;
-		int parkTimeLimit = pair.getValue();
+		Pair<Integer, Integer> pair = getParkUpdatedParameters(newBooking.getParkBooked());
 		int numberOfVisitors = newBooking.getNumberOfVisitors();
 
+		// checking park parameters
+		int countVisitors = getCurrentParkCapacities(newBooking.getParkBooked(), newBooking.getDayOfVisit(),
+				newBooking.getTimeOfVisit(), pair.getValue());
+		return pair.getKey() - countVisitors - numberOfVisitors >= 0;
+	}
+
+	/**
+	 * This method gets a park, a date, a time and time limits, and return the
+	 * park's current orders capacity in this time frame
+	 * 
+	 * @param park
+	 * @param date
+	 * @param time
+	 * @param timeLimit
+	 * @return the park's current capacity for the specified time frame
+	 */
+	private int getCurrentParkCapacities(Park park, LocalDate date, LocalTime time, int timeLimit) {
 		// creating the request for the availability check
+		Communication availabilityRequest = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			availabilityRequest.setQueryType(QueryType.SELECT);
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
 
+		@SuppressWarnings("static-access")
+		String parkTableName = ParkController.getInstance().nameOfTable(park) + availabilityRequest.activeBookings;
+
 		availabilityRequest.setTables(Arrays.asList(parkTableName));
 		availabilityRequest.setSelectColumns(Arrays.asList("numberOfVisitors"));
 		availabilityRequest.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit"),
 				Arrays.asList("=", "AND", ">", "AND", "<"),
-				Arrays.asList(newBooking.getDayOfVisit(), newBooking.getTimeOfVisit().minusHours(parkTimeLimit),
-						newBooking.getTimeOfVisit().plusHours(parkTimeLimit)));
+				Arrays.asList(date, time.minusHours(timeLimit), time.plusHours(timeLimit)));
 
 		// sending the request to the server side
 		GoNatureClientUI.client.accept(availabilityRequest);
@@ -219,26 +240,8 @@ public class BookingController {
 		for (Object[] row : availabilityRequest.getResultList()) {
 			countVisitors += (Integer) row[0];
 		}
-		// checking park parameters
-		return pair.getKey() - countVisitors - numberOfVisitors >= 0;
-	}
 
-	/**
-	 * This method connects with the PaymentController in order to calculate the
-	 * price for the group with the most updated prices, without discount
-	 * 
-	 * @param newBooking
-	 * @param visitorType
-	 * @return the calculated price without discount
-	 */
-	public int calculateFinalRegularPrice(Booking newBooking, VisitorType visitorType) {
-		if (visitorType == VisitorType.TRAVELLER) {
-//			return PaymentController.getInstance().calculateRegularPriceTravelersGroup(newBooking);
-		} else {
-//			return PaymentController.getInstance().calculateRegularPriceGuidedGroup(newBooking);
-		}
-		// for now:
-		return newBooking.getNumberOfVisitors() * 50;
+		return countVisitors;
 	}
 
 	/**
@@ -246,17 +249,25 @@ public class BookingController {
 	 * price for the group with the most updated prices, with discounts
 	 * 
 	 * @param newBooking
-	 * @param visitorType
 	 * @return the calculated price with discount
 	 */
-	public int calculateFinalDiscountPrice(Booking newBooking, VisitorType visitorType) {
-		if (visitorType == VisitorType.TRAVELLER) {
+	public int calculateFinalDiscountPrice(Booking newBooking, boolean isGroup, boolean isPrePaid) {
+		if (isGroup) { // guided group
+			if (isPrePaid) {
+//				return PaymentController.getInstance().calculateDiscountPriceGuidedGroupPrePaid(newBooking);
+
+			} else {
+//				return PaymentController.getInstance().calculateDiscountPriceGuidedGroupNotPrePaid(newBooking);
+			}
+		} else { // individual group
 //			return PaymentController.getInstance().calculateDiscountPriceTravelersGroup(newBooking);
-		} else {
-//			return PaymentController.getInstance().calculateDiscountPriceGuidedGroup(newBooking);
 		}
 		// for now:
-		return (int) (newBooking.getNumberOfVisitors() * 50 * 0.9);
+		int price = (int) (newBooking.getNumberOfVisitors() * 50 * 0.9);
+		if (isPrePaid) {
+			price = (int) (price * 0.9);
+		}
+		return price;
 	}
 
 	/**
@@ -291,6 +302,8 @@ public class BookingController {
 						newBooking.isConfirmed() == false ? 0 : 1, newBooking.getEntryParkTime(),
 						newBooking.getExitParkTime(), newBooking.isRecievedReminder() == false ? 0 : 1,
 						newBooking.getReminderArrivalTime()));
+
+		insertRequest.setSecondaryRequest(SecondaryRequest.SEND_NOTIFICATIONS);
 
 		// sending the request to the server side
 		GoNatureClientUI.client.accept(insertRequest);
@@ -461,39 +474,11 @@ public class BookingController {
 
 		// if arrived here, the new booking has the same park, date and time range of
 		// the old booking
-		// pre-setting data for request
-		Communication availabilityRequest = new Communication(CommunicationType.QUERY_REQUEST);
-		Park parkOfBooking = newBooking.getParkBooked();
-		@SuppressWarnings("static-access")
-		String parkTableName = ParkController.getInstance().nameOfTable(parkOfBooking)
-				+ availabilityRequest.activeBookings;
-		int numberOfVisitors = newBooking.getNumberOfVisitors();
+		int parkCurrentCapacity = getCurrentParkCapacities(newBooking.getParkBooked(), newBooking.getDayOfVisit(),
+				newBooking.getTimeOfVisit(), pair.getValue());
+		return pair.getKey() - parkCurrentCapacity - newBooking.getNumberOfVisitors()
+				+ oldBooking.getNumberOfVisitors() >= 0;
 
-		// creating the request for the availability check
-		try {
-			availabilityRequest.setQueryType(QueryType.SELECT);
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-
-		availabilityRequest.setTables(Arrays.asList(parkTableName));
-		availabilityRequest.setSelectColumns(Arrays.asList("numberOfVisitors"));
-		availabilityRequest.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit"),
-				Arrays.asList("=", "AND", ">", "AND", "<"),
-				Arrays.asList(newBooking.getDayOfVisit(), newBooking.getTimeOfVisit().minusHours(parkTimeLimit),
-						newBooking.getTimeOfVisit().plusHours(parkTimeLimit)));
-
-		// sending the request to the server side
-		GoNatureClientUI.client.accept(availabilityRequest);
-
-		// getting the result from the database
-		int countVisitors = 0 - oldBooking.getNumberOfVisitors();
-		// checking the orders amount for the specific time
-		for (Object[] row : availabilityRequest.getResultList()) {
-			countVisitors += (Integer) row[0];
-		}
-		// checking park parameters
-		return pair.getKey() - countVisitors - numberOfVisitors >= 0;
 	}
 
 	/**
@@ -532,6 +517,14 @@ public class BookingController {
 		return insertRequest.getQueryResult();
 	}
 
+	/**
+	 * This method gets an old booking, deletes it from the active bookings table
+	 * and inserts the new booking, all within a signle transaction
+	 * 
+	 * @param oldBooking
+	 * @param newBooking
+	 * @return
+	 */
 	public boolean updateBooking(Booking oldBooking, Booking newBooking) {
 		Communication transaction = new Communication(CommunicationType.TRANSACTION);
 		// creating the request for the old booking deletion
@@ -552,8 +545,8 @@ public class BookingController {
 		// adding the request to the requests list
 		transaction.addRequestToList(deleteRequest);
 
-		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
 		// creating the request for the new booking insert
+		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			insertRequest.setQueryType(QueryType.INSERT);
 		} catch (CommunicationException e) {
@@ -587,6 +580,72 @@ public class BookingController {
 		return transaction.getQueryResult();
 	}
 
+	/**
+	 * This method gets a park, a date and a time and updates the waiting list for
+	 * this time range by deleting reservations that have place now after a booking
+	 * is cancelled
+	 * 
+	 * @param park
+	 * @param date
+	 * @param time
+	 */
+	public void updateWaitingList(Park park, LocalDate date, LocalTime time) {
+		// the pair holds the maximum orders amount, and maximum time limit parameters
+		Pair<Integer, Integer> pair = getParkUpdatedParameters(park);
+
+		// getting current capacities and time limit
+		int currentCapacity = getCurrentParkCapacities(park, date, time, pair.getValue());
+		int moreCanEnter = pair.getKey() - currentCapacity;
+		int timeLimit = pair.getValue();
+
+		// getting all the relevant bookings from the waiting list table
+		Communication getWaiting = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			getWaiting.setQueryType(QueryType.SELECT);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		getWaiting.setTables((Arrays.asList(ParkController.getInstance().nameOfTable(park))));
+		getWaiting.setSelectColumns(Arrays.asList("bookingId"));
+		getWaiting.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit", "numberOfVisitors"),
+				Arrays.asList("=", "AND", ">", "AND", "<", "AND", "<="),
+				Arrays.asList(date, time.minusHours(timeLimit), time.plusHours(timeLimit), moreCanEnter));
+
+		// sending the requests list to the server side
+		GoNatureClientUI.client.accept(getWaiting);
+
+		// getting the results from the database
+		ArrayList<Booking> waitingResults = new ArrayList<>();
+		for (Object[] row : getWaiting.getResultList()) {
+			Booking add = new Booking((String) row[0], ((Date) row[1]).toLocalDate(), ((Time) row[2]).toLocalTime(),
+					((Date) row[3]).toLocalDate(),
+					((String) row[5]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL, (Integer) row[6],
+					(String) row[7], (String) row[8], (String) row[9], (String) row[10], (String) row[11], -1, false,
+					false, null, null, false, null, park);
+			add.setWaitingListPriority((Integer) row[4]);
+			add.setFinalPrice(calculateFinalDiscountPrice(add, add.getVisitType() == VisitType.GROUP, false));
+		}
+
+		// waitingResults holds all the bookings that CAN be entered in terms of their
+		// group size
+		waitingResults.sort(Booking.waitingListComparator); // sorting these bookings
+
+		ArrayList<Booking> transferBookings = new ArrayList<>();
+		int decreasePriority = 0;
+		for (Booking currectBooking : waitingResults) {
+			int currentBookingSize = currectBooking.getNumberOfVisitors();
+			if (currentBookingSize <= moreCanEnter) {
+				moreCanEnter -= currentBookingSize;
+				decreasePriority++;
+
+				transferBookings.add(currectBooking);
+				waitingResults.remove(currectBooking);
+			} else {
+				currectBooking.setWaitingListPriority(currectBooking.getWaitingListPriority() - decreasePriority);
+			}
+		}
+	}
+
 	////////////////////////////////////////////////////
 	////////////////////////////////////////////////////
 	///// METHODS FOR CONTROLLED RESCHEDULE SCREEN /////
@@ -618,7 +677,7 @@ public class BookingController {
 						available.add(slot);
 					}
 				} else {
-					for (int minute = 0; minute < (60); minute += minutes) {
+					for (int minute = 0; minute < 60; minute += minutes) {
 						AvailableSlot slot = new AvailableSlot(
 								LocalDate.of(start.getYear(), start.getMonth(), start.getDayOfMonth()),
 								LocalTime.of(hour, minute));
@@ -838,7 +897,7 @@ public class BookingController {
 
 		ArrayList<Pair<String, Integer>> idNumbers = new ArrayList<>();
 		for (Object[] row : selectQuery.getResultList()) {
-			idNumbers.add(new Pair<String, Integer>((String)row[0], (Integer)row[1]));
+			idNumbers.add(new Pair<String, Integer>((String) row[0], (Integer) row[1]));
 		}
 
 		// creating the request for the booking deletion
@@ -869,7 +928,8 @@ public class BookingController {
 			}
 			updateRequest.setTables(Arrays.asList(parkTableName));
 			updateRequest.setColumnsAndValues(Arrays.asList("waitingListOrder"), Arrays.asList(row.getValue() - 1));
-			updateRequest.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList(row.getKey()));
+			updateRequest.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="),
+					Arrays.asList(row.getKey()));
 			try {
 				System.out.println(updateRequest.combineQuery());
 			} catch (CommunicationException e) {
@@ -879,7 +939,6 @@ public class BookingController {
 			// adding the update request to the transaction
 			transaction.addRequestToList(updateRequest);
 		}
-		
 
 		// sending the request to the server side
 		GoNatureClientUI.client.accept(transaction);

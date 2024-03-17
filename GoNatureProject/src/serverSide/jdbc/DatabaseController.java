@@ -40,16 +40,35 @@ public class DatabaseController {
 		}
 		System.out.println("Database connection established successfully");
 	}
-	
+
+	/**
+	 * This methods toggles to auto-commit option of the database
+	 * 
+	 * @param toggle false "locks" the database, true "unlocks" the database
+	 * @throws SQLException
+	 */
 	public void toggleAutoCommit(boolean toggle) throws SQLException {
 		conn.setAutoCommit(toggle);
-		System.out.println(toggle ? "Database is unlocked: auto commit is on" : "Database is locked: auto commit is off");
+		System.out
+				.println(toggle ? "Database is unlocked: auto commit is on" : "Database is locked: auto commit is off");
 	}
-	
+
+	/**
+	 * This method rolls back all committed queries in case of an exception with one
+	 * of the requests
+	 * 
+	 * @throws SQLException
+	 */
 	public void rollback() throws SQLException {
 		conn.rollback();
 	}
-	
+
+	/**
+	 * This method commits all waiting queries executed, in case the auto commit
+	 * option is off
+	 * 
+	 * @throws SQLException
+	 */
 	public void commit() throws SQLException {
 		conn.commit();
 	}
@@ -99,6 +118,11 @@ public class DatabaseController {
 				e.printStackTrace();
 			}
 		}
+		System.out.println(success
+				? LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Transaction succeed"
+				: LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Transaction failed");
 		return success;
 	}
 

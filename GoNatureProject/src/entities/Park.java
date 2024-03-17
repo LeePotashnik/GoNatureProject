@@ -1,9 +1,20 @@
 package entities;
 
+import java.util.Comparator;
+
 public class Park {
 	private int parkId;
 	private String parkName, parkCity, parkState, parkDepartment, parkManagerId, departmentManagerId;
 	private int maximumVisitors, maximumOrders, timeLimit, currentCapacity;
+	/**
+	 * A Comparator for sorting parks with their id integer property
+	 */
+	public static Comparator<Park> parkComparator = new Comparator<Park>() {
+		@Override
+		public int compare(Park park1, Park park2) {
+			return park1.getParkId() - park2.getParkId();
+		}
+	};
 	
 	public Park(int parkId, String parkName, String parkCity, String parkState, String parkDepartment,
 			String parkManagerId, String departmentManagerId, int maximumVisitors, int maximumOrders, int timeLimit,

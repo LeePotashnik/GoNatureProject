@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import common.communication.Communication;
 import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
+import common.communication.Communication.SecondaryRequest;
 import common.communication.Communication.ServerMessageType;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
@@ -39,7 +40,7 @@ public class GoNatureServer extends AbstractServer {
 	public void connectToDatabase(String databae, String root, String password) throws DatabaseException {
 		database = new DatabaseController(databae, root, password); // creates a new instance of the db connector
 	}
-	
+
 	/**
 	 * This method creates a new instance of the background tasks manager
 	 */
@@ -47,11 +48,6 @@ public class GoNatureServer extends AbstractServer {
 		if (database == null)
 			throw new NullPointerException();
 		backgroundManager = new BackgroundManager(database);
-		try {
-			backgroundManager.updateActiveTables();
-		} catch (DatabaseException e) {
-			e.printStackTrace();
-		}
 	}
 
 	@Override
@@ -140,6 +136,23 @@ public class GoNatureServer extends AbstractServer {
 			default:
 				return;
 			}
+
+			//// HERE: SHOULD ADD SOMETHING ABOUT SCREEN CONQUER /////
+
+			SecondaryRequest secondaryRequest = request.getSecondaryRequest();
+			System.out.println("Secondary: " + secondaryRequest);
+			if (secondaryRequest != null) {
+				// if the original request is an active booking cancellation
+				// there's a need to check the park's waiting list and possibly release some
+				// bookings and transfer them to the active booking table
+				System.out.println(backgroundManager);
+				if (secondaryRequest == SecondaryRequest.UPDATE_WAITING_LIST) {
+					System.out.println("Doing it");
+					backgroundManager.checkWaitingListReleasePossibility(request.getParkId(), request.getDate(),
+							request.getTime());
+				}
+			}
+
 			try {
 				client.sendToClient(response);
 			} catch (IOException e) {
@@ -150,9 +163,13 @@ public class GoNatureServer extends AbstractServer {
 		// if this is a combined query (transaction) request
 		if (request.getCommunicationType() == CommunicationType.TRANSACTION) {
 			Communication response = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
+			response.setServerMessageType(ServerMessageType.RESPONSE);
 			response.setUniqueId(request.getUniqueId());
 			boolean transactionResult = database.executeTransaction(request);
 			response.setQueryResult(transactionResult);
+
+			//// HERE: SHOULD ADD SOMETHING ABOUT SCREEN CONQUER /////
+
 			try {
 				client.sendToClient(response);
 			} catch (IOException e) {
