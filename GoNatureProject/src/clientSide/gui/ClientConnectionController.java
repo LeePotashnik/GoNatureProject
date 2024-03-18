@@ -31,12 +31,16 @@ import javafx.util.Duration;
  * Controller class for the Client Connection JavaFX screen
  */
 public class ClientConnectionController extends AbstractScreen {
+	// properties for the image animation
 	private final static int IMAGE_VIEW_COUNT = 3; // Display 3 images at a time
 	private final ArrayList<String> imagePaths = new ArrayList<>(); // List to hold all your image paths
 	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT]; // Array for ImageViews
 	private int currentIndex = 0; // Index to track current image set
 
-	// JAVA FX COMPONENTS
+	//////////////////////////
+	/// JAVA FX COMPONENTS ///
+	//////////////////////////
+	
 	@FXML
 	private Button connectBtn;
 	@FXML
@@ -52,7 +56,10 @@ public class ClientConnectionController extends AbstractScreen {
 	@FXML
 	private Rectangle rectangle;
 
-	///// --- EVENT METHODS --- /////
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
+
 	@FXML
 	/**
 	 * this method is called after clicking on the "Connect to Server" button.
@@ -107,6 +114,63 @@ public class ClientConnectionController extends AbstractScreen {
 			showErrorAlert(ScreenManager.getInstance().getStage(), "Errors:" + showMessage);
 		}
 	}
+	
+	///////////////////////////////////
+	/// JAVAFX FLOW CONTROL METHODS ///
+	///////////////////////////////////
+	
+	@FXML
+	/**
+	 * transfers the focus from hostTxtField to portTxtField
+	 * 
+	 * @param event
+	 */
+	void hostTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			portTxtField.requestFocus();
+		}
+	}
+
+	@FXML
+	/**
+	 * transfers the focus from portTxtField to the connect button
+	 * 
+	 * @param event
+	 */
+	void portTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			connectBtn.requestFocus();
+		}
+	}
+
+	@FXML
+	/**
+	 * transfers the focus from the button to the pane
+	 * 
+	 * @param event
+	 */
+	void btnTabPressed(KeyEvent event) {
+		if (event.getCode() == KeyCode.TAB) {
+			event.consume();
+			pane.requestFocus();
+		}
+	}
+
+	@FXML
+	/**
+	 * sets the focus to the pane
+	 * 
+	 * @param event
+	 */
+	void paneClicked(MouseEvent event) {
+		pane.requestFocus();
+	}
+
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
 
 	/**
 	 * This method is called after the client-server connection is established
@@ -121,6 +185,9 @@ public class ClientConnectionController extends AbstractScreen {
 		}
 	}
 
+	/**
+	 * This method starts the parks images slide show using fade transitions
+	 */
 	private void startSlideshow() {
 		// Create a runnable task for changing images
 		Runnable changeImagesTask = () -> {
@@ -198,9 +265,9 @@ public class ClientConnectionController extends AbstractScreen {
 		}
 	}
 
-	////////////////////////////////////////////////
-	/// ABSTRACT SCREEN, FXML AND JAVAFX METHODS ///
-	////////////////////////////////////////////////
+	///////////////////////////////
+	/// ABSTRACT SCREEN METHODS ///
+	///////////////////////////////
 	
 	@FXML
 	/**
@@ -247,58 +314,5 @@ public class ClientConnectionController extends AbstractScreen {
 	@Override
 	public String getScreenTitle() {
 		return "Client Connection";
-	}
-
-	/////////////////////////////////////
-	/// TEXT FIELDS TABS FLOW METHODS ///
-	/////////////////////////////////////
-	
-	@FXML
-	/**
-	 * transfers the focus from hostTxtField to portTxtField
-	 * 
-	 * @param event
-	 */
-	void hostTabPressed(KeyEvent event) {
-		if (event.getCode() == KeyCode.TAB) {
-			event.consume();
-			portTxtField.requestFocus();
-		}
-	}
-
-	@FXML
-	/**
-	 * transfers the focus from portTxtField to the connect button
-	 * 
-	 * @param event
-	 */
-	void portTabPressed(KeyEvent event) {
-		if (event.getCode() == KeyCode.TAB) {
-			event.consume();
-			connectBtn.requestFocus();
-		}
-	}
-
-	@FXML
-	/**
-	 * transfers the focus from the button to the pane
-	 * 
-	 * @param event
-	 */
-	void btnTabPressed(KeyEvent event) {
-		if (event.getCode() == KeyCode.TAB) {
-			event.consume();
-			pane.requestFocus();
-		}
-	}
-
-	@FXML
-	/**
-	 * sets the focus to the pane
-	 * 
-	 * @param event
-	 */
-	void paneClicked(MouseEvent event) {
-		pane.requestFocus();
 	}
 }

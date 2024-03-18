@@ -12,6 +12,17 @@ import entities.Booking;
 
 public class PaymentController {
 	private int individualFullPrice,individualDiscount, groupFullPrice, groupPreorderDiscount, groupPrepaidDiscount; 
+	private static PaymentController instance;
+	
+	private PaymentController() {
+		
+	}
+	
+	public static PaymentController getInstance() {
+		if (instance == null)
+			instance = new PaymentController();
+		return instance;
+	}
 	
 	/**
      * Retrieves pricing details from the database and updates local fields
@@ -51,7 +62,6 @@ public class PaymentController {
 					this.groupPrepaidDiscount=(int) row[4];
 				}
 			}
-			System.out.println("individualFullPrice:"+individualFullPrice+"\nindividualDiscount:"+individualDiscount+"\ngroupFullPrice:"+ groupFullPrice+"\ngroupPreorderDiscount:"+groupPreorderDiscount+"\ngroupPrepaidDiscount:"+groupPrepaidDiscount);
 		}
 	}
 	

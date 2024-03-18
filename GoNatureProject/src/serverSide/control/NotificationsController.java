@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.mail.Message;
@@ -40,7 +41,7 @@ public class NotificationsController {
 	 * @param ArrayList that contains The booking details for which the notification
 	 *                  is sent.
 	 */
-	public void sendWaitingListEmailNotification(ArrayList<Object> details) {
+	public void sendWaitingListEmailNotification(List<Object> details) {
 		String emailAddress = (String) details.get(0);
 // 		String phoneNumber = (String)details.get(1);
 		String parkName = (String) details.get(2);
@@ -56,7 +57,7 @@ public class NotificationsController {
 		long hoursUntilVisit = Duration.between(now, visitDateTime).toHours();
 		String message = "Hello, " + fullName + "!";
 		if (hoursUntilVisit <= 24) {
-			message += "\n\nWe are happy to inform you that we have found place to your booking.";
+			message += "\n\nWe are happy to inform you that we have found place to your booking to " + parkName + "!";
 			message += "\nWe removed you from the waiting list and now your booking is active.";
 			message += "\nThis is a gentle reminder that your reservation is scheduled for tomorrow.";
 			message += "\nThis reminder will have to be confirmed within 2 hours in order to save your booking.";
@@ -74,14 +75,11 @@ public class NotificationsController {
 		message += "\n\nYour booking details:";
 		message += "\nPark: " + parkName + " in " + parkLocation;
 		message += "\nDate: " + dayofvisit + "    Time: " + timeOfVisit;
-		message += "\nNumber of Visitors: " + numberOfVisitors + "    Final Price: " + finalPrice;
+		message += "\nNumber of Visitors: " + numberOfVisitors + "    Final Price: " + finalPrice + "$";
 		message += isPaid ? "\nYour booking is fully paid!"
 				: "\nYour booking is not paid, you will need to pay at the park entrance.";
 
-		System.out.println("Sending Email to: " + emailAddress);
-		System.out.println("The content is: ");
-		System.out.println(message);
-		sendEmail(emailAddress, "Go - Nature Waiting List Update", message);
+		sendEmail(emailAddress, "GoNature - No More Waiting!", message);
 	}
 
 	/**
@@ -90,7 +88,40 @@ public class NotificationsController {
 	 * @param ArrayList that contains The booking details for which the confirmation
 	 *                  is sent.
 	 */
-	public void sendConfirmationEmailNotification(ArrayList<Object> details) {
+	public void sendConfirmationEmailNotification(List<Object> details) {
+		String emailAddress = (String) details.get(0);
+// 		String phoneNumber = (String)details.get(1);
+		String parkName = (String) details.get(2);
+		LocalDate dayofvisit = (LocalDate) details.get(3);
+		LocalTime timeOfVisit = (LocalTime) details.get(4);
+		String fullName = (String) details.get(5);
+		String parkLocation = (String) details.get(6);
+		Integer numberOfVisitors = (int) details.get(7);
+		Integer finalPrice = (Integer) details.get(8);
+		boolean isPaid = (Boolean) details.get(9);
+		String message = "Hello, " + fullName + "!";
+		message += "\n\nWe are pleased to confirm your reservation to " + parkName + "!";
+		message += "\nYou will get a reminder 24 hours before the day of your booking,";
+		message += "\nThis reminder will have to be confirmed within 2 hours in order to save your booking.";
+		message += "\n\nIf you will not confirm, your booking will automatically be cancelled.";
+		message += "\n\nThank you and we are looking forward to see you!";
+		message += "\n\nYour booking details:";
+		message += "\nPark: " + parkName + " in " + parkLocation;
+		message += "\nDate: " + dayofvisit + "    Time: " + timeOfVisit;
+		message += "\nNumber of Visitors: " + numberOfVisitors + "    Final Price: " + finalPrice + "$";
+		message += isPaid ? "\nYour booking is fully paid!"
+				: "\nYour booking is not paid, you will need to pay at the park entrance.";
+
+		sendEmail(emailAddress, "GoNature - Confirmation", message);
+	}
+
+	/**
+	 * Sends a booking confirmation email notification to a user.
+	 *
+	 * @param ArrayList that contains The booking details for which the confirmation
+	 *                  is sent.
+	 */
+	public void sendCancellationEmailNotification(List<Object> details) {
 		String emailAddress = (String) details.get(0);
 // 		String phoneNumber = (String)details.get(1);
 		String parkName = (String) details.get(2);
@@ -102,22 +133,15 @@ public class NotificationsController {
 		Integer finalPrice = (int) details.get(8);
 		boolean isPaid = (boolean) details.get(9);
 		String message = "Hello, " + fullName + "!";
-		message += "\n\nWe are pleased to confirm your reservation.";
-		message += "\nYou will get a reminder 24 hours before the day of your booking,";
-		message += "\nThis reminder will have to be confirmed within 2 hours in order to save your booking.";
-		message += "\n\nIf you will not confirm, your booking will automatically be cancelled.";
-		message += "\n\nThank you and we are looking forward to see you!";
+		message += "\n\nWe are sorry to confirm that your booking to " + parkName + " is now cancelled.";
+		message += isPaid ? "\nYou will be fully refunded within 48 hours." : "";
+		message += "\n\nThank you and we are looking forward to see you some day in the near future!";
 		message += "\n\nYour booking details:";
 		message += "\nPark: " + parkName + " in " + parkLocation;
 		message += "\nDate: " + dayofvisit + "    Time: " + timeOfVisit;
-		message += "\nNumber of Visitors: " + numberOfVisitors + "    Final Price: " + finalPrice;
-		message += isPaid ? "\nYour booking is fully paid!"
-				: "\nYour booking is not paid, you will need to pay at the park entrance.";
+		message += "\nNumber of Visitors: " + numberOfVisitors + "    Final Price: " + finalPrice + "$";
 
-		System.out.println("Sending Email to: " + emailAddress);
-		System.out.println("The content is: ");
-		System.out.println(message);
-		sendEmail(emailAddress, "Go - Nature Waiting List Update", message);
+		sendEmail(emailAddress, "GoNature - Cancellation", message);
 	}
 
 	/**
@@ -126,7 +150,8 @@ public class NotificationsController {
 	 * @param ArrayList that contains The booking details for which the reminder is
 	 *                  sent.
 	 */
-	public void sendReminderEmailNotification(ArrayList<Object> details) {
+	public void sendReminderEmailNotification(List<Object> details) {
+		details = (ArrayList<Object>) details;
 		String emailAddress = (String) details.get(0);
 // 		String phoneNumber = (String)details.get(1);
 		String parkName = (String) details.get(2);
@@ -150,10 +175,7 @@ public class NotificationsController {
 		message += isPaid ? "\nYour booking is fully paid!"
 				: "\nYour booking is not paid, you will need to pay at the park entrance.";
 
-		System.out.println("Sending Email to: " + emailAddress);
-		System.out.println("The content is: ");
-		System.out.println(message);
-		sendEmail(emailAddress, "Go - Nature Waiting List Update", message);
+		sendEmail(emailAddress, "GoNature - Booking Reminder", message);
 	}
 
 	/**
@@ -164,7 +186,6 @@ public class NotificationsController {
 	 * @param textMessage The body text of the email.
 	 */
 	public static void sendEmail(String to, String subject, String textMessage) {
-
 		// Set up the SMTP server properties
 		Properties p = new Properties();
 		p.put("mail.smtp.auth", "true");
@@ -199,7 +220,9 @@ public class NotificationsController {
 
 			// Send message
 			Transport.send(message);
-			System.out.println("Sent message successfully....");
+			System.out.println(
+					LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+							+ ": Email sent successfully to " + to);
 		} catch (MessagingException mex) {
 			mex.printStackTrace();
 		}

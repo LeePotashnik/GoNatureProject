@@ -24,7 +24,9 @@ import javafx.util.Pair;
 
 public class BookingController {
 	private static BookingController instance;
-	ArrayList<Park> parkList;
+	private ArrayList<Park> parkList;
+	private PaymentController paymentControl = PaymentController.getInstance();
+	private ParkController parkControl = ParkController.getInstance();
 
 	// date validation parameters
 	/**
@@ -90,7 +92,7 @@ public class BookingController {
 	 * observable lists of the parks, one of Park and the second of String
 	 */
 	public Pair<ObservableList<Park>, ObservableList<String>> fetchParks() {
-		parkList = ParkController.getInstance().fetchParks();
+		parkList = parkControl.fetchParks();
 		// returning the pair of the observable lists
 		Pair<ObservableList<Park>, ObservableList<String>> pair = new Pair<>(
 				FXCollections.observableArrayList(parkList), parksAsString());
@@ -127,7 +129,7 @@ public class BookingController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		String parkTableName = ParkController.getInstance().nameOfTable(deleteBooking.getParkBooked()) + table;
+		String parkTableName = parkControl.nameOfTable(deleteBooking.getParkBooked()) + table;
 		deleteRequest.setTables(Arrays.asList(parkTableName));
 		deleteRequest.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="),
 				Arrays.asList(deleteBooking.getBookingId()));
@@ -143,9 +145,10 @@ public class BookingController {
 
 		// sending the request to the server side
 		GoNatureClientUI.client.accept(deleteRequest);
+		boolean result = deleteRequest.getQueryResult();
 
-		// getting the result from the database
-		return deleteRequest.getQueryResult();
+		// returning the result
+		return result;
 	}
 
 	/**
@@ -223,7 +226,7 @@ public class BookingController {
 		}
 
 		@SuppressWarnings("static-access")
-		String parkTableName = ParkController.getInstance().nameOfTable(park) + availabilityRequest.activeBookings;
+		String parkTableName = parkControl.nameOfTable(park) + availabilityRequest.activeBookings;
 
 		availabilityRequest.setTables(Arrays.asList(parkTableName));
 		availabilityRequest.setSelectColumns(Arrays.asList("numberOfVisitors"));
@@ -246,28 +249,18 @@ public class BookingController {
 
 	/**
 	 * This method connects with the PaymentController in order to calculate the
-	 * price for the group with the most updated prices, with discounts
+	 * price for the group with the most updated prices, with discounts applied
 	 * 
 	 * @param newBooking
 	 * @return the calculated price with discount
 	 */
 	public int calculateFinalDiscountPrice(Booking newBooking, boolean isGroup, boolean isPrePaid) {
 		if (isGroup) { // guided group
-			if (isPrePaid) {
-//				return PaymentController.getInstance().calculateDiscountPriceGuidedGroupPrePaid(newBooking);
+			return paymentControl.calculateDiscountPriceGuidedGroup(newBooking, isPrePaid);
 
-			} else {
-//				return PaymentController.getInstance().calculateDiscountPriceGuidedGroupNotPrePaid(newBooking);
-			}
 		} else { // individual group
-//			return PaymentController.getInstance().calculateDiscountPriceTravelersGroup(newBooking);
+			return paymentControl.calculateDiscountPriceTravelersGroup(newBooking);
 		}
-		// for now:
-		int price = (int) (newBooking.getNumberOfVisitors() * 50 * 0.9);
-		if (isPrePaid) {
-			price = (int) (price * 0.9);
-		}
-		return price;
 	}
 
 	/**
@@ -286,8 +279,7 @@ public class BookingController {
 			e.printStackTrace();
 		}
 		@SuppressWarnings("static-access")
-		String parkTableName = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
-				+ insertRequest.activeBookings;
+		String parkTableName = parkControl.nameOfTable(newBooking.getParkBooked()) + insertRequest.activeBookings;
 		insertRequest.setTables(Arrays.asList(parkTableName));
 		insertRequest.setColumnsAndValues(
 				Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType", "numberOfVisitors",
@@ -302,14 +294,38 @@ public class BookingController {
 						newBooking.isConfirmed() == false ? 0 : 1, newBooking.getEntryParkTime(),
 						newBooking.getExitParkTime(), newBooking.isRecievedReminder() == false ? 0 : 1,
 						newBooking.getReminderArrivalTime()));
-
-		insertRequest.setSecondaryRequest(SecondaryRequest.SEND_NOTIFICATIONS);
-
+		
 		// sending the request to the server side
 		GoNatureClientUI.client.accept(insertRequest);
 
 		// getting the result from the database
 		return insertRequest.getQueryResult();
+	}
+	
+	/**
+	 * This method is called in order to send a confirmation or cancellation to the booker
+	 * @param notify
+	 */
+	public void sendNotification(Booking notify, boolean isCancel) {
+		Communication notifyBooking = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			notifyBooking.setQueryType(QueryType.NONE);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		notifyBooking.setSecondaryRequest(isCancel ? SecondaryRequest.SEND_CANCELLATION : SecondaryRequest.SEND_CONFIRMATION);
+		notifyBooking.setFullName(notify.getFirstName() + " " + notify.getLastName());
+		notifyBooking.setEmail(notify.getEmailAddress());
+		notifyBooking.setPhone(notify.getPhoneNumber());
+		notifyBooking.setPrice(notify.getFinalPrice());
+		notifyBooking.setPaid(notify.isPaid());
+		notifyBooking.setVisitors(notify.getNumberOfVisitors());
+		notifyBooking.setDate(notify.getDayOfVisit());
+		notifyBooking.setTime(notify.getTimeOfVisit());
+		notifyBooking.setParkName(notify.getParkBooked().getParkName() + " Park");
+		notifyBooking.setParkLocation(notify.getParkBooked().getParkCity() + ", " + notify.getParkBooked().getParkState());
+		
+		GoNatureClientUI.client.accept(notifyBooking);
 	}
 
 	/**
@@ -328,8 +344,7 @@ public class BookingController {
 			e.printStackTrace();
 		}
 		@SuppressWarnings("static-access")
-		String parkTableName = ParkController.getInstance().nameOfTable(updateBooking.getParkBooked())
-				+ updateRequest.activeBookings;
+		String parkTableName = parkControl.nameOfTable(updateBooking.getParkBooked()) + updateRequest.activeBookings;
 		updateRequest.setTables(Arrays.asList(parkTableName));
 		updateRequest.setColumnsAndValues(Arrays.asList("finalPrice", "paid"),
 				Arrays.asList(updateBooking.getFinalPrice(), updateBooking.isPaid() == true ? 1 : 0));
@@ -365,7 +380,7 @@ public class BookingController {
 		if (parkList == null)
 			fetchParks();
 		for (Park park : parkList) {
-			String tableName = ParkController.getInstance().nameOfTable(park) + tableEnding;
+			String tableName = parkControl.nameOfTable(park) + tableEnding;
 			Communication availabilityRequest = new Communication(CommunicationType.QUERY_REQUEST);
 			try {
 				availabilityRequest.setQueryType(QueryType.SELECT);
@@ -497,7 +512,7 @@ public class BookingController {
 			e.printStackTrace();
 		}
 		@SuppressWarnings("static-access")
-		String parkTableName = ParkController.getInstance().nameOfTable(cancelledBooking.getParkBooked())
+		String parkTableName = parkControl.nameOfTable(cancelledBooking.getParkBooked())
 				+ insertRequest.cancelledBookings;
 		insertRequest.setTables(Arrays.asList(parkTableName));
 		insertRequest.setColumnsAndValues(
@@ -536,8 +551,7 @@ public class BookingController {
 		}
 
 		@SuppressWarnings("static-access")
-		String deleteTable = ParkController.getInstance().nameOfTable(oldBooking.getParkBooked())
-				+ deleteRequest.activeBookings;
+		String deleteTable = parkControl.nameOfTable(oldBooking.getParkBooked()) + deleteRequest.activeBookings;
 		deleteRequest.setTables(Arrays.asList(deleteTable));
 		deleteRequest.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="),
 				Arrays.asList(oldBooking.getBookingId()));
@@ -554,8 +568,7 @@ public class BookingController {
 		}
 
 		@SuppressWarnings("static-access")
-		String insertTable = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
-				+ insertRequest.activeBookings;
+		String insertTable = parkControl.nameOfTable(newBooking.getParkBooked()) + insertRequest.activeBookings;
 		insertRequest.setTables(Arrays.asList(insertTable));
 		insertRequest.setColumnsAndValues(
 				Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType", "numberOfVisitors",
@@ -605,7 +618,7 @@ public class BookingController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		getWaiting.setTables((Arrays.asList(ParkController.getInstance().nameOfTable(park))));
+		getWaiting.setTables((Arrays.asList(parkControl.nameOfTable(park))));
 		getWaiting.setSelectColumns(Arrays.asList("bookingId"));
 		getWaiting.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit", "numberOfVisitors"),
 				Arrays.asList("=", "AND", ">", "AND", "<", "AND", "<="),
@@ -705,8 +718,7 @@ public class BookingController {
 		// pre-setting data for request
 		Communication availabilityRequest = new Communication(CommunicationType.QUERY_REQUEST);
 		@SuppressWarnings("static-access")
-		String parkTableName = ParkController.getInstance().nameOfTable(parkToCheck)
-				+ availabilityRequest.activeBookings;
+		String parkTableName = parkControl.nameOfTable(parkToCheck) + availabilityRequest.activeBookings;
 		// the pair holds the maximum orders amount, and maximum time limit parameters
 		Pair<Integer, Integer> pair = getParkUpdatedParameters(parkToCheck);
 		int parkTimeLimit = pair.getValue();
@@ -762,8 +774,7 @@ public class BookingController {
 			e.printStackTrace();
 		}
 		@SuppressWarnings("static-access")
-		String parkTableName = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
-				+ insertRequest.waitingList;
+		String parkTableName = parkControl.nameOfTable(newBooking.getParkBooked()) + insertRequest.waitingList;
 		insertRequest.setTables(Arrays.asList(parkTableName));
 		insertRequest.setColumnsAndValues(
 				Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "waitingListOrder", "visitType",
@@ -797,8 +808,7 @@ public class BookingController {
 			e.printStackTrace();
 		}
 		@SuppressWarnings("static-access")
-		String parkTableName = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
-				+ waitingListRequest.waitingList;
+		String parkTableName = parkControl.nameOfTable(newBooking.getParkBooked()) + waitingListRequest.waitingList;
 		waitingListRequest.setTables(Arrays.asList(parkTableName));
 		waitingListRequest.setSelectColumns(Arrays.asList("dayOfVisit", "timeOfVisit"));
 
@@ -833,8 +843,7 @@ public class BookingController {
 			e.printStackTrace();
 		}
 		@SuppressWarnings("static-access")
-		String parkTableName = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())
-				+ waitingListRequest.waitingList;
+		String parkTableName = parkControl.nameOfTable(newBooking.getParkBooked()) + waitingListRequest.waitingList;
 		waitingListRequest.setTables(Arrays.asList(parkTableName));
 		waitingListRequest.setSelectColumns(Arrays.asList("bookingId", "timeOfVisit", "dayOfBooking",
 				"waitingListOrder", "visitType", "numberOfVisitors"));
@@ -882,8 +891,7 @@ public class BookingController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		String parkTableName = ParkController.getInstance().nameOfTable(deleteBooking.getParkBooked())
-				+ selectQuery.waitingList;
+		String parkTableName = parkControl.nameOfTable(deleteBooking.getParkBooked()) + selectQuery.waitingList;
 		selectQuery.setTables(Arrays.asList(parkTableName));
 		selectQuery.setSelectColumns(Arrays.asList("bookingId", "waitingListOrder"));
 		selectQuery.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit", "waitingListOrder"),
@@ -930,12 +938,7 @@ public class BookingController {
 			updateRequest.setColumnsAndValues(Arrays.asList("waitingListOrder"), Arrays.asList(row.getValue() - 1));
 			updateRequest.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="),
 					Arrays.asList(row.getKey()));
-			try {
-				System.out.println(updateRequest.combineQuery());
-			} catch (CommunicationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
 			// adding the update request to the transaction
 			transaction.addRequestToList(updateRequest);
 		}

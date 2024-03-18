@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import clientSide.control.ParkController;
+import clientSide.control.PaymentController;
 import common.communication.Communication;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
@@ -24,14 +25,14 @@ import serverSide.jdbc.DatabaseException;
 public class BackgroundManager {
 //	private final ScheduledExecutorService scheduler;
 //	private int numberOfTasks = 4;
-//	private NotificationsController notifications;
+	private NotificationsController notifications = NotificationsController.getInstance();
 	private DatabaseController database;
 	private ParkController parkControl = ParkController.getInstance();
+	private PaymentController paymentControl = PaymentController.getInstance();
 	private ArrayList<Park> parks = new ArrayList<>();
 
 	public BackgroundManager(DatabaseController database) {
 //		scheduler = Executors.newScheduledThreadPool(numberOfTasks);
-//		notification = new NotificationsController();
 		this.database = database;
 	}
 
@@ -315,9 +316,100 @@ public class BackgroundManager {
 	/// REMINDERS SENDING BACKGROUND PROCESS ///
 	////////////////////////////////////////////
 
-//	private void remindersSendingBackground() {
-//
-//	}
+	/**
+	 * This method scans all active bookings tables of all parks, checks which
+	 * bookings are going to be in 24 hours from now. These bookings will be
+	 * recieving a reminder for their booking
+	 */
+	@SuppressWarnings("static-access")
+	private void remindersSendingBackground() {
+		ArrayList<ArrayList<Booking>> parksBookings = new ArrayList<>();
+
+		// for each park, scanning its active bookings table
+		for (Park park : parks) {
+			ArrayList<Booking> toBeReminded = new ArrayList<>();
+
+			// creating the communication request
+			Communication checkPark = new Communication(CommunicationType.SELF);
+			try {
+				checkPark.setQueryType(QueryType.SELECT);
+			} catch (CommunicationException e) {
+				e.printStackTrace();
+			}
+
+			String parkTableName = parkControl.nameOfTable(park) + checkPark.activeBookings;
+			checkPark.setTables(Arrays.asList(parkTableName));
+			checkPark.setSelectColumns(Arrays.asList("*"));
+
+			LocalDate checkDate = LocalDate.now().plusDays(1);
+			LocalTime checkTime = LocalTime.of(LocalTime.now().getHour(), 0);
+
+			checkPark.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit"), Arrays.asList("=", "AND", "="),
+					Arrays.asList(checkDate, checkTime));
+
+			// executing the request
+			ArrayList<Object[]> results = database.executeSelectQuery(checkPark);
+
+			// adding all the returned bookings
+			for (Object[] row : results) {
+				Booking addBooking = new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
+						((Time) row[2]).toLocalTime(), ((Date) row[3]).toLocalDate(),
+						((String) row[4]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL, (Integer) row[5],
+						(String) row[6], (String) row[7], (String) row[8], (String) row[9], (String) row[10],
+						(Integer) row[11], (Integer) row[12] == 0 ? false : true, (Integer) row[13] == 0 ? false : true,
+						((Time) row[14]) == null ? null : ((Time) row[14]).toLocalTime(),
+						((Time) row[15]) == null ? null : ((Time) row[15]).toLocalTime(),
+						(Integer) row[16] == 0 ? false : true,
+						((Time) row[17]) == null ? null : ((Time) row[17]).toLocalTime(), park);
+				toBeReminded.add(addBooking);
+			}
+
+			parksBookings.add(toBeReminded);
+		}
+
+		// sending reminders to each booking's holder
+		int parkIndex = 0;
+		for (ArrayList<Booking> remindingBookings : parksBookings) {
+
+			// sending reminders with the notifications controller
+			for (Booking toRemind : remindingBookings) {
+				notifications.sendReminderEmailNotification(
+						Arrays.asList(toRemind.getEmailAddress(), toRemind.getPhoneNumber(),
+								toRemind.getParkBooked().getParkCity() + " Park", toRemind.getDayOfVisit(),
+								toRemind.getTimeOfVisit(), toRemind.getFirstName() + " " + toRemind.getLastName(),
+								toRemind.getParkBooked().getParkCity() + ", " + toRemind.getParkBooked().getParkState(),
+								toRemind.getNumberOfVisitors(), toRemind.getFinalPrice(), toRemind.isPaid()));
+			}
+
+			// creating the IN (...) part to the query, to update the visitor has been
+			// reminded
+			int size = remindingBookings.size();
+			String bookingIDs = "(";
+			// creating the booking ids values
+			for (int i = 0; i < size; i++) {
+				bookingIDs += "'" + remindingBookings.get(i).getBookingId() + "'";
+				if (i + 1 < size)
+					bookingIDs += ", ";
+			}
+			bookingIDs += ")";
+
+			// creating the communication request
+			Communication updateReminded = new Communication(CommunicationType.SELF);
+			try {
+				updateReminded.setQueryType(QueryType.UPDATE);
+			} catch (CommunicationException e) {
+				e.printStackTrace();
+			}
+			updateReminded.setTables(
+					Arrays.asList(parkControl.nameOfTable(parks.get(parkIndex++)) + updateReminded.activeBookings));
+			updateReminded.setColumnsAndValues(Arrays.asList("isRecievedReminder", "reminderArrivalTime"),
+					Arrays.asList(1, LocalTime.now()));
+			updateReminded.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("IN"),
+					Arrays.asList(bookingIDs));
+
+			database.executeUpdateQuery(updateReminded);
+		}
+	}
 
 	/////////////////////////////////////////////
 	/// REMINDERS CHECKING BACKGROUND PROCESS ///
@@ -386,7 +478,7 @@ public class BackgroundManager {
 					((String) row[5]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL, (Integer) row[6],
 					(String) row[7], (String) row[8], (String) row[9], (String) row[10], (String) row[11], -1, false,
 					false, null, null, false, null, park);
-			add.setWaitingListPriority((Integer)row[4]);
+			add.setWaitingListPriority((Integer) row[4]);
 			// HERE: need to add:
 			// add.setFinalPrice(PaymentController:
 			// .calculateFinalDiscountPrice(booking,isGroupReservation, false));
@@ -397,12 +489,6 @@ public class BackgroundManager {
 		// group size
 		waitingResults.sort(Booking.waitingListComparator); // sorting these bookings by their priority
 
-		/////////////////////////////////////////////
-		System.out.println("Order of bookings:");
-		for (Booking in : waitingResults) {
-			System.out.println(in.getBookingId() + " - " + in.getWaitingListPriority());
-		}		
-		
 		///////////////////
 		/// SECOND PART ///
 		///////////////////
@@ -421,7 +507,6 @@ public class BackgroundManager {
 		ArrayList<Booking> transferBookings = new ArrayList<>();
 		int decreasePriority = 0;
 		for (Booking currentBooking : waitingResults) {
-			System.out.println("Checking ID: " + currentBooking.getBookingId());
 			int currentBookingSize = currentBooking.getNumberOfVisitors();
 			if (currentBookingSize <= moreCanEnter) {
 				moreCanEnter -= currentBookingSize;
@@ -431,11 +516,9 @@ public class BackgroundManager {
 				currentBooking.setWaitingListPriority(currentBooking.getWaitingListPriority() - decreasePriority);
 			}
 		}
-		
+
 		waitingResults.removeAll(transferBookings);
-		
-		System.out.println("Transfer: " + transferBookings);
-		System.out.println("Waiting: " + waitingResults);
+
 
 		// now: waitingResults holds all the waiting list bookings that are going to
 		// stay in the waiting list, but with possible new priority. transferBookings
@@ -465,12 +548,12 @@ public class BackgroundManager {
 				e.printStackTrace();
 			}
 			insert.setTables(Arrays.asList(parkControl.nameOfTable(park) + Communication.activeBookings));
-
 			// updating final price
-			// HERE: need to add:
-			// transfer.setFinalPrice(PaymentController:
-			// .calculateFinalDiscountPrice(booking,isGroupReservation, false));
-			transfer.setFinalPrice(transfer.getNumberOfVisitors() * 50);
+			new Thread(() -> {
+				transfer.setFinalPrice(transfer.getVisitType() == VisitType.GROUP
+						? paymentControl.calculateDiscountPriceGuidedGroup(transfer, false)
+						: paymentControl.calculateDiscountPriceTravelersGroup(transfer));
+			}).start();
 
 			insert.setColumnsAndValues(
 					Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType",
@@ -532,9 +615,14 @@ public class BackgroundManager {
 		//////////////////
 
 		// sending confirmation to the transferred bookings
-//		for (Booking transfer : transferBookings) {
-//			sendConfirmationPlaceFound(transfer);
-//		}
+		for (Booking transfer : transferBookings) {
+			notifications.sendWaitingListEmailNotification(
+					Arrays.asList(transfer.getEmailAddress(), transfer.getPhoneNumber(),
+							transfer.getParkBooked().getParkName() + " Park", transfer.getDayOfVisit(),
+							transfer.getTimeOfVisit(), transfer.getFirstName() + " " + transfer.getLastName(),
+							transfer.getParkBooked().getParkCity() + ", " + transfer.getParkBooked().getParkState(),
+							transfer.getNumberOfVisitors(), transfer.getFinalPrice(), transfer.isPaid()));
+		}
 	}
 
 	/**

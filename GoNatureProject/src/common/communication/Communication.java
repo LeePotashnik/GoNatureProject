@@ -147,13 +147,16 @@ public class Communication implements Serializable {
 	////////////////////////////////////////////////////
 
 	public enum SecondaryRequest {
-		SEND_NOTIFICATIONS, UPDATE_WAITING_LIST;
+		SEND_CONFIRMATION, SEND_CANCELLATION, UPDATE_WAITING_LIST;
 	}
 
 	private SecondaryRequest secondaryRequest;
 	private int parkId;
 	private LocalDate date;
 	private LocalTime time;
+	private String parkName, email, phone, fullName, parkLocation;
+	private int visitors, price;
+	private boolean paid;
 
 	///////////////////////
 	/// GENERAL METHODS ///
@@ -211,7 +214,7 @@ public class Communication implements Serializable {
 	/**
 	 * This method returns the secondery request's park id
 	 * 
-	 * @return
+	 * @return the park id
 	 */
 	public int getParkId() {
 		return parkId;
@@ -220,7 +223,7 @@ public class Communication implements Serializable {
 	/**
 	 * This method returns the secondery request's date
 	 * 
-	 * @return
+	 * @return the date
 	 */
 	public LocalDate getDate() {
 		return date;
@@ -229,10 +232,82 @@ public class Communication implements Serializable {
 	/**
 	 * This method returns the secondery request's time
 	 * 
-	 * @return
+	 * @return the time
 	 */
 	public LocalTime getTime() {
 		return time;
+	}
+	
+	/**
+	 * This method returns the secondary request's park name
+	 * 
+	 * @return the park name
+	 */
+	public String getParkName() {
+		return parkName;
+	}
+	
+	/**
+	 * This method returns the secondery request's email address
+	 * 
+	 * @return the email address
+	 */
+	public String getEmail() {
+		return email;
+	}
+
+	/**
+	 * This method returns the secondery request's phone number
+	 * 
+	 * @return the phone number
+	 */
+	public String getPhone() {
+		return phone;
+	}
+
+	/**
+	 * This method returns the secondery request's full name
+	 * 
+	 * @return the full name
+	 */
+	public String getFullName() {
+		return fullName;
+	}
+
+	/**
+	 * This method returns the secondery request's visitors number
+	 * 
+	 * @return the visitors number
+	 */
+	public int getVisitors() {
+		return visitors;
+	}
+
+	/**
+	 * This method returns the secondery request's final price
+	 * 
+	 * @return the final price
+	 */
+	public int getPrice() {
+		return price;
+	}
+
+	/**
+	 * This method returns the secondery request's paid property
+	 * 
+	 * @return true if paid, false if not
+	 */
+	public boolean isPaid() {
+		return paid;
+	}
+	
+	/**
+	 * This method returns the secondery request's park location
+	 * 
+	 * @return parkLocation
+	 */
+	public String getParkLocation() {
+		return parkLocation;
 	}
 
 	///////////////
@@ -312,7 +387,8 @@ public class Communication implements Serializable {
 	
 	/**
 	 * This method sets the secondary request's park id
-	 * @return
+	 * 
+	 * @param parkId
 	 */
 	public void setParkId(int parkId) {
 		this.parkId = parkId;
@@ -320,7 +396,8 @@ public class Communication implements Serializable {
 	
 	/**
 	 * This method sets the secondary request's date
-	 * @return
+	 * 
+	 * @param date
 	 */
 	public void setDate(LocalDate date) {
 		this.date = date;
@@ -328,10 +405,83 @@ public class Communication implements Serializable {
 	
 	/**
 	 * This method sets the secondary request's time
-	 * @return
+	 * 
+	 * @param time
 	 */
 	public void setTime(LocalTime time) {
 		this.time = time;
+	}
+
+	/**
+	 * This method sets the secondary request's park name
+	 * 
+	 * @param parkName
+	 */
+	public void setParkName(String parkName) {
+		this.parkName = parkName;
+	}
+
+	/**
+	 * This method sets the secondary request's email address
+	 * 
+	 * @param email
+	 */
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	/**
+	 * This method sets the secondary request's phone number
+	 * 
+	 * @param phone
+	 */
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	/**
+	 * This method sets the secondary request's full name
+	 * 
+	 * @param fullName
+	 */
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
+	}
+
+	/**
+	 * This method sets the secondary request's visitors number
+	 * 
+	 * @param visitor
+	 */
+	public void setVisitors(int visitors) {
+		this.visitors = visitors;
+	}
+
+	/**
+	 * This method sets the secondary request's final price
+	 * 
+	 * @param price
+	 */
+	public void setPrice(int price) {
+		this.price = price;
+	}
+
+	/**
+	 * This method sets the secondary request's paid property
+	 * 
+	 * @param paid
+	 */
+	public void setPaid(boolean paid) {
+		this.paid = paid;
+	}
+	
+	/**
+	 * This method sets the secondary request's park location
+	 * 
+	 * @param parkLocation
+	 */
+	public void setParkLocation(String parkLocation) {
+		this.parkLocation = parkLocation;
 	}
 
 	/////////////////////////////////

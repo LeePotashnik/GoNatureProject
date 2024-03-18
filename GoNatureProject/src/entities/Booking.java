@@ -330,7 +330,7 @@ public class Booking {
 	/**
 	 * @return finalPrice
 	 */
-	public float getFinalPrice() {
+	public int getFinalPrice() {
 		return finalPrice;
 	}
 
