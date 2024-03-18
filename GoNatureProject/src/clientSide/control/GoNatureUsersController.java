@@ -1,21 +1,15 @@
 package clientSide.control;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.CommunicationException;
+import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
-import common.communication.Communication.MessageType;
 import common.communication.Communication.QueryType;
-import common.controllers.ScreenException;
-import common.controllers.ScreenManager;
-import common.controllers.StatefulException;
 import entities.Representative;
 import entities.SystemUser;
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
 
 public class GoNatureUsersController {
 
@@ -72,8 +66,8 @@ public class GoNatureUsersController {
      * creating a communication request for disconnecting from the server port
      */
     public void disconnectClientFromServer() {
-		Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
-		message.setMessageType(MessageType.DISCONNECT);
+    	Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
+		message.setClientMessageType(ClientMessageType.DISCONNECT);
 		GoNatureClientUI.client.accept(message);
     }
     

@@ -2,12 +2,15 @@ package clientSide.gui;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Random;
 
 import clientSide.control.ParkController;
+import clientSide.control.PaymentController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
+import common.controllers.StageSettings;
 import common.controllers.StatefulException;
 import entities.Booking;
 import entities.Park;
@@ -25,6 +28,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.stage.WindowEvent;
+import javafx.util.Pair;
 
 public class ParkEntryReservationScreenController extends AbstractScreen{
 
@@ -32,6 +37,7 @@ public class ParkEntryReservationScreenController extends AbstractScreen{
 	private Booking newBooking; 
 	private static ParkController parkControl;
 	private ParkVisitor parkVisitor;
+	private Park park;
 	
 	@FXML
     private Button backButton, makeReservationBtn;
@@ -70,42 +76,67 @@ public class ParkEntryReservationScreenController extends AbstractScreen{
     	if (validate()) { 
     		//in case all the inserted values are valid, 
     		//checks if there is place for new group reservation at current date
-    		Park park = parkEmployee.getWorkingIn();
+    		//Update parameters if they have changed in the previous screen.
+    		String[] returnsVal = new String[4]; 
+    		returnsVal = parkControl.checkCurrentCapacity(park.getParkName());
+    		if (returnsVal != null) {
+    			//updates park parameters
+    			park.setMaximumVisitors(Integer.parseInt(returnsVal[0]));
+    			park.setMaximumOrders(Integer.parseInt(returnsVal[1]));
+    			park.setTimeLimit(Integer.parseInt(returnsVal[2])); 
+    			park.setCurrentCapacity(Integer.parseInt(returnsVal[3])); 
+    		}
     		int available = park.getMaximumVisitors() * park.getMaximumOrders() / 100;
     		if (available - park.getCurrentCapacity() > Integer.parseInt(visitorsAmountTxt.getText()))
 				valid = true;    		
     	}
     	if (valid) {
     		//if there is a place for the new group reservation
-    		int flag = -1;
-    		int price, amount;
+    		int flag = 0;
+    		int finalPrice, amount;
     		parkVisitor = null;
-    		parkVisitor = (ParkVisitor) parkControl.checkIfVisitorExists("traveller", "travellerId", visitorIDTxt.getText());
-    		if (parkVisitor != null) {//indicates the visitor is exist in database as a 'traveller'
-    			flag = 1; 
-    		} if (flag == -1) { 		
-    			parkVisitor = (ParkVisitor) parkControl.checkIfVisitorExists("group_guide", "groupGuideId", visitorIDTxt.getText());
-    			if (parkVisitor != null) 
-    				flag = 2; //indicates the visitor is exist in database as a 'groupGuide'
-    		} if (flag == -1) { //the visitor is not exist in database.
-    			parkVisitor = new ParkVisitor(visitorIDTxt.getText(), nameTxt.getText(), lastNameTxt.getText(),
-    					emailTxt.getText(), phoneTxt.getText(), "", "", false, VisitorType.TRAVELLER);
-    			flag = 0;
-    		}
-    		price = parkControl.checkPrice(parkVisitor); //price per visitor
-    		amount = Integer.parseInt(visitorsAmountTxt.getText());
+    		parkVisitor = (ParkVisitor) parkControl.checkIfVisitorExists("group_guide", "groupGuideId", visitorIDTxt.getText());
+    		if (parkVisitor != null) //indicates the visitor is exist in database as a 'groupGuide'
+    			flag = 1; 	
+    		amount = Integer.parseInt(visitorsAmountTxt.getText()); 		
 
     		String bookingId = ((Integer) (1000000000 + new Random().nextInt(900000000))).toString();
 			newBooking = new Booking(bookingId, LocalDate.now(), LocalTime.now(), LocalDate.now(), 
-				parkVisitor.getVisitorType() == VisitorType.GROUPGUIDE ? VisitType.GROUP : VisitType.INDIVIDUAL, 
-				amount , parkVisitor.getIdNumber(), parkVisitor.getFirstName(),
-				parkVisitor.getLastName(), parkVisitor.getEmailAddress(), parkVisitor.getPhoneNumber(), amount*price, true, true,
+				flag == 1 ? VisitType.GROUP : VisitType.INDIVIDUAL, amount , visitorIDTxt.getText(),
+				nameTxt.getText(), lastNameTxt.getText(), emailTxt.getText(), phoneTxt.getText(), 0, true, true,
 				LocalTime.now(), null, true, LocalTime.now(), parkEmployee.getWorkingIn());
+			
+			if (flag ==1) 
+				finalPrice = PaymentController.getInstance().calculateRegularPriceGuidedGroup(newBooking);
+			else
+				finalPrice = PaymentController.getInstance().calculateRegularPriceTravelersGroup(newBooking);
+			//updates the final price due visitors amount and relevant price
+			newBooking.setFinalPrice(finalPrice);
+			System.out.println("final price =" + finalPrice);
 			if(parkControl.checkParkAvailabilityForBooking(newBooking))
 				parkControl.insertBookingToTable(newBooking, parkVisitor,"_park_active_booking", "active");
-			
-    	}
-
+			//updating park capacity
+			parkControl.updateCurrentCapacity(newBooking.getParkBooked().getParkName(), amount);
+			int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+					"Please charge the customer: " + finalPrice,
+					Arrays.asList("Cash", "CreditCard"));
+			if (decision == 2) {// if the user clicked on "Credit Card" he will redirect to pay screen and then to confirmation screen
+				event.consume();
+				try {
+					ScreenManager.getInstance().showScreen("PaymentSystemScreenController", "/clientSide/fxml/PaymentSystemScreen.fxml",
+							true, false, StageSettings.defaultSettings("Payment"), new Pair<Booking, ParkEmployee>(newBooking, parkEmployee));
+				} catch (StatefulException | ScreenException e) {
+					e.printStackTrace();
+				} 
+			}// else // user clicked on "Cash", showing the confirmation screen
+			//	try {
+			//		ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+			//				"/clientSide/fxml/ConfirmationScreen.fxml", true, true,
+			//				StageSettings.defaultSettings("Confirmation"), new Pair<Booking, ParkEmployee>(newBooking, parkEmployee));
+			//	} catch (StatefulException | ScreenException e) {
+			//		e.printStackTrace();
+			//	}	
+    		}
     }
     
 	/**
@@ -198,11 +229,30 @@ public class ParkEntryReservationScreenController extends AbstractScreen{
 		backButton.setStyle("-fx-alignment: center-right;");
 
 	}
-//bookingLbl, dateLbl, emailLbl, hourLbl, parkLbl, phoneLbl, titleLbl, visitorsLbl;
+	
+	/**
+	 *  Activated after the X is clicked on the window.
+	 *  The default is to show a Confirmation Alert with "Yes" and "No" options for the user to choose. 
+	 *  "Yes" will check if the client is connected to the server, disconnect it from the server and the system.
+	 */ /*
+	@Override
+	public void handleCloseRequest(WindowEvent event) {
+		int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(), "Are you sure you want to leave?",
+				Arrays.asList("Yes", "No"));
+		if (decision == 2) // if the user clicked on "No"
+			event.consume();
+		else { // if the user clicked on "Yes" and he is connected to server
+			logOut(null); //log out from go nature system
+    		System.out.println("User logged out");
+			UuserController.getInstance().disconnectClientFromServer(); 
+		}
+	}*/
+
 	@Override
 	public void loadBefore(Object information) {
 		ParkEmployee PE = (ParkEmployee)information;
 		setParkEmployee(PE);	
+		park = PE.getWorkingIn();
 		this.bookingLbl.setText(getScreenTitle());
 	    this.bookingLbl.underlineProperty();
 	}

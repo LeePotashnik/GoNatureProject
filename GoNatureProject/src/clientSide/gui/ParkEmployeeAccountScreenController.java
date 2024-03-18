@@ -43,9 +43,33 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
     	userControl = GoNatureUsersController.getInstance();
     	parkControl = ParkController.getInstance();
 	}
+	public String getParkTable() {
+		return parkTable;
+	}
+
+	public void setParkTable() {
+		this.parkTable = parkControl.nameOfTable(park) + "_park_employees";
+	}
+
+	public ParkEmployee getParkEmployee() {
+		return parkEmployee;
+	}
+
+	public void setParkEmployee(ParkEmployee parkEmployee) {
+		this.parkEmployee = parkEmployee;
+	}
+	
+	public Park getPark() {
+		return park;
+	}
+
+	public void setPark(Park park) {
+		this.park = park;
+	}
+	
     /**
      * @param event
-     * When the 'parkEntryCasualBTN' button is pressed, 
+     * When the 'Visitor Reservation' button is pressed, 
      * the park employee will be redirected to the 'ParkEntryResevationScreen'
      * @throws ScreenException 
      * @throws StatefulException 
@@ -73,7 +97,8 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
 
     /**
      * @param event
-     * parkEmplyee clicked on 'Log out' button, an update query is executed to alter the value of the 'isLoggedIn' field in database
+     * parkEmplyee clicked on 'Log out' button, an update query is executed to alter the value of the 
+     * 'isLoggedIn' field in database. The user will return to main Screen.
      * @throws CommunicationException 
      */
     @FXML
@@ -85,9 +110,10 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
         else 
         	showErrorAlert(ScreenManager.getInstance().getStage(), "Failed to log out");
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(false, false);
-		} catch (ScreenException | StatefulException e) {
-			e.printStackTrace();
+    		ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml", true,
+    				false, StageSettings.defaultSettings("GoNature System - Reservations"), null);
+    		} catch (ScreenException | StatefulException e) {
+    				e.printStackTrace();
 		}
     }
 
@@ -114,10 +140,10 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
 	public void loadBefore(Object information) {
 		ParkEmployee PE = (ParkEmployee)information;
 		setParkEmployee(PE);
+		setPark(PE.getWorkingIn());	
 		setParkTable();	
-		setPark(PE.getWorkingIn());
 		String[] returnsVal = new String[4]; 
-		returnsVal = parkControl.checkCurrentCapacity(parkEmployee.getWorkingIn().getParkName());
+		returnsVal = parkControl.checkCurrentCapacity(park.getParkName());
 		if (returnsVal != null) {
 			//updates park parameters
 			park.setMaximumVisitors(Integer.parseInt(returnsVal[0]));
@@ -125,36 +151,12 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
 			park.setTimeLimit(Integer.parseInt(returnsVal[2])); 
 			park.setCurrentCapacity(Integer.parseInt(returnsVal[3])); 
 		}
+		parkEmployee.setWorkingIn(park);
 		this.privateName.setText("Hello " + parkEmployee.getFirstName() + " " + parkEmployee.getLastName());
 	    this.privateName.underlineProperty();
 		this.Title.setText(park.getParkName());
 	    this.Title.underlineProperty();
 	}
-
-	public String getParkTable() {
-		return parkTable;
-	}
-
-	public void setParkTable() {
-		this.parkTable = parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_employees";
-	}
-
-	public ParkEmployee getParkEmployee() {
-		return parkEmployee;
-	}
-
-	public void setParkEmployee(ParkEmployee parkEmployee) {
-		this.parkEmployee = parkEmployee;
-	}
-	
-	public Park getPark() {
-		return park;
-	}
-
-	public void setPark(Park park) {
-		this.park = park;
-	}
-
 	
 	/**
 	 * Activated after the X is clicked on the window.
@@ -179,17 +181,23 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
 		return null;
 	}
 
+	/**
+	 *	This method saves the current user state and the park state.
+	 */
 	@Override
 	public void saveState() {
 		userControl.saveUser(parkEmployee);
 		parkControl.savePark(park);
 	}
 
+	/**
+	 * This method restores the previous user state and the park state.
+	 */
 	@Override
 	public void restoreState() {
 		parkEmployee = (ParkEmployee) userControl.restoreUser();
-		setParkTable();	
 		this.park = parkControl.restorePark();
+		setParkTable();	
 		this.privateName.setText("Hello " + parkEmployee.getFirstName() + " " + parkEmployee.getLastName());
 	    this.privateName.underlineProperty();
 		this.Title.setText(park.getParkName());

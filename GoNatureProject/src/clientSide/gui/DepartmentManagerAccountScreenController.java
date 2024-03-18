@@ -25,13 +25,13 @@ import javafx.scene.image.ImageView;
 public class DepartmentManagerAccountScreenController extends AbstractScreen implements Stateful{
 
 	private static GoNatureUsersController userControl;
-	
+	private ArrayList<Park> parks;
 	private ParkController parkControl;
 	private String screenTitle;
 	private DepartmentManager departmentManager;
 	
     @FXML
-    private Label Title, privateName;
+    private Label title, privateName;
 
     @FXML
     private Button approvingDataBTN, reportsBTN, logOutBTN, currentCapacitiesBTN;
@@ -51,8 +51,7 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
      * the park MANAGER will be redirected to the 'ParametersApprovingScreen'
      */
     @FXML
-    void GoToApprovingParksDataScreen(ActionEvent event) {
-    	
+    void GoToApprovingParksDataScreen(ActionEvent event){
     }
 
     /**
@@ -72,17 +71,26 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
   */
     @FXML
     void getCurrenetCapacities(ActionEvent event) {
-    	int i = 0;
-    	ArrayList<Park> parks = new ArrayList<>();
-    	departmentManager.setResponsible(parks);
-    	String output = "";
-    	parks = parkControl.fetchDepartmentManagerParksList(departmentManager.getManagesDepartment());
-
-    	for (i = 0; i<parks.size(); i++){
+    	//updates for each park the latest relevant parameters
+    	for (int i = 0; i<parks.size(); i++){
     		String parkName = parks.get(i).getParkName();
         	String[] currCap = parkControl.checkCurrentCapacity(parkName);
-        	output+= "Capacity parameters in " + parkName + " park:\n	maximum visitors: " + currCap[0] +
-        			"\n	maximum orders: " +currCap[1] +"\n	current capacity:  " + currCap[2] + "\n";
+    		if (currCap != null) {
+    			//updates park parameters
+    			parks.get(i).setMaximumVisitors(Integer.parseInt(currCap[0]));
+    			parks.get(i).setMaximumOrders(Integer.parseInt(currCap[1]));
+    			parks.get(i).setTimeLimit(Integer.parseInt(currCap[2])); 
+    			parks.get(i).setCurrentCapacity(Integer.parseInt(currCap[3])); 
+    		}	
+    	}
+    	int i = 0;
+    	String output = "";
+    	for (i = 0; i<parks.size(); i++){
+    		Park park = parks.get(i);
+        	//String[] currCap = parkControl.checkCurrentCapacity(parkName);
+        	output+= "Capacity parameters in " + park.getParkName() + " park:\n	maximum visitors: " + park.getMaximumVisitors() +
+        			"\n	maximum allowable quantity of visitors: " +park.getMaximumOrders() +"\n	current capacity:  " + park.getCurrentCapacity() +
+        			"\n	time limit: " + park.getTimeLimit() + "\n";
         }
     	showInformationAlert(ScreenManager.getInstance().getStage(), output);
     }
@@ -124,7 +132,6 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
 		reportsBTN.setStyle("-fx-alignment: center-right;");
 		currentCapacitiesBTN.setStyle("-fx-alignment: center-right;");
 		logOutBTN.setStyle("-fx-alignment: center-right;");	
-		//UC = new GoNatureUsersController(); 
 	}
 
 	/**
@@ -135,31 +142,55 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
 	@Override
 	public void loadBefore(Object information) {
 		DepartmentManager DM = (DepartmentManager)information;
-		setDepartmentManager(DM);		
+		setDepartmentManager(DM);
+		this.screenTitle = departmentManager.getManagesDepartment()+"'s Department Manager";
 		this.privateName.setText("Hello " + departmentManager.getFirstName() + " " + departmentManager.getLastName());
 	    this.privateName.underlineProperty();
-		this.Title.setText(getScreenTitle());
-	    this.Title.underlineProperty();	
+		this.title.setText(screenTitle);
+	    this.title.underlineProperty();
+		//updating the list of parks managed by the department manager
+		parks = new ArrayList<>();
+		parks = parkControl.fetchManagerParksList("departmentManagerId", departmentManager.getIdNumber());
+    	departmentManager.setResponsible(parks);
+    	//updates for each park the relevant parameters
+    	for (int i = 0; i<parks.size(); i++){
+    		String parkName = parks.get(i).getParkName();
+        	String[] currCap = parkControl.checkCurrentCapacity(parkName);
+    		if (currCap != null) {
+    			//updates park parameters
+    			parks.get(i).setMaximumVisitors(Integer.parseInt(currCap[0]));
+    			parks.get(i).setMaximumOrders(Integer.parseInt(currCap[1]));
+    			parks.get(i).setTimeLimit(Integer.parseInt(currCap[2])); 
+    			parks.get(i).setCurrentCapacity(Integer.parseInt(currCap[3])); 
+    		}	
+    	}
+    	
+			
+	}
+
+	public void setScreenTitle(String screenTitle) {
+		this.screenTitle = screenTitle;
 	}
 
 	@Override
 	public String getScreenTitle() { //need to check
-		return " Department Manager";
+		return null;
 	}
 
 	@Override
 	public void saveState() {
 		userControl.saveUser(departmentManager);
-		userControl.saveTitle(getScreenTitle());
+		userControl.saveTitle(screenTitle);		
 	}
 
 	@Override
 	public void restoreState() {
 		departmentManager = (DepartmentManager) userControl.restoreUser();
 		this.privateName.setText("Hello " + departmentManager.getFirstName() + " " + departmentManager.getLastName());
+		userControl.restoreTitle();
 	    this.privateName.underlineProperty();
-		this.Title.setText(getScreenTitle());
-	    this.Title.underlineProperty();	
+		this.title.setText(screenTitle);
+	    this.title.underlineProperty();
 	}
 		
 }
