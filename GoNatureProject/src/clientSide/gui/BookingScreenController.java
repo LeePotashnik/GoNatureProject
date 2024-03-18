@@ -151,8 +151,6 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			payMessage += "\nYour reservation's final price (after pre-order discount) is: " + discountPrice + "$";
 		}
 		
-		
-
 		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
 				Arrays.asList("Pay Now", "Pay Upon Arrival", "Cancel Reservation"));
 
@@ -162,13 +160,10 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			booking.setPaid(true);
 			booking.setFinalPrice(isGroupReservation ? preOrderPrice : discountPrice);
 			// updating the payment columns in the database
-			///////////////////////////////////////////////////
-			///// maybe transfer it to the payment screen /////
-			///////////////////////////////////////////////////
 			control.updateBookingPayment(booking);
 			// showing the payment screen
 			try {
-				ScreenManager.getInstance().showScreen("LoadingScreenController", "/clientSide/fxml/LoadingScreen.fxml",
+				ScreenManager.getInstance().showScreen("PaymentSystemScreenController", "/clientSide/fxml/PaymentSystemScreen.fxml",
 						true, false, StageSettings.defaultSettings("Payment"),
 						new Pair<Booking, ParkVisitor>(booking, visitor));
 			} catch (StatefulException | ScreenException e) {
@@ -184,6 +179,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			// updating the payment columns in the database
 			control.updateBookingPayment(booking);
 			// showing the confirmation screen
+			control.sendNotification(booking, false);
 			try {
 				ScreenManager.getInstance().showScreen("ConfirmationScreenController",
 						"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
@@ -676,6 +672,21 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			}
 		});
 	}
+	
+	/**
+	 * This method sets the hours combo box with the relevant hours for visiting
+	 */
+	protected void setHours() {
+		ArrayList<LocalTime> hoursString = new ArrayList<>();
+		for (int hour = control.openHour; hour <= control.closeHour; hour++) {
+			hoursString.add(LocalTime.of(hour, 0));
+			// sets the minutes intervals. if 0 - only in full hours
+			if (hour != control.closeHour && control.minutes != 0)
+				hoursString.add(LocalTime.of(hour, control.minutes));
+		}
+		hours = FXCollections.observableArrayList(hoursString);
+		hourCombobox.setItems(hours);
+	}
 
 	////////////////////////////////////////////
 	/// ABSTRACT SCREEN AND STATEFUL METHODS ///
@@ -780,29 +791,6 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 	@Override
 	/**
-	 * This method returns the screen's name
-	 */
-	public String getScreenTitle() {
-		return "Booking Reservations";
-	}
-
-	/**
-	 * This method sets the hours combo box with the relevant hours for visiting
-	 */
-	protected void setHours() {
-		ArrayList<LocalTime> hoursString = new ArrayList<>();
-		for (int hour = control.openHour; hour <= control.closeHour; hour++) {
-			hoursString.add(LocalTime.of(hour, 0));
-			// sets the minutes intervals. if 0 - only in full hours
-			if (hour != control.closeHour && control.minutes != 0)
-				hoursString.add(LocalTime.of(hour, control.minutes));
-		}
-		hours = FXCollections.observableArrayList(hoursString);
-		hourCombobox.setItems(hours);
-	}
-
-	@Override
-	/**
 	 * This method is called in order to set pre-info into the GUI components,
 	 * according to the object parameter it gets
 	 * 
@@ -869,5 +857,13 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			typeLbl.setText((isGroupReservation == true ? "Guided Group | Your Id: " : "Regular Group | Your Id: ")
 					+ booking.getIdNumber());
 		}
+	}
+	
+	@Override
+	/**
+	 * This method returns the screen's name
+	 */
+	public String getScreenTitle() {
+		return "Booking Reservations";
 	}
 }

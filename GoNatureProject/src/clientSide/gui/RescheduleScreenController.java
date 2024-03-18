@@ -244,14 +244,11 @@ public class RescheduleScreenController extends AbstractScreen {
 					booking.setPaid(true);
 					booking.setFinalPrice(isGroupReservation ? preOrderPrice : discountPrice);
 					// updating the payment columns in the database
-					///////////////////////////////////////////////////
-					///// maybe transfer it to the payment screen /////
-					///////////////////////////////////////////////////
 					control.updateBookingPayment(booking);
 					// showing the payment screen
 					try {
-						ScreenManager.getInstance().showScreen("LoadingScreenController",
-								"/clientSide/fxml/LoadingScreen.fxml", true, false,
+						ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
+								"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
 								StageSettings.defaultSettings("Payment"),
 								new Pair<Booking, ParkVisitor>(booking, visitor));
 					} catch (StatefulException | ScreenException e) {

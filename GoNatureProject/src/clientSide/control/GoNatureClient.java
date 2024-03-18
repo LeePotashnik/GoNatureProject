@@ -72,9 +72,7 @@ public class GoNatureClient extends AbstractClient {
 			}
 
 			// if the original request was a transaction request
-			System.out.println("Original request type: " + originalRequest.getCommunicationType());
 			if (originalRequest.getCommunicationType() == CommunicationType.TRANSACTION) {
-				System.out.println("Server response result: " + serverMessage.getQueryResult());
 				originalRequest.setQueryResult(serverMessage.getQueryResult());
 			}
 			return;

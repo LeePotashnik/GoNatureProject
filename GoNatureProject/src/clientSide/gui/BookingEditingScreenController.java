@@ -105,6 +105,9 @@ public class BookingEditingScreenController extends BookingScreenController {
 		case 2: // chose to cancel
 			if (control.deleteBooking(booking, Communication.activeBookings)) {
 				if (control.insertBookingToCancelledTable(booking, Communication.userCancelled)) {
+					new Thread(() -> {
+						control.sendNotification(booking, true);
+					}).start();
 					// showing the cancellation screen
 					try {
 						ScreenManager.getInstance().showScreen("CancellationScreenController",
@@ -115,8 +118,6 @@ public class BookingEditingScreenController extends BookingScreenController {
 						e.printStackTrace();
 					}
 				}
-			} else {
-
 			}
 			event.consume();
 		}
@@ -488,7 +489,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 		} else {
 			payMessage += "\nYour reservation's final price (after pre-order discount) is: " + discountPrice + "$";
 		}
-		
+
 		if (booking.isPaid()) {
 			payMessage += "\nYour old booking was paid. This payment will be refunded.";
 		}

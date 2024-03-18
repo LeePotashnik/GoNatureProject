@@ -2,6 +2,7 @@ package clientSide.gui;
 
 import java.util.ArrayList;
 
+import clientSide.control.BookingController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
@@ -9,42 +10,62 @@ import common.controllers.StageSettings;
 import common.controllers.StatefulException;
 import entities.Booking;
 import entities.ParkVisitor;
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.util.Duration;
 import javafx.util.Pair;
 
 public class PaymentSystemScreenController extends AbstractScreen {
 	private Booking booking;
 	private Pair<Booking, ParkVisitor> pair;
 
+	// properties for the images anymation
+	private final static int IMAGE_VIEW_COUNT = 3; // Display 3 images at a time
+	private final ArrayList<String> imagePaths = new ArrayList<>(); // List to hold all your image paths
+	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT]; // Array for ImageViews
+	private int currentIndex = 0; // Index to track current image set
+
 	@FXML
-	private Label amountLbl;
+	private ImageView goNatureLogo, image1, image2, image3, visaImage, mastercardImage, amexImage;
+	@FXML
+	private HBox hbox;
+	@FXML
+	private Label amountLbl, waitLabel, label1, label2, label3, label4, label5;
 	@FXML
 	private Button processPayment;
 	@FXML
 	private TextField cardNumber1Txt, cardNumber2Txt, cardNumber3Txt, cardNumber4Txt, cvvTxt, holderNameTxt;
 	@FXML
-	private ImageView goNatureLogo;
-	@FXML
 	private ComboBox<String> monthComboBox;
 	@FXML
 	private ComboBox<String> yearComboBox;
+	@FXML
+	private ProgressIndicator progressIndicator;
+	@FXML
+	private Pane pane;
 
 	/////////////////////////////
 	/// ACTION EVENTS METHODS ///
 	/////////////////////////////
-	
+
 	/**
 	 * Processes the payment when the 'Process Payment' button is clicked. Validates
 	 * the payment information and navigates to the confirmation screen if
@@ -56,13 +77,23 @@ public class PaymentSystemScreenController extends AbstractScreen {
 	void processPayment(ActionEvent event) {
 		boolean valid = paymentValidation();
 		if (valid) {
-			try {
-				ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-						"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
-						StageSettings.defaultSettings("Confirmation"), pair);
-			} catch (StatefulException | ScreenException e1) {
-				e1.printStackTrace();
-			}
+			setVisible(false);
+
+			PauseTransition pause = new PauseTransition(Duration.seconds(2));
+			pause.setOnFinished(e -> {
+				try {
+					new Thread(() -> {
+						BookingController.getInstance().sendNotification(booking, false);
+					}).start();
+
+					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+							"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
+							StageSettings.defaultSettings("Confirmation"), pair);
+				} catch (StatefulException | ScreenException e1) {
+					e1.printStackTrace();
+				}
+			});
+			pause.play();
 		}
 	}
 
@@ -79,7 +110,7 @@ public class PaymentSystemScreenController extends AbstractScreen {
 //		ScreenManager.getInstance().goToPreviousScreen(false, true);
 //
 //	}
-	
+
 	///////////////////////////////////
 	/// JAVAFX FLOW CONTROL METHODS ///
 	///////////////////////////////////
@@ -125,7 +156,7 @@ public class PaymentSystemScreenController extends AbstractScreen {
 			cvvTxt.requestFocus();
 		}
 	}
-	
+
 	////////////////////////
 	/// INSTANCE METHODS ///
 	////////////////////////
@@ -174,7 +205,7 @@ public class PaymentSystemScreenController extends AbstractScreen {
 		}
 		// Validate ComboBox selections
 		if (!validateComboBoxSelection(monthComboBox)) {
-			yearComboBox.setStyle(setFieldToError());
+			monthComboBox.setStyle(setFieldToError());
 			showMessage += "\n- Month is not valid.";
 			valid = false;
 		}
@@ -199,6 +230,71 @@ public class PaymentSystemScreenController extends AbstractScreen {
 			showErrorAlert(ScreenManager.getInstance().getStage(), "Errors:" + showMessage);
 		}
 		return valid; // All validations passed
+	}
+
+	/**
+	 * This method starts the slide show animation of the parks images
+	 */
+	private void startSlideshow() {
+		// Create a runnable task for changing images
+		Runnable changeImagesTask = () -> {
+			if (currentIndex >= imagePaths.size()) {
+				currentIndex = 0; // Reset index to loop
+			}
+
+			for (int i = 0; i < IMAGE_VIEW_COUNT; i++) {
+				final int imageIndex = (currentIndex + i) % imagePaths.size();
+				ImageView imageView = imageViews[i];
+				Image newImage = new Image(imagePaths.get(imageIndex));
+
+				// Apply fade-out transition on image change
+				FadeTransition fadeOut = new FadeTransition(Duration.millis(1000), imageView);
+				fadeOut.setFromValue(1.0);
+				fadeOut.setToValue(0.0);
+				fadeOut.setDelay(Duration.millis(i * 1000));
+				fadeOut.setOnFinished(event -> {
+					imageView.setImage(newImage);
+					FadeTransition fadeIn = new FadeTransition(Duration.millis(1000), imageView);
+					fadeIn.setFromValue(0.0);
+					fadeIn.setToValue(1.0);
+					fadeIn.play();
+				});
+				fadeOut.play();
+			}
+			currentIndex += IMAGE_VIEW_COUNT; // Move to the next set of images
+		};
+
+		// Schedule the task to run periodically
+		javafx.animation.Timeline timeline = new javafx.animation.Timeline(
+				new javafx.animation.KeyFrame(Duration.seconds(5), // Change images every 5 seconds
+						event -> changeImagesTask.run()));
+		timeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
+		timeline.play();
+	}
+
+	/**
+	 * This method is used in order to add all parks images paths to the array list
+	 */
+	private void setParksPaths() {
+		if (imagePaths == null || imagePaths.isEmpty()) {
+			imagePaths.add("/acadia.jpg");
+			imagePaths.add("/big_bend.jpg");
+			imagePaths.add("/congaree.jpg");
+			imagePaths.add("/everglades.jpg");
+			imagePaths.add("/gateway_arch.jpg");
+			imagePaths.add("/glacier.jpg");
+			imagePaths.add("/grand_canyon.jpg");
+			imagePaths.add("/great_smoky_mountains.jpg");
+			imagePaths.add("/hawaii_volcanoes.jpg");
+			imagePaths.add("/hot_springs.jpg");
+			imagePaths.add("/mammoth_cave.jpg");
+			imagePaths.add("/olympic.jpg");
+			imagePaths.add("/shenandoah.jpg");
+			imagePaths.add("/theodore_roosevelt.jpg");
+			imagePaths.add("/voyageurs.jpg");
+			imagePaths.add("/yellowstone.jpg");
+			imagePaths.add("/yosemite.jpg");
+		}
 	}
 
 	/**
@@ -259,7 +355,7 @@ public class PaymentSystemScreenController extends AbstractScreen {
 
 	public void updateAmountLabel() {
 		amountLbl.setText(String.valueOf(booking.getFinalPrice()) + "$"); // Update the label's text programmatically
-    }
+	}
 
 	/**
 	 * Populates the month ComboBox with month numbers.
@@ -285,7 +381,37 @@ public class PaymentSystemScreenController extends AbstractScreen {
 		}
 		yearComboBox.setItems(FXCollections.observableArrayList(years)); // Set all items at once
 	}
-	
+
+	/**
+	 * This method is used to hide/show all elements but the progress indicator and
+	 * its label
+	 * 
+	 * @param visible
+	 */
+	private void setVisible(boolean visible) {
+		progressIndicator.setVisible(!visible);
+		waitLabel.setVisible(!visible);
+		visaImage.setVisible(visible);
+		mastercardImage.setVisible(visible);
+		amexImage.setVisible(visible);
+		label1.setVisible(visible);
+		label2.setVisible(visible);
+		label3.setVisible(visible);
+		label4.setVisible(visible);
+		label5.setVisible(visible);
+		amountLbl.setVisible(visible);
+		processPayment.setVisible(visible);
+		cardNumber1Txt.setVisible(visible);
+		cardNumber2Txt.setVisible(visible);
+		cardNumber3Txt.setVisible(visible);
+		cardNumber4Txt.setVisible(visible);
+		cvvTxt.setVisible(visible);
+		holderNameTxt.setVisible(visible);
+		monthComboBox.setVisible(visible);
+		yearComboBox.setVisible(visible);
+
+	}
+
 	///////////////////////////////
 	/// ABSTRACT SCREEN METHODS ///
 	///////////////////////////////
@@ -297,6 +423,22 @@ public class PaymentSystemScreenController extends AbstractScreen {
 	 */
 	@Override
 	public void initialize() {
+		// setting the image view array
+		imageViews[0] = image1;
+		imageViews[1] = image2;
+		imageViews[2] = image3;
+
+		// setting the park images paths
+		setParksPaths();
+
+		// setting 3 first images
+		imageViews[0].setImage(new Image(imagePaths.get(0)));
+		imageViews[1].setImage(new Image(imagePaths.get(1)));
+		imageViews[2].setImage(new Image(imagePaths.get(2)));
+		currentIndex = 3;
+
+		startSlideshow();
+
 		populateMonthComboBox();
 		populateYearComboBox();
 		setupTextField(cardNumber1Txt, cardNumber2Txt);
@@ -310,6 +452,16 @@ public class PaymentSystemScreenController extends AbstractScreen {
 				cvvTxt.setText(newValue.substring(0, 3)); // Truncate to 3 digits
 			}
 		});
+
+		// setting and hiding the porgress indicator and its label
+		progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+		progressIndicator.layoutXProperty()
+				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
+		progressIndicator.setVisible(false);
+		waitLabel.setText("Proccessing Payment...");
+		waitLabel.setAlignment(Pos.CENTER);
+		waitLabel.layoutXProperty().bind(pane.widthProperty().subtract(waitLabel.widthProperty()).divide(2));
+		waitLabel.setVisible(false);
 	}
 
 	/**

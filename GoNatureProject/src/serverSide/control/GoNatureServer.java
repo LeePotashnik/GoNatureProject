@@ -3,6 +3,7 @@ package serverSide.control;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import common.communication.Communication;
 import common.communication.Communication.ClientMessageType;
@@ -18,6 +19,7 @@ public class GoNatureServer extends AbstractServer {
 	private DatabaseController database;
 	private BackgroundManager backgroundManager;
 	private ArrayList<ConnectionToClient> clientsConnected = new ArrayList<>();
+	private NotificationsController notifications = NotificationsController.getInstance();
 
 	/**
 	 * The constructor creates a new server on the given port, and also creates an
@@ -133,23 +135,30 @@ public class GoNatureServer extends AbstractServer {
 				boolean deleteQueryResult = database.executeDeleteQuery(request);
 				response.setQueryResult(deleteQueryResult);
 				break;
-			default:
-				return;
+			default: // NONE
+				break;
 			}
 
-			//// HERE: SHOULD ADD SOMETHING ABOUT SCREEN CONQUER /////
-
 			SecondaryRequest secondaryRequest = request.getSecondaryRequest();
-			System.out.println("Secondary: " + secondaryRequest);
 			if (secondaryRequest != null) {
 				// if the original request is an active booking cancellation
 				// there's a need to check the park's waiting list and possibly release some
 				// bookings and transfer them to the active booking table
-				System.out.println(backgroundManager);
 				if (secondaryRequest == SecondaryRequest.UPDATE_WAITING_LIST) {
-					System.out.println("Doing it");
 					backgroundManager.checkWaitingListReleasePossibility(request.getParkId(), request.getDate(),
 							request.getTime());
+				}
+				else if (secondaryRequest == SecondaryRequest.SEND_CONFIRMATION) {
+					notifications.sendConfirmationEmailNotification(Arrays.asList(request.getEmail(),
+							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
+							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
+							request.isPaid()));
+				}
+				else if (secondaryRequest == SecondaryRequest.SEND_CANCELLATION) {
+					notifications.sendCancellationEmailNotification(Arrays.asList(request.getEmail(),
+							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
+							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
+							request.isPaid()));
 				}
 			}
 
