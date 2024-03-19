@@ -101,8 +101,8 @@ public class LoginScreenConrtroller extends AbstractScreen {
         					showInformationAlert(ScreenManager.getInstance().getStage(),"the user:"+visitorUser.getUsername()+" successfully login");
         					//////////////////////////////////
         					//open the traveler account screen:
-        					//ScreenManager.getInstance().showScreen("TravelerAccountScreen","/clientSide/fxml/TravelerAccountScreen.fxml",
-        					//false, false,StageSettings.defaultSettings("GoNature System - Reservations"), visitorUser);
+        					ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController", "/clientSide/fxml/ParkVisitorAccountScreen.fxml", false,
+        							false, StageSettings.defaultSettings("GoNature System - Booking Managing"), visitorUser);
         				}
         			}
         			//case that the exist parkVisitorUser is groupGuide
@@ -119,8 +119,8 @@ public class LoginScreenConrtroller extends AbstractScreen {
             					/////////////////////////////
             					
             					//open the groupGuide account screen:
-            					//ScreenManager.getInstance().showScreen("GroupGuideAccountScreen","/clientSide/fxml/GroupGuideAccount.fxml",
-            					//false, false,StageSettings.defaultSettings("GoNature System - Reservations"), visitorUser);
+            					ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController", "/clientSide/fxml/ParkVisitorAccountScreen.fxml", false,
+            							false, StageSettings.defaultSettings("GoNature System - Booking Managing"), visitorUser);
             				}
             			}
             		}      			
@@ -152,16 +152,19 @@ public class LoginScreenConrtroller extends AbstractScreen {
             				if(LoginController.updateUserIsLoggedIn("park_manager","parkManagerId",stuffUser.getIdNumber()))  //update in the DB that the stuffUser is logged in
             				{
             					//update that the stuffUser is logged in, in the instance field
+            		    		System.out.println("ParkManager is logged in");
+
             					stuffUser.setLoggedIn(true);
             					showInformationAlert(ScreenManager.getInstance().getStage(),"the user:"+stuffUser.getUsername()+" successfully login");
             					//open the ParkManager account screen:
-            					//ScreenManager.getInstance().showScreen("ParkManagerAccountScreen","/clientSide/fxml/ParkManagerScreen.fxml",
-                    					//false, false,StageSettings.defaultSettings("GoNature System - Reservations"), stuffUser);
+            					ScreenManager.getInstance().showScreen("ParkManagerAccountScreenController",
+            									"/clientSide/fxml/ParkManagerAccountScreen.fxml", false, false,
+            									StageSettings.defaultSettings("GoNature System - Client Connection"), stuffUser);
             				}
             			}
             			
             			//case that the exist stuffUser is DepartmentManager:
-            			if(stuffUser instanceof DepartmentManager ) 
+            			else if(stuffUser instanceof DepartmentManager ) 
             			{
             				if(LoginController.updateUserIsLoggedIn("department_manager","departmentManagerId",stuffUser.getIdNumber()))  //update in the DB that the stuffUser is logged in
             				{
@@ -171,13 +174,14 @@ public class LoginScreenConrtroller extends AbstractScreen {
             					showInformationAlert(ScreenManager.getInstance().getStage(),"the user:"+stuffUser.getUsername()+" successfully login");
             					/////////////////////////////////////////////////////////////
             					//open the ParkManager account screen:
-            					//ScreenManager.getInstance().showScreen("DepartmentManagerAccountScreen","/clientSide/fxml/DepartmentManagerScreen.fxml",
-                    					//false, false,StageSettings.defaultSettings("GoNature System - Reservations"), stuffUser);
+            					ScreenManager.getInstance().showScreen("DepartmentManagerAccountScreenController",
+            							"/clientSide/fxml/DepartmentManagerAccountScreen.fxml", false, false,
+            							StageSettings.defaultSettings("GoNature System - Client Connection"), stuffUser);
             				}
             			}
             			
             			//case that the exist stuffUser is ParkEmployee:
-            			if(stuffUser instanceof ParkEmployee ) 
+            			else  
             			{
             				//find the name of the table where we found the user:
             			
@@ -196,8 +200,9 @@ public class LoginScreenConrtroller extends AbstractScreen {
             					showInformationAlert(ScreenManager.getInstance().getStage(),"the user:"+stuffUser.getUsername()+" successfully login");
             					//////////////////////////////////////////////////////////
             					//open the ParkManager account screen:
-            					//ScreenManager.getInstance().showScreen("DepartmentManagerAccountScreen","/clientSide/fxml/DepartmentManagerScreen.fxml",
-                    					//false, false,StageSettings.defaultSettings("GoNature System - Reservations"), stuffUser);
+            					ScreenManager.getInstance().showScreen("ParkEmployeeAccountScreenController",
+            									"/clientSide/fxml/ParkEmployeeAccountScreen.fxml", false, false,
+            									StageSettings.defaultSettings("GoNature System - Client Connection"), stuffUser);
             				}
             			}
             		}            		

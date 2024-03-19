@@ -2,6 +2,7 @@ package clientSide.gui;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Arrays;
 
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
@@ -24,6 +25,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.util.Pair;
 
 public class ParkEntryManagementScreenController extends AbstractScreen implements Stateful{
 
@@ -112,7 +114,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen implemen
 			return;
 		}
 	
-		if (booking.getTimeOfVisit().plusHours(park.getTimeLimit()).isBefore(LocalTime.now())) {
+		if (booking.getTimeOfVisit().plusHours(park.getTimeLimit()).isAfter(LocalTime.now())) {
 			//Checking if the visitor did not arrive after his time limit has expired
 			showErrorAlert(ScreenManager.getInstance().getStage(), "The visitor missed his time reservation.");
 			return;
@@ -120,7 +122,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen implemen
 		
 		if (LocalTime.now().isBefore(booking.getTimeOfVisit())) {
 			//Checking if the visitor did not arrive earlier than his reservation
-			showErrorAlert(ScreenManager.getInstance().getStage(), "The visitor arrived to early.");
+			showErrorAlert(ScreenManager.getInstance().getStage(), "The visitor arrived too early.");
 			return;
 		}
 		
@@ -128,9 +130,30 @@ public class ParkEntryManagementScreenController extends AbstractScreen implemen
 		int updateCapacity = park.getCurrentCapacity() + booking.getNumberOfVisitors();
 		if(parkControl.updateCurrentCapacity(parkTable,updateCapacity))//updates park current capacity
 			System.out.println("Park capacity updated");
-		if (!booking.isPaid()) 
+		if (!booking.isPaid()) {//needs to update DB: "paid" ?
+			int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+					"Please charge the customer: " + booking.getFinalPrice(),
+					Arrays.asList("Cash", "CreditCard"));
+			if (decision == 2) {// if the user clicked on "Credit Card" he will redirect to pay screen and then to confirmation screen
+				event.consume();
+				try {
+					ScreenManager.getInstance().showScreen("PaymentSystemScreenController", "/clientSide/fxml/PaymentSystemScreen.fxml",
+							true, false, StageSettings.defaultSettings("Payment"), new Pair<Booking, ParkEmployee>(booking, parkEmployee));
+				} catch (StatefulException | ScreenException e) {
+					e.printStackTrace();
+				} 
+			}// else // user clicked on "Cash", showing the confirmation screen
+			//	try {
+			//		ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+			//				"/clientSide/fxml/ConfirmationScreen.fxml", true, true,
+			//				StageSettings.defaultSettings("Confirmation"), new Pair<Booking, ParkEmployee>(booking, parkEmployee));
+			//	} catch (StatefulException | ScreenException e) {
+			//		e.printStackTrace();
+			//	}		
 			if(parkControl.payForBooking(parkTable)) //
 				System.out.println("Payment successful.");
+			
+		}
     } 
 
     /**
