@@ -69,7 +69,8 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
         else 
         	showErrorAlert(ScreenManager.getInstance().getStage(), "Failed to log out");
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(false,false);
+    		ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml", true,
+    				false, StageSettings.defaultSettings("GoNature System - Reservations"), null);
 		} catch (ScreenException | StatefulException e) {
 			e.printStackTrace();
 		}
