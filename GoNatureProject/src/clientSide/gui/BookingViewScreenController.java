@@ -15,6 +15,7 @@ import common.controllers.StatefulException;
 import entities.Booking;
 import entities.Park;
 import entities.ParkVisitor;
+import entities.ParkVisitor.VisitorType;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ObservableList;

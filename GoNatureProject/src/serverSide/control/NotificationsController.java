@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -151,7 +150,6 @@ public class NotificationsController {
 	 *                  sent.
 	 */
 	public void sendReminderEmailNotification(List<Object> details) {
-		details = (ArrayList<Object>) details;
 		String emailAddress = (String) details.get(0);
 // 		String phoneNumber = (String)details.get(1);
 		String parkName = (String) details.get(2);
@@ -159,9 +157,9 @@ public class NotificationsController {
 		LocalTime timeOfVisit = (LocalTime) details.get(4);
 		String fullName = (String) details.get(5);
 		String parkLocation = (String) details.get(6);
-		Integer numberOfVisitors = (int) details.get(7);
-		Integer finalPrice = (int) details.get(8);
-		boolean isPaid = (boolean) details.get(9);
+		Integer numberOfVisitors = (Integer) details.get(7);
+		Integer finalPrice = (Integer) details.get(8);
+		Boolean isPaid = (Boolean) details.get(9);
 		String message = "Hello, " + fullName + "!";
 		message += "\n\nWe hope this message finds you well.";
 		message += "\nThis is a gentle reminder that your reservation is scheduled for tomorrow.";

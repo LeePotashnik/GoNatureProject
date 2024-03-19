@@ -20,6 +20,7 @@ public class GoNatureServer extends AbstractServer {
 	private BackgroundManager backgroundManager;
 	private ArrayList<ConnectionToClient> clientsConnected = new ArrayList<>();
 	private NotificationsController notifications = NotificationsController.getInstance();
+	private StaffController staffController;
 
 	/**
 	 * The constructor creates a new server on the given port, and also creates an
@@ -50,6 +51,9 @@ public class GoNatureServer extends AbstractServer {
 		if (database == null)
 			throw new NullPointerException();
 		backgroundManager = new BackgroundManager(database);
+
+		// starting the background operations
+		backgroundManager.startBackgroundOperations();
 	}
 
 	@Override
@@ -94,6 +98,18 @@ public class GoNatureServer extends AbstractServer {
 	 */
 	public boolean areAllClientsDisconnected() {
 		return clientsConnected.size() == 0;
+	}
+
+	/**
+	 * This method is called in order to import users data from the Users Management
+	 * System into GoNature database
+	 */
+	public boolean importUsersFromExternalSystem() {
+		if (staffController == null) {
+			staffController = new StaffController(database);
+		}
+		// initiating the users import from the external system into the database
+		return staffController.importUsers();
 	}
 
 	@Override
@@ -147,14 +163,12 @@ public class GoNatureServer extends AbstractServer {
 				if (secondaryRequest == SecondaryRequest.UPDATE_WAITING_LIST) {
 					backgroundManager.checkWaitingListReleasePossibility(request.getParkId(), request.getDate(),
 							request.getTime());
-				}
-				else if (secondaryRequest == SecondaryRequest.SEND_CONFIRMATION) {
+				} else if (secondaryRequest == SecondaryRequest.SEND_CONFIRMATION) {
 					notifications.sendConfirmationEmailNotification(Arrays.asList(request.getEmail(),
 							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
 							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
 							request.isPaid()));
-				}
-				else if (secondaryRequest == SecondaryRequest.SEND_CANCELLATION) {
+				} else if (secondaryRequest == SecondaryRequest.SEND_CANCELLATION) {
 					notifications.sendCancellationEmailNotification(Arrays.asList(request.getEmail(),
 							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
 							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),

@@ -21,7 +21,7 @@ public class GoNatureClientUI extends Application {
 	 * Runs the client-side connection screen
 	 */
 	@Override
-	public void start(Stage arg0) throws Exception {
+	public void start(Stage arg0) throws Exception {		
 		ScreenManager.getInstance().showScreen("ClientConnectionController",
 				"/clientSide/fxml/ClientConnection.fxml", false, false,
 				StageSettings.defaultSettings("GoNature System - Client Connection"), "localhost 5555");

@@ -32,6 +32,7 @@ public class Communication implements Serializable {
 	public static final String traveller = "traveller";
 	public static final String griupGuide = "group_guide";
 	public static final String representative = "representative";
+	public static final String systemUser = "system_users";
 	// tables in context of management
 	public static final String invoice = "invoice";
 	public static final String park = "park";
