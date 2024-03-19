@@ -19,6 +19,7 @@ import entities.Booking;
 public class ParkController {
 	private static ParkController instance;
 	private Park park;
+	private ArrayList<Park> parks;
 
 	private ParkController() {
 		
@@ -36,6 +37,14 @@ public class ParkController {
 
 	public void savePark(Park park) {
 		this.park = park;
+	}
+	
+	public ArrayList<Park> restoreParkList() {
+		return parks;
+	}
+
+	public void saveParkList(ArrayList<Park> parks) {
+		this.parks = parks;
 	}
 	
 	public String nameOfTable(Park park) {
@@ -288,40 +297,30 @@ public class ParkController {
     }
     
     /**
-     * !!!!! The method will likely be deleted, but if someone needs it, please tell me!!!!!!!
-     * A 'SELECT' SQL query is generated to access one of the park_active_booking tables in the database, 
-     * and it checks if there is a value at a specific time on the relevant day
-     * @param park
+     * @param table
+     * @param bookingID
      * @return 
-     * 		It returns true if the field is still null And it is the correct date, otherwise returns false. 
+     * An 'UPDATE' SQL query is generated to access the relevant table in the database and change the 'confirmed' 
+     * field to true (represents by '1'. 
+     * This indicating the traveler intends to arrive
+     * It returns a boolean if the update succeed, otherwise false
      */
-    /*
-    public boolean checkTimeAndDate(String table, String timeField, Booking booking) {	
+    public boolean updateConfirmed(String table, String bookingID) {
     	Communication request = new Communication(CommunicationType.QUERY_REQUEST);
     	try {
-			request.setQueryType(QueryType.SELECT);
-	    	request.setTables(Arrays.asList(table));
-	    	request.setSelectColumns(Arrays.asList(timeField));
-	    	request.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit"),
-					Arrays.asList("=", "AND", ">", "AND", "<"),
-					Arrays.asList(booking.getDayOfVisit(), booking.getTimeOfVisit().minusHours(park.getTimeLimit()),
-							booking.getTimeOfVisit().plusHours(park.getTimeLimit())));
-	    	System.out.println(LocalDate.now());
+			request.setQueryType(QueryType.UPDATE);
+	    	request.setTables(Arrays.asList(table + "_park_active_booking"));
+	    	request.setColumnsAndValues(Arrays.asList("confirmed"), Arrays.asList('1'));
+	    	request.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="),Arrays.asList(bookingID));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
     	GoNatureClientUI.client.accept(request);
-    	ArrayList<Object[]> result = request.getResultList();
-        if (!result.isEmpty()) {
-            Object[] row = result.get(0);
-            LocalDate time = LocalDate.parse(row[3].toString());
-            //in this case, the booking is for the correct date.
-            if (time != null)
-            	return false;   //the relevant field time has value already.			
-        }	
-		return true;
-    } 
-    */
+		boolean result=request.getQueryResult();
+		if (result)
+			return true;
+		return false;   
+    }
     
     /**
      * @param park
@@ -462,7 +461,7 @@ public class ParkController {
 					newBooking.getFinalPrice(), newBooking.getEntryParkTime(), LocalTime.now()));
 		        System.out.println("inserted to done bookings");
 		        break;
-			case "cancelled":
+			case "canceled":
 		    	insertRequest.setColumnsAndValues(Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking",
 			    	"visitType", "numberOfVisitors", "idNumber", "firstName", "lastName", "emailAddress", "phoneNumber",
 			    	"cancellationReason"),

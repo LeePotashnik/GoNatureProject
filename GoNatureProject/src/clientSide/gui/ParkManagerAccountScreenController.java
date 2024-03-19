@@ -80,11 +80,17 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
     /**
      * @param event
      * When the 'Reports' button is pressed, 
-     * the park MANAGER will be redirected to the 'ParkManagerReportsScreen'
+     * the park MANAGER will be redirected to the 'ParkManagerReportScreen'
      */
     @FXML
     void GoToParkManagerReportsScreen(ActionEvent event) {
-
+    	try {
+			ScreenManager.getInstance().showScreen("ParkManagerReportScreenController",
+					"/clientSide/fxml/ParkManagerReportScreen.fxml", false, true,
+					StageSettings.defaultSettings("GoNature System - Client Connection"), parkManager);
+		} catch (StatefulException | ScreenException e) {
+			e.printStackTrace();
+		}
     }
 
 
@@ -100,7 +106,8 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
         else 
         	showErrorAlert(ScreenManager.getInstance().getStage(), "Failed to log out");
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(false,false);
+    		ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml", true,
+    				false, StageSettings.defaultSettings("GoNature System - Reservations"), null);
 		} catch (ScreenException | StatefulException e) {
 			e.printStackTrace();
 		}

@@ -61,7 +61,13 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
      */
     @FXML
     void GoToReportsScreen(ActionEvent event) {
-    	
+    	try {
+			ScreenManager.getInstance().showScreen("DepartmentManagerReportsScreenController",
+					"/clientSide/fxml/DepartmentManagerReportsScreen.fxml", false, true,
+					StageSettings.defaultSettings("GoNature System - Client Connection"), departmentManager);
+		} catch (StatefulException | ScreenException e) {
+			e.printStackTrace();
+		}
     }
 
   /**
@@ -107,7 +113,8 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
         else 
         	showErrorAlert(ScreenManager.getInstance().getStage(), "Failed to log out");
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(false,false);
+    		ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml", true,
+    				false, StageSettings.defaultSettings("GoNature System - Reservations"), null);
 		} catch (ScreenException | StatefulException e) {
 			e.printStackTrace();
 		}
@@ -174,20 +181,22 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
 
 	@Override
 	public String getScreenTitle() { //need to check
-		return null;
+		return screenTitle;
 	}
 
 	@Override
 	public void saveState() {
 		userControl.saveUser(departmentManager);
-		userControl.saveTitle(screenTitle);		
+		userControl.saveTitle(screenTitle);
+		parkControl.saveParkList(parks);
 	}
 
 	@Override
 	public void restoreState() {
 		departmentManager = (DepartmentManager) userControl.restoreUser();
+		this.parks = parkControl.restoreParkList();
 		this.privateName.setText("Hello " + departmentManager.getFirstName() + " " + departmentManager.getLastName());
-		userControl.restoreTitle();
+		setScreenTitle(userControl.restoreTitle());
 	    this.privateName.underlineProperty();
 		this.title.setText(screenTitle);
 	    this.title.underlineProperty();

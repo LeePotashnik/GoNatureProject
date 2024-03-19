@@ -29,5 +29,10 @@
             <Font name="Calibri" size="14.0" />
          </font>
       </Button>
+      <Button fx:id="arrivalConfirmationBTN" layoutX="272.0" layoutY="310.0" mnemonicParsing="false" onAction="#ArrivalConfirmationPopUp" text="Arrival Confirmation">
+         <font>
+            <Font name="Calibri" size="14.0" />
+         </font>
+      </Button>
    </children>
 </Pane>
