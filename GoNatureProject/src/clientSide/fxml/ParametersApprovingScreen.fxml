@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParametersApprovingScreenConrtroller">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParametersApprovingScreenConrtroller">
    <children>
       <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="191.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />
       <Label fx:id="titleLbl" layoutX="191.0" layoutY="63.0" prefHeight="38.0" prefWidth="300.0" text="Parameters Approving">
@@ -23,11 +23,11 @@
         <columns>
             <TableColumn fx:id="parkNameColumn" prefWidth="122.0" text="ParkName" />
           <TableColumn fx:id="dayColumn" prefWidth="79.0" sortable="false" text=" Day " />
-            <TableColumn fx:id="timeColumn" minWidth="0.0" prefWidth="81.0" sortable="false" text=" Time" />
-            <TableColumn fx:id="byColumn" minWidth="0.0" prefWidth="96.0" sortable="false" text=" By" />
-            <TableColumn fx:id="beforeColumn" prefWidth="77.0" sortable="false" text=" Before" />
-            <TableColumn fx:id="afterColumn" minWidth="0.0" prefWidth="73.0" sortable="false" text=" After" />
-          <TableColumn fx:id="typeColumn" minWidth="0.0" prefWidth="118.0" sortable="false" text=" Type" />
+            <TableColumn fx:id="timeColumn" minWidth="0.0" prefWidth="60.00001525878906" sortable="false" text=" Time" />
+            <TableColumn fx:id="byColumn" minWidth="0.0" prefWidth="92.0" sortable="false" text=" By" />
+            <TableColumn fx:id="beforeColumn" prefWidth="60.6666259765625" sortable="false" text=" Before" />
+            <TableColumn fx:id="afterColumn" minWidth="0.0" prefWidth="71.33331298828125" sortable="false" text=" After" />
+          <TableColumn fx:id="typeColumn" minWidth="0.0" prefWidth="130.00006103515625" sortable="false" text=" Type" />
         </columns>
       </TableView>
       <Button fx:id="returnToAccountBtn" layoutX="26.0" layoutY="443.0" mnemonicParsing="false" onAction="#returnToAccount" text="Return to Account">
