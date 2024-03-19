@@ -5,6 +5,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import clientSide.control.BookingController;
 import clientSide.control.ParkController;
@@ -20,6 +21,8 @@ import entities.Booking.VisitType;
 import entities.Park;
 import entities.ParkVisitor;
 import entities.ParkVisitor.VisitorType;
+import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -32,6 +35,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -39,6 +43,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.util.Duration;
 import javafx.util.Pair;
 
 /**
@@ -56,7 +61,6 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 	// the user enters the screen with a visitor instance or only with an id number
 	private ParkVisitor visitor;
-	private String userId;
 	private boolean isGroupReservation; // determines if this is a regular or guided group
 
 	// booking objects and data
@@ -76,7 +80,8 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	//////////////////////////////////
 
 	@FXML
-	private Label nameLbl, dateLbl, emailLbl, hourLbl, parkLbl, phoneLbl, visitorsLbl, titleLbl, bookingLbl, typeLbl;
+	private Label nameLbl, dateLbl, emailLbl, hourLbl, parkLbl, phoneLbl, visitorsLbl, titleLbl, bookingLbl, typeLbl,
+			waitLabel;
 	@FXML
 	private Button backButton, makeReservationBtn;
 	@FXML
@@ -91,6 +96,8 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	private TextField firstNameTxt, lastNameTxt, emailTxt, phoneTxt, visitorsTxt;
 	@FXML
 	private Pane pane;
+	@FXML
+	private ProgressIndicator progressIndicator;
 
 	//////////////////////////////
 	/// EVENT HANDLING METHODS ///
@@ -109,21 +116,32 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			event.consume();
 			return;
 		}
+
 		// creating a booking object with the entered details
 		makeBookingObject();
+		setVisible(false);
 
-		// checking the park availability for the chosen date and time
-		boolean isAvailable = control.checkParkAvailabilityForNewBooking(booking);
+		AtomicBoolean isAvailable = new AtomicBoolean(false);
+		// moving the data fetching operation to a background thread
+		new Thread(() -> {
+			// checking the park availability for the chosen date and time
+			boolean availability = control.checkParkAvailabilityForNewBooking(booking);
+			isAvailable.set(availability);
 
-		if (!isAvailable) { // if the entered date and time are not available
+			// once fetching is complete, updating the UI on the JavaFX Application Thread
+			Platform.runLater(() -> {
+				setVisible(true);
+				if (!isAvailable.get()) { // if the entered date and time are not available
 
-			dateIsNotAvailable();
-		}
+					dateIsNotAvailable();
+				}
 
-		else { // if the date and time are available
+				else { // if the date and time are available
 
-			dateIsAvailable();
-		}
+					dateIsAvailable();
+				}
+			});
+		}).start();
 	}
 
 	/**
@@ -146,11 +164,10 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			payMessage += "\nPay now and get a special discount for paying ahead:";
 			payMessage += "\n        Your reservation's final price: " + discountPrice + "$";
 			payMessage += "\n        Your reservetion's price after paying ahead discount: " + preOrderPrice + "$";
-		}
-		else {
+		} else {
 			payMessage += "\nYour reservation's final price (after pre-order discount) is: " + discountPrice + "$";
 		}
-		
+
 		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
 				Arrays.asList("Pay Now", "Pay Upon Arrival", "Cancel Reservation"));
 
@@ -163,9 +180,9 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			control.updateBookingPayment(booking);
 			// showing the payment screen
 			try {
-				ScreenManager.getInstance().showScreen("PaymentSystemScreenController", "/clientSide/fxml/PaymentSystemScreen.fxml",
-						true, false, StageSettings.defaultSettings("Payment"),
-						new Pair<Booking, ParkVisitor>(booking, visitor));
+				ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
+						"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
+						StageSettings.defaultSettings("Payment"), new Pair<Booking, ParkVisitor>(booking, visitor));
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
@@ -176,18 +193,31 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		case 2: {
 			booking.setPaid(false);
 			booking.setFinalPrice(discountPrice);
-			// updating the payment columns in the database
-			control.updateBookingPayment(booking);
-			// showing the confirmation screen
-			control.sendNotification(booking, false);
-			try {
-				ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-						"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
-						StageSettings.defaultSettings("Confirmation"), new Pair<Booking, ParkVisitor>(booking, visitor));
-			} catch (StatefulException | ScreenException e) {
-				e.printStackTrace();
-			}
-			return;
+
+			waitLabel.setText("Processing Your Reservation");
+			setVisible(false);
+
+			PauseTransition pause = new PauseTransition(Duration.seconds(2));
+			pause.setOnFinished(e -> {
+				try {
+					new Thread(() -> {
+						// updating the payment columns in the database
+						control.updateBookingPayment(booking);
+						// showing the confirmation screen
+						control.sendNotification(booking, false);
+					}).start();
+
+					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+							"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
+							StageSettings.defaultSettings("Confirmation"),
+							new Pair<Booking, ParkVisitor>(booking, visitor));
+//					return;
+				} catch (StatefulException | ScreenException e1) {
+					e1.printStackTrace();
+				}
+			});
+			pause.play();
+			break;
 		}
 
 		// chose to cancel reservation
@@ -455,6 +485,33 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	////////////////////////
 
 	/**
+	 * This method is used to hide/show all elements but the progress indicator and
+	 * its label
+	 * 
+	 * @param visible
+	 */
+	private void setVisible(boolean visible) {
+		progressIndicator.setVisible(!visible);
+		waitLabel.setVisible(!visible);
+		parkLbl.setVisible(visible);
+		parkComboBox.setVisible(visible);
+		dateLbl.setVisible(visible);
+		datePicker.setVisible(visible);
+		hourLbl.setVisible(visible);
+		hourCombobox.setVisible(visible);
+		nameLbl.setVisible(visible);
+		firstNameTxt.setVisible(visible);
+		lastNameTxt.setVisible(visible);
+		visitorsLbl.setVisible(visible);
+		visitorsTxt.setVisible(visible);
+		phoneLbl.setVisible(visible);
+		phoneTxt.setVisible(visible);
+		emailLbl.setVisible(visible);
+		emailTxt.setVisible(visible);
+		makeReservationBtn.setDisable(!visible);
+	}
+
+	/**
 	 * This method is called after the button for make reservations is clicked
 	 * Checks and validates all the reservation details
 	 * 
@@ -553,13 +610,13 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 				Park parkDesired = parksList.get(parkIndexInCombobox);
 				if (Integer.parseInt(visitorsTxt.getText()) < control.minimumVisitorsInReservation) {
 					visitorsTxt.setStyle(setFieldToError());
-					error += "• group reservations have to have at least " + control.minimumVisitorsInReservation + " visitors\n";
+					error += "• group reservations have to have at least " + control.minimumVisitorsInReservation
+							+ " visitors\n";
 					valid = false;
 				}
 				if (Integer.parseInt(visitorsTxt.getText()) > parkDesired.getMaximumOrders()) {
 					visitorsTxt.setStyle(setFieldToError());
-					error += "• reservations can't exceed a total of " + parkDesired.getMaximumOrders()
-							+ " visitors\n";
+					error += "• reservations can't exceed a total of " + parkDesired.getMaximumOrders() + " visitors\n";
 					valid = false;
 				}
 			}
@@ -606,9 +663,9 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 					visitor == null ? VisitType.INDIVIDUAL
 							: (visitor.getVisitorType() == VisitorType.GROUPGUIDE ? VisitType.GROUP
 									: VisitType.INDIVIDUAL),
-					Integer.parseInt(visitorsTxt.getText()), visitor == null ? userId : visitor.getIdNumber(),
-					prepareName(firstNameTxt.getText()), prepareName(lastNameTxt.getText()), emailTxt.getText(),
-					phoneTxt.getText(), -1, false, false, null, null, false, null, parkDesired);
+					Integer.parseInt(visitorsTxt.getText()), visitor.getIdNumber(), prepareName(firstNameTxt.getText()),
+					prepareName(lastNameTxt.getText()), emailTxt.getText(), phoneTxt.getText(), -1, false, false, null,
+					null, false, null, parkDesired);
 		}
 	}
 
@@ -672,7 +729,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			}
 		});
 	}
-	
+
 	/**
 	 * This method sets the hours combo box with the relevant hours for visiting
 	 */
@@ -787,6 +844,19 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		setupTextFieldToDigitsOnly(phoneTxt);
 		setupTextFieldToLettersOnly(firstNameTxt);
 		setupTextFieldToLettersOnly(lastNameTxt);
+
+		// setting the labels
+		waitLabel.setAlignment(Pos.CENTER);
+		waitLabel.layoutXProperty().bind(pane.widthProperty().subtract(waitLabel.widthProperty()).divide(2));
+		waitLabel.setText("Checking Park Availability");
+		waitLabel.setStyle("-fx-text-alignment: center;");
+
+		// setting the porgress indicator
+		progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+		progressIndicator.layoutXProperty()
+				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
+
+		setVisible(true);
 	}
 
 	@Override
@@ -801,33 +871,25 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 *                    reschedule screen
 	 */
 	public void loadBefore(Object information) {
-		// in case the user is logged in entered this screen from his account screen
+		// in case the user is logged in (as a group guide) and enters this screen from
+		// his account screen
 		if (information instanceof ParkVisitor) {
 			visitor = (ParkVisitor) information;
 
 			// setting the visitor's details into the text fields
 			firstNameTxt.setText(visitor.getFirstName());
 			lastNameTxt.setText(visitor.getLastName());
-			firstNameTxt.setDisable(true);
-			lastNameTxt.setDisable(true);
+			if (visitor.getVisitorType() == VisitorType.GROUPGUIDE) {
+				firstNameTxt.setDisable(true);
+				lastNameTxt.setDisable(true);
+			}
 			emailTxt.setText(visitor.getEmailAddress());
 			phoneTxt.setText(visitor.getPhoneNumber());
 
 			// setting the reservation type
 			isGroupReservation = visitor.getVisitorType() == VisitorType.GROUPGUIDE ? true : false;
-			typeLbl.setText((isGroupReservation == true ? "Guided Group | Your Id: " : "Regular Group | Your Id: ")
+			typeLbl.setText((isGroupReservation ? "Guided Group | Your Id: " : "Regular Group | Your Id: ")
 					+ visitor.getIdNumber());
-
-			// generating booking id
-			bookingId = ((Integer) (1000000000 + new Random().nextInt(900000000))).toString();
-			bookingLbl.setText("Booking ID: " + bookingId);
-		}
-
-		// in case the user in not logged in, entered only with id from the main screen
-		if (information instanceof String) {
-			userId = (String) information;
-			typeLbl.setText("Regular Group | Your Id: " + userId);
-			isGroupReservation = false;
 
 			// generating booking id
 			bookingId = ((Integer) (1000000000 + new Random().nextInt(900000000))).toString();
@@ -836,9 +898,6 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 		// in case the user returned from the waiting list or reschedule screen
 		if (information instanceof Booking) {
-			// in case the visitor wants to edit his reservation
-			// will arrive this screen after being in the booking managing screenName
-			// or after being in the waiting list screen
 			booking = (Booking) information;
 
 			// setting all the info into the components of the screen
@@ -854,11 +913,11 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			firstNameTxt.setDisable(true);
 			lastNameTxt.setDisable(true);
 			isGroupReservation = booking.getVisitType() == VisitType.GROUP ? true : false;
-			typeLbl.setText((isGroupReservation == true ? "Guided Group | Your Id: " : "Regular Group | Your Id: ")
+			typeLbl.setText((isGroupReservation ? "Guided Group | Your Id: " : "Regular Group | Your Id: ")
 					+ booking.getIdNumber());
 		}
 	}
-	
+
 	@Override
 	/**
 	 * This method returns the screen's name

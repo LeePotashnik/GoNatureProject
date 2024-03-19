@@ -3,6 +3,7 @@ package clientSide.gui;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import clientSide.control.BookingController;
 import clientSide.control.ParkController;
@@ -15,6 +16,7 @@ import entities.Booking;
 import entities.Booking.VisitType;
 import entities.Park;
 import entities.ParkVisitor;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -24,6 +26,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -65,7 +68,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 	//////////////////////////////////
 
 	@FXML
-	private Label dateLbl, hourLbl, parkLbl, visitorsLbl, titleLbl, bookingLbl, typeLbl;
+	private Label dateLbl, hourLbl, parkLbl, visitorsLbl, titleLbl, bookingLbl, typeLbl, waitLabel;
 	@FXML
 	private Button backButton, cancelReservationBtn, updateReservationBtn, availabilityBtn;
 	@FXML
@@ -80,6 +83,8 @@ public class BookingEditingScreenController extends BookingScreenController {
 	private TextField visitorsTxt;
 	@FXML
 	private Pane pane;
+	@FXML
+	private ProgressIndicator progressIndicator;
 
 	//////////////////////////////
 	/// EVENT HANDLING METHODS ///
@@ -103,6 +108,8 @@ public class BookingEditingScreenController extends BookingScreenController {
 			return;
 
 		case 2: // chose to cancel
+			setVisible(false);
+			waitLabel.setText("Cancelling Your Reservation");
 			if (control.deleteBooking(booking, Communication.activeBookings)) {
 				if (control.insertBookingToCancelledTable(booking, Communication.userCancelled)) {
 					new Thread(() -> {
@@ -146,17 +153,45 @@ public class BookingEditingScreenController extends BookingScreenController {
 				clone.setTimeOfVisit(hourCombobox.getValue());
 				clone.setNumberOfVisitors(Integer.parseInt(visitorsTxt.getText()));
 
-				if (control.checkParkAvailabilityForExistingBooking(booking, clone)) {
-					showInformationAlert(ScreenManager.getInstance().getStage(),
-							parkDesired.getParkName() + " Park is available for " + clone.getNumberOfVisitors()
-									+ " visitors on " + clone.getDayOfVisit() + ", " + clone.getTimeOfVisit()
-									+ "\nAvailability can change quickly due to high volume of orders");
-				} else {
-					showInformationAlert(ScreenManager.getInstance().getStage(),
-							"Unfortunately, " + parkDesired.getParkName() + " Park is not available for "
-									+ clone.getNumberOfVisitors() + " visitors on " + clone.getDayOfVisit() + ", "
-									+ clone.getTimeOfVisit());
-				}
+				setVisible(false);
+
+				AtomicBoolean isAvailable = new AtomicBoolean(false);
+				// moving the data fetching operation to a background thread
+				new Thread(() -> {
+					// checking the park availability for the chosen date and time
+					boolean availability = control.checkParkAvailabilityForExistingBooking(booking, clone);
+					isAvailable.set(availability);
+
+					// once fetching is complete, updating the UI on the JavaFX Application Thread
+					Platform.runLater(() -> {
+						setVisible(true);
+						if (!isAvailable.get()) { // if the entered date and time are not available
+							showInformationAlert(ScreenManager.getInstance().getStage(),
+									"Unfortunately, " + parkDesired.getParkName() + " Park is not available for "
+											+ clone.getNumberOfVisitors() + " visitors on " + clone.getDayOfVisit() + ", "
+											+ clone.getTimeOfVisit());
+						}
+
+						else { // if the date and time are available
+							showInformationAlert(ScreenManager.getInstance().getStage(),
+									parkDesired.getParkName() + " Park is available for " + clone.getNumberOfVisitors()
+											+ " visitors on " + clone.getDayOfVisit() + ", " + clone.getTimeOfVisit()
+											+ "\nAvailability can change quickly due to high volume of orders");
+						}
+					});
+				}).start();
+
+//				if (control.checkParkAvailabilityForExistingBooking(booking, clone)) {
+//					showInformationAlert(ScreenManager.getInstance().getStage(),
+//							parkDesired.getParkName() + " Park is available for " + clone.getNumberOfVisitors()
+//									+ " visitors on " + clone.getDayOfVisit() + ", " + clone.getTimeOfVisit()
+//									+ "\nAvailability can change quickly due to high volume of orders");
+//				} else {
+//					showInformationAlert(ScreenManager.getInstance().getStage(),
+//							"Unfortunately, " + parkDesired.getParkName() + " Park is not available for "
+//									+ clone.getNumberOfVisitors() + " visitors on " + clone.getDayOfVisit() + ", "
+//									+ clone.getTimeOfVisit());
+//				}
 			}
 		}
 	}
@@ -324,6 +359,29 @@ public class BookingEditingScreenController extends BookingScreenController {
 	////////////////////////
 	/// INSTANCE METHODS ///
 	////////////////////////
+
+	/**
+	 * This method is used to hide/show all elements but the progress indicator and
+	 * its label
+	 * 
+	 * @param visible
+	 */
+	private void setVisible(boolean visible) {
+		progressIndicator.setVisible(!visible);
+		waitLabel.setVisible(!visible);
+		parkLbl.setVisible(visible);
+		parkComboBox.setVisible(visible);
+		dateLbl.setVisible(visible);
+		datePicker.setVisible(visible);
+		hourLbl.setVisible(visible);
+		hourCombobox.setVisible(visible);
+		visitorsLbl.setVisible(visible);
+		visitorsTxt.setVisible(visible);
+		cancelReservationBtn.setDisable(!visible);
+		availabilityBtn.setDisable(!visible);
+		updateReservationBtn.setDisable(!visible);
+		backButton.setDisable(!visible);
+	}
 
 	/**
 	 * This method is called after the button for make reservations is clicked
@@ -643,6 +701,19 @@ public class BookingEditingScreenController extends BookingScreenController {
 		backImage.setPreserveRatio(true);
 		backButton.setGraphic(backImage);
 		backButton.setPadding(new Insets(1, 1, 1, 1));
+
+		// setting the labels
+		waitLabel.setAlignment(Pos.CENTER);
+		waitLabel.layoutXProperty().bind(pane.widthProperty().subtract(waitLabel.widthProperty()).divide(2));
+		waitLabel.setText("Checking Park Availability");
+		waitLabel.setStyle("-fx-text-alignment: center;");
+
+		// setting the porgress indicator
+		progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+		progressIndicator.layoutXProperty()
+				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
+
+		setVisible(true);
 	}
 
 	@Override

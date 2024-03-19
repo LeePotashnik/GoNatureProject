@@ -3,50 +3,92 @@ package serverSide.control;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import clientSide.control.ParkController;
 import clientSide.control.PaymentController;
 import common.communication.Communication;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
-import common.communication.Communication.ServerMessageType;
 import common.communication.CommunicationException;
 import entities.Booking;
 import entities.Booking.VisitType;
 import entities.Park;
-import serverSide.gui.GoNatureServerUI;
 import serverSide.jdbc.DatabaseController;
 import serverSide.jdbc.DatabaseException;
 
+/**
+ * This class manages all the background operations that are performed
+ * repeatedly. Also has some methods that are executed after a communication
+ * from the client side requires them to perform
+ */
 public class BackgroundManager {
-//	private final ScheduledExecutorService scheduler;
-//	private int numberOfTasks = 4;
+	private final ScheduledExecutorService scheduler;
 	private NotificationsController notifications = NotificationsController.getInstance();
 	private DatabaseController database;
 	private ParkController parkControl = ParkController.getInstance();
 	private PaymentController paymentControl = PaymentController.getInstance();
 	private ArrayList<Park> parks = new ArrayList<>();
+	private static int reminderCancellationTime = 2; // can be updated for future development
+	private static int minutesGapOfBookingTimes = 0; // can be updated for future development
 
+	/**
+	 * Constructor
+	 * 
+	 * @param database the initialized database instance of the runtime
+	 */
 	public BackgroundManager(DatabaseController database) {
-//		scheduler = Executors.newScheduledThreadPool(numberOfTasks);
+		scheduler = Executors.newScheduledThreadPool(1);
 		this.database = database;
 	}
+	
+	//////////////////////////////////
+	/// START BACKGROUND OPERATION ///
+	//////////////////////////////////
 
-//	public void startBackgroundOperations() {
-//		scheduler.scheduleAtFixedRate(this::updateWaitingLists, 0, 1, TimeUnit.HOURS);
-//		scheduler.scheduleAtFixedRate(this::updateActiveTables, 0, 1, TimeUnit.HOURS);
-//		scheduler.scheduleAtFixedRate(this::sendReminders, 0, 1, TimeUnit.HOURS);
-//		scheduler.scheduleAtFixedRate(this::checkReminders, 0, 1, TimeUnit.HOURS);
-//
-//	}
+	/**
+	 * This method is called (once) and starts all background operations of the
+	 * runtime on the application, every 1 hour (as default, can be changed in the
+	 * "minutesGapOfBookingTimes" property)
+	 */
+	public void startBackgroundOperations() {
+		// if the operation started not on a "full" hour, setting a delay for the first
+		// operation
+		long delay;
+		if (LocalTime.now().getMinute() != 0) {
+			delay = 60 - LocalTime.now().getMinute();
+		} else {
+			delay = 0;
+		}
+		
+		// executing the scheduler
+		scheduler.scheduleAtFixedRate(() -> {
+			// executing the waiting lists background updates
+			waitingListsBackgroundUpdates();
 
-	///////////////////////////////////////
-	/// WAITING LISTS BACKGROUND UPDATE ///
-	///////////////////////////////////////
+			// executing the active tables background updates
+			activeTablesBackgroundUpdates();
+
+			// executing the reminders sendings background process
+			remindersSendingBackground();
+
+			// executing the reminders checking background process
+			remindersCheckingBackground();
+
+		}, delay, minutesGapOfBookingTimes == 0 ? 60 : 60 / minutesGapOfBookingTimes, TimeUnit.MINUTES);
+	}
+
+	////////////////////////////////////////
+	/// WAITING LISTS BACKGROUND UPDATES ///
+	////////////////////////////////////////
 
 	/**
 	 * This method is a background method executed repeatedly by a background thread
@@ -54,12 +96,17 @@ public class BackgroundManager {
 	 * bookings that their time and date of arrival have passed and no spot has
 	 * found for them in the requested park. The process of this method is done as a
 	 * transaction where all waiting list tables are scanned and relevant bookings
-	 * are deleted (not transferred to another table).
+	 * are deleted (not transferred to another table, but deleted from the
+	 * database).
 	 * 
 	 * @throws DatabaseException if there is a problem with the transaction
 	 */
 	@SuppressWarnings("static-access")
-	public void waitingListsBackgroundUpdates() throws DatabaseException {
+	public void waitingListsBackgroundUpdates() {
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Starting waiting list updates background operations");
+
 		// fetching parks information from the database
 		fetchParks();
 
@@ -69,12 +116,6 @@ public class BackgroundManager {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
-		// creating a conquer request
-		Communication conquer = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
-		conquer.setServerMessageType(ServerMessageType.CONQUER);
-		conquer.setServerMessageContent("Updating Information.\nThis could take several seconds...");
-		GoNatureServerUI.server.sendToAllClients(conquer);
 
 		// executing queries
 		for (Park park : parks) {
@@ -133,7 +174,15 @@ public class BackgroundManager {
 
 				boolean deleteResult = database.executeDeleteQuery(deleteBookings);
 				if (!deleteResult) {
-					throw new DatabaseException("Problem with DELETE query");
+					System.out.println("\n//////////////////////////////////////////////////");
+					System.out.println("EXECUTING THE FOLLOWING QUERY FAILED:");
+					try {
+						System.out.println(deleteBookings.combineQuery());
+					} catch (CommunicationException e) {
+						e.printStackTrace();
+					}
+					System.out.println("//////////////////////////////////////////////////\n");
+
 				}
 			}
 		}
@@ -156,6 +205,10 @@ public class BackgroundManager {
 			e1.printStackTrace();
 
 		}
+
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Ending waiting list updates background operations");
 	}
 
 	////////////////////////////////////////
@@ -163,12 +216,21 @@ public class BackgroundManager {
 	////////////////////////////////////////
 
 	/**
-	 * This i
+	 * This method is a background method executed repeatedly by a background thread
+	 * for transferring active bookings from the active bookings tables of the
+	 * parks. These bookings are bookings that have confirmed their arrival in the
+	 * reminder sent to them, but did not show up at the park entrance at the day of
+	 * visit. The bookings are deleted and transferred to the cancelled bookings
+	 * table of each park.
 	 * 
 	 * @throws DatabaseException
 	 */
 	@SuppressWarnings("static-access")
-	public void activeTablesBackgroundUpdates() throws DatabaseException {
+	public void activeTablesBackgroundUpdates() {
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Starting active tables updates background operations");
+
 		// fetching parks information from the database
 		fetchParks();
 
@@ -178,12 +240,6 @@ public class BackgroundManager {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
-		// creating a conquer request
-		Communication conquer = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
-		conquer.setServerMessageType(ServerMessageType.CONQUER);
-		conquer.setServerMessageContent("Updating Information.\nThis could take several seconds...");
-		GoNatureServerUI.server.sendToAllClients(conquer);
 
 		// executing queries
 		for (Park park : parks) {
@@ -255,7 +311,14 @@ public class BackgroundManager {
 
 				boolean deleteResult = database.executeDeleteQuery(deleteBookings);
 				if (!deleteResult) {
-					throw new DatabaseException("Problem with DELETE query");
+					System.out.println("\n//////////////////////////////////////////////////");
+					System.out.println("EXECUTING THE FOLLOWING QUERY FAILED:");
+					try {
+						System.out.println(deleteBookings.combineQuery());
+					} catch (CommunicationException e) {
+						e.printStackTrace();
+					}
+					System.out.println("//////////////////////////////////////////////////\n");
 				}
 			}
 
@@ -286,7 +349,14 @@ public class BackgroundManager {
 					// sending the request to the database
 					boolean insertResult = database.executeInsertQuery(insertCancelled);
 					if (!insertResult) {
-						throw new DatabaseException("Problem with INSERT query");
+						System.out.println("\n//////////////////////////////////////////////////");
+						System.out.println("EXECUTING THE FOLLOWING QUERY FAILED:");
+						try {
+							System.out.println(insertCancelled.combineQuery());
+						} catch (CommunicationException e) {
+							e.printStackTrace();
+						}
+						System.out.println("//////////////////////////////////////////////////\n");
 					}
 				}
 			}
@@ -310,6 +380,10 @@ public class BackgroundManager {
 			e1.printStackTrace();
 
 		}
+
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Ending active tables updates background operations");
 	}
 
 	////////////////////////////////////////////
@@ -317,12 +391,17 @@ public class BackgroundManager {
 	////////////////////////////////////////////
 
 	/**
-	 * This method scans all active bookings tables of all parks, checks which
-	 * bookings are going to be in 24 hours from now. These bookings will be
-	 * recieving a reminder for their booking
+	 * This method is a background method executed repeatedly by a background thread
+	 * for scanning all active bookings tables of all parks. The scan is checking
+	 * which bookings are going to occur in 24 hours from now. These bookings will
+	 * be recieving a reminder for their booking.
 	 */
 	@SuppressWarnings("static-access")
 	private void remindersSendingBackground() {
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Starting reminders sending background operations");
+
 		ArrayList<ArrayList<Booking>> parksBookings = new ArrayList<>();
 
 		// for each park, scanning its active bookings table
@@ -342,10 +421,13 @@ public class BackgroundManager {
 			checkPark.setSelectColumns(Arrays.asList("*"));
 
 			LocalDate checkDate = LocalDate.now().plusDays(1);
-			LocalTime checkTime = LocalTime.of(LocalTime.now().getHour(), 0);
+			LocalTime checkTimeFrom = LocalTime.of(LocalTime.now().getHour(), 0);
+			LocalTime checkTimeTo = LocalTime.of(LocalTime.now().getHour(), 59);
 
-			checkPark.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit"), Arrays.asList("=", "AND", "="),
-					Arrays.asList(checkDate, checkTime));
+			checkPark.setWhereConditions(
+					Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit", "isRecievedReminder"),
+					Arrays.asList("=", "AND", ">=", "AND", "<=", "AND", "="),
+					Arrays.asList(checkDate, checkTimeFrom, checkTimeTo, 0));
 
 			// executing the request
 			ArrayList<Object[]> results = database.executeSelectQuery(checkPark);
@@ -407,17 +489,168 @@ public class BackgroundManager {
 			updateReminded.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("IN"),
 					Arrays.asList(bookingIDs));
 
-			database.executeUpdateQuery(updateReminded);
+			if (size > 0) {
+				database.executeUpdateQuery(updateReminded);
+			}
 		}
+
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Ending reminders sending background operations");
 	}
 
 	/////////////////////////////////////////////
 	/// REMINDERS CHECKING BACKGROUND PROCESS ///
 	/////////////////////////////////////////////
 
-//	private void remindersCheckingBackground() {
-//
-//	}
+	/**
+	 * This method is a background method executed repeatedly by a background thread
+	 * for scanning all active bookings tables of all parks. The scan is checking
+	 * which bookings have recieved a reminder but did not confirmed it within 2
+	 * hours after sending. These bookings will be transferred from the active
+	 * booking table to the cancelled bookings table of each park.
+	 */
+	@SuppressWarnings("static-access")
+	private void remindersCheckingBackground() {
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Starting reminders checking background operations");
+
+		ArrayList<ArrayList<Booking>> transferring = new ArrayList<>();
+
+		// for each park, scanning its active bookings table
+		for (Park park : parks) {
+			ArrayList<Booking> toBeTransferred = new ArrayList<>();
+
+			// creating the communication request
+			Communication checkPark = new Communication(CommunicationType.SELF);
+			try {
+				checkPark.setQueryType(QueryType.SELECT);
+			} catch (CommunicationException e) {
+				e.printStackTrace();
+			}
+
+			String parkTableName = parkControl.nameOfTable(park) + checkPark.activeBookings;
+			checkPark.setTables(Arrays.asList(parkTableName));
+			checkPark.setSelectColumns(Arrays.asList("*"));
+			checkPark.setWhereConditions(Arrays.asList("confirmed"), Arrays.asList("="), Arrays.asList(0));
+
+			// executing the request
+			ArrayList<Object[]> results = database.executeSelectQuery(checkPark);
+
+			// checking all the returned bookings
+			for (Object[] row : results) {
+				// checking the reminder sending time
+				if ((Time) row[17] != null) {
+					LocalTime reminderSentTime = ((Time) row[17]).toLocalTime();
+					LocalDate remiderSentDate = reminderSentTime.compareTo(LocalTime.of(22, 00)) >= 0
+							&& reminderSentTime.compareTo(LocalTime.of(23, 59)) <= 0 ? LocalDate.now().minusDays(1)
+									: LocalDate.now();
+					// checking the gap
+					LocalDateTime reminderSent = LocalDateTime.of(remiderSentDate, reminderSentTime);
+					LocalDateTime now = LocalDateTime.now();
+
+					// if 2 hours already passed
+					if (Duration.between(reminderSent, now).toHours() >= reminderCancellationTime) {
+						Booking addBooking = new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
+								((Time) row[2]).toLocalTime(), ((Date) row[3]).toLocalDate(),
+								((String) row[4]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL,
+								(Integer) row[5], (String) row[6], (String) row[7], (String) row[8], (String) row[9],
+								(String) row[10], (Integer) row[11], (Integer) row[12] == 0 ? false : true,
+								(Integer) row[13] == 0 ? false : true,
+								((Time) row[14]) == null ? null : ((Time) row[14]).toLocalTime(),
+								((Time) row[15]) == null ? null : ((Time) row[15]).toLocalTime(),
+								(Integer) row[16] == 0 ? false : true,
+								((Time) row[17]) == null ? null : ((Time) row[17]).toLocalTime(), park);
+						toBeTransferred.add(addBooking);
+					}
+				}
+			}
+
+			transferring.add(toBeTransferred);
+		}
+
+		int parkIndex = 0;
+		ArrayList<String> bookingIDs = new ArrayList<>(); // will hold all the booking ids to be deleted
+		for (ArrayList<Booking> toBeTransferred : transferring) {
+			// deleting the booking from the active table and inserting it into the
+			// cancelled table
+
+			// sending cancellation notification to the relevant cancelled bookings
+			for (Booking transfer : toBeTransferred) {
+				notifications.sendCancellationEmailNotification(
+						Arrays.asList(transfer.getEmailAddress(), transfer.getPhoneNumber(),
+								transfer.getParkBooked().getParkCity() + " Park", transfer.getDayOfVisit(),
+								transfer.getTimeOfVisit(), transfer.getFirstName() + " " + transfer.getLastName(),
+								transfer.getParkBooked().getParkCity() + ", " + transfer.getParkBooked().getParkState(),
+								transfer.getNumberOfVisitors(), transfer.getFinalPrice(), transfer.isPaid()));
+
+				// adding the id to the list, we be used as IN part of the delete query next
+				bookingIDs.add(transfer.getBookingId());
+
+				// creating the insert request into the cancelled table
+				Communication insert = new Communication(CommunicationType.SELF);
+				try {
+					insert.setQueryType(QueryType.INSERT);
+				} catch (CommunicationException e) {
+					e.printStackTrace();
+				}
+
+				Park park = parks.get(parkIndex++);
+				String parkTableName = parkControl.nameOfTable(park) + insert.cancelledBookings;
+				insert.setTables(Arrays.asList(parkTableName));
+				insert.setColumnsAndValues(
+						Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType",
+								"numberOfVisitors", "idNumber", "firstName", "lastName", "emailAddress", "phoneNumber",
+								"cancellationReason"),
+						Arrays.asList(transfer.getBookingId(), transfer.getDayOfVisit(), transfer.getTimeOfVisit(),
+								transfer.getDayOfBooking(),
+								transfer.getVisitType() == VisitType.GROUP ? "group" : "individual",
+								transfer.getNumberOfVisitors(), transfer.getIdNumber(), transfer.getFirstName(),
+								transfer.getLastName(), transfer.getEmailAddress(), transfer.getPhoneNumber(),
+								"Did not confirm"));
+
+				// executing insert query
+				database.executeInsertQuery(insert);
+			}
+
+			// creating the IN (...) part to the delete query, to delete all the relevant
+			// bookings from the active table
+			int size = bookingIDs.size();
+			String value = "(";
+			// creating the booking ids values
+			for (int i = 0; i < size; i++) {
+				value += "'" + bookingIDs.get(i) + "'";
+				if (i + 1 < size)
+					value += ", ";
+			}
+			value += ")";
+
+			// creating the delete request
+			Communication delete = new Communication(CommunicationType.SELF);
+			try {
+				delete.setQueryType(QueryType.DELETE);
+			} catch (CommunicationException e) {
+				e.printStackTrace();
+			}
+			Park park = parks.get(transferring.indexOf(toBeTransferred));
+			String parkTableName = parkControl.nameOfTable(park) + delete.activeBookings;
+			delete.setTables(Arrays.asList(parkTableName));
+			delete.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("IN"), Arrays.asList(value));
+
+			// executing the query if there are bookings to remove
+			if (size > 0) {
+				database.executeDeleteQuery(delete);
+			}
+
+			// emptying the IDs list
+			bookingIDs.removeAll(bookingIDs);
+		}
+
+		System.out.println(
+				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
+						+ ": Ending reminders checking background operations");
+	}
 
 	///////////////////////
 	/// GENERAL METHODS ///
@@ -518,7 +751,6 @@ public class BackgroundManager {
 		}
 
 		waitingResults.removeAll(transferBookings);
-
 
 		// now: waitingResults holds all the waiting list bookings that are going to
 		// stay in the waiting list, but with possible new priority. transferBookings
@@ -635,6 +867,7 @@ public class BackgroundManager {
 	 * @param timeLimit
 	 * @return the park's current capacity for the specified time frame
 	 */
+	@SuppressWarnings("static-access")
 	private int getCurrentParkCapacities(Park park, LocalDate date, LocalTime time, int timeLimit) {
 		// creating the request for the availability check
 		Communication availabilityRequest = new Communication(CommunicationType.SELF);
@@ -644,7 +877,6 @@ public class BackgroundManager {
 			e.printStackTrace();
 		}
 
-		@SuppressWarnings("static-access")
 		String parkTableName = parkControl.nameOfTable(park) + availabilityRequest.activeBookings;
 
 		availabilityRequest.setTables(Arrays.asList(parkTableName));

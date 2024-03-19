@@ -3,6 +3,7 @@ package serverSide.gui;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenManager;
@@ -27,7 +28,7 @@ import javafx.stage.WindowEvent;
 public class ServerConnectionController extends AbstractScreen {
 
 	@FXML
-	private Button connectBtn, disconnectBtn, clearBtn;
+	private Button connectBtn, disconnectBtn, clearBtn, importBtn;
 	@FXML
 	private ImageView goNatureLogo;
 	@FXML
@@ -56,7 +57,6 @@ public class ServerConnectionController extends AbstractScreen {
 		if (validate()) {
 			String result = GoNatureServerUI.runServer(Integer.parseInt(portTxtField.getText()),
 					databaseTxtField.getText(), rootTxtField.getText(), passwordTxtField.getText());
-			System.out.println("RESULT: " + result);
 			if (result.contains("Error")) {
 				showErrorAlert(ScreenManager.getInstance().getStage(), result);
 				System.out.println(result);
@@ -73,6 +73,7 @@ public class ServerConnectionController extends AbstractScreen {
 
 				connectBtn.setVisible(false);
 				disconnectBtn.setVisible(true);
+				importBtn.setDisable(false);
 			}
 		}
 	}
@@ -102,6 +103,34 @@ public class ServerConnectionController extends AbstractScreen {
 	 */
 	void clearBtnClicked(ActionEvent event) {
 		consoleArea.setText("");
+	}
+
+	@FXML
+	/**
+	 * This method is called after the user has clicked on the "Import Users"
+	 * button. It calls a method in the server class to import users data from the
+	 * Users Management System
+	 * 
+	 * @param event
+	 */
+	void importUsersFromExternalSystem(ActionEvent event) {
+		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+				"You are about to import users data from the Users Management System into GoNature database",
+				Arrays.asList("Cancel", "Continue"));
+
+		switch (choise) {
+		case 1:
+			event.consume();
+			return;
+
+		case 2:
+			if (GoNatureServerUI.server.importUsersFromExternalSystem()) {
+				showInformationAlert(ScreenManager.getInstance().getStage(), "The users data import succeed");
+				importBtn.setDisable(true);
+			} else {
+				showInformationAlert(ScreenManager.getInstance().getStage(), "The users data import failed");
+			}
+		}
 	}
 
 	/**
@@ -273,6 +302,8 @@ public class ServerConnectionController extends AbstractScreen {
 
 		statusLabel.setText("Disconnected");
 		statusLabel.setStyle("-fx-background-color: #ffe6e6; -fx-text-alignment: center;");
+
+		importBtn.setDisable(true);
 
 		// for later use
 //		consoleArea.setEditable(false);
