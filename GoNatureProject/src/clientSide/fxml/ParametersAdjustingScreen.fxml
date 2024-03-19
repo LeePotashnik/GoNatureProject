@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane  maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParametersAdjustingScreen">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParametersAdjustingScreenConrtroller">
    <children>
       <Button fx:id="backButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onAction="#returnToPreviousScreen" prefHeight="38.0" prefWidth="38.0">
          <font>
@@ -20,12 +20,12 @@
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <TextField fx:id="userNameID" layoutX="132.0" layoutY="156.0" prefHeight="31.0" prefWidth="86.0" />
-      <TextField fx:id="passwordID" layoutX="132.0" layoutY="209.0" prefHeight="31.0" prefWidth="86.0" />
+      <TextField fx:id="maximumVisitorsCapacityTextField" layoutX="132.0" layoutY="156.0" prefHeight="31.0" prefWidth="86.0" />
+      <TextField fx:id="maximumOrderAmountTextField" layoutX="135.0" layoutY="210.0" prefHeight="31.0" prefWidth="80.0" />
       <Button fx:id="BackToMainScreenButton" layoutX="14.0" layoutY="455.0" mnemonicParsing="false" onAction="#openMainScreen" prefHeight="31.0" prefWidth="164.0" text="Back To Main Screen" />
-      <Button fx:id="AdjustMaximumVisitorsCapacityButton" layoutX="249.0" layoutY="149.0" mnemonicParsing="false" onAction="#openVisitorsAccountScreen" prefHeight="38.0" prefWidth="258.0" text="Adjust Maximum Visitors Capacity" />
-      <Button fx:id="AdjustOrdersAmountButton" layoutX="249.0" layoutY="206.0" mnemonicParsing="false" onAction="#openVisitorsAccountScreen" prefHeight="38.0" prefWidth="186.0" text="Adjust Orders Amount" />
-      <TextField fx:id="passwordID1" layoutX="132.0" layoutY="256.0" prefHeight="31.0" prefWidth="86.0" />
-      <Button fx:id="AdjustTimeLimitsButton" layoutX="249.0" layoutY="253.0" mnemonicParsing="false" onAction="#openVisitorsAccountScreen" prefHeight="38.0" prefWidth="164.0" text="Adjust Time Limits" />
+      <Button fx:id="AdjustMaximumVisitorsCapacityButton" layoutX="249.0" layoutY="149.0" mnemonicParsing="false" onAction="#adjustMaximumVisitorsCapacity" prefHeight="38.0" prefWidth="258.0" text="Adjust Maximum Visitors Capacity" />
+      <Button fx:id="AdjustMaximumOrderAmountButton" layoutX="249.0" layoutY="206.0" mnemonicParsing="false" onAction="#adjustMaximumOrderAmount" prefHeight="38.0" prefWidth="236.0" text="Adjust Maximum Order Amount" />
+      <TextField fx:id="maximumTimeLimitTextField" layoutX="132.0" layoutY="272.0" prefHeight="31.0" prefWidth="86.0" />
+      <Button fx:id="AdjustMaximumTimeLimitsButton" layoutX="249.0" layoutY="269.0" mnemonicParsing="false" onAction="#adjustMaximumTimeLimits" prefHeight="38.0" prefWidth="222.0" text="Adjust Maximum Time Limits" />
    </children>
 </Pane>
