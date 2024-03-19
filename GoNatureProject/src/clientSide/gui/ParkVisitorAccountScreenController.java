@@ -22,7 +22,6 @@ import javafx.stage.WindowEvent;
 
 public class ParkVisitorAccountScreenController extends AbstractScreen implements Stateful{
 
-	private String PV_Table, PV_Col;
 	private GoNatureUsersController userControl;
 	private ParkVisitor parkVisitor;
 
@@ -56,9 +55,10 @@ public class ParkVisitorAccountScreenController extends AbstractScreen implement
      */
     @FXML
     void logOut(ActionEvent event){
-    	setPV_Table_andPV_Col(parkVisitor.getVisitorType());
-    	if (userControl.checkLogOut(PV_Table,PV_Col,parkVisitor.getIdNumber()))
-    		parkVisitor.setLoggedIn(false);
+    	//Only GROUPGUIDE (not TRAVELLER) is a user, thus only they need to log out.    	
+    	if (parkVisitor.getVisitorType() == VisitorType.GROUPGUIDE)
+    		if (userControl.checkLogOut("group_guide","groupGuideId",parkVisitor.getIdNumber()))
+    			parkVisitor.setLoggedIn(false);
         else 
         	showErrorAlert(ScreenManager.getInstance().getStage(), "Failed to log out");
     	try {
@@ -93,21 +93,6 @@ public class ParkVisitorAccountScreenController extends AbstractScreen implement
 		this.NameLable.setText("Hello " + parkVisitor.getFirstName() + " " + parkVisitor.getLastName());
 	    this.NameLable.underlineProperty();
 	    
-	}
-
-	/**
-	 * @param visitorType
-	 * sets PV_Table and PV_Col to reflect the correct table and ID column from the database according to the type of customer.
-	 */
-	public void setPV_Table_andPV_Col(VisitorType visitorType) {
-		if (visitorType == VisitorType.TRAVELLER) {
-			PV_Col = "travellerId";
-			PV_Table = "traveller";
-		}	
-		else {
-			PV_Table = "group_guide";
-			PV_Col = "groupGuideId";
-		}
 	}
 
 	public ParkVisitor getParkManager() {
@@ -152,7 +137,6 @@ public class ParkVisitorAccountScreenController extends AbstractScreen implement
     		System.out.println("User logged out");
 			userControl.disconnectClientFromServer(); 
 			//    	if (userControl.checkLogOut() {
-
 		}
 	}
 

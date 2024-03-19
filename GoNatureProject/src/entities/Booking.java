@@ -2,8 +2,19 @@ package entities;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Comparator;
 
 public class Booking {
+	/**
+	 * A Comparator for sorting waiting list bookings with their priority property
+	 */
+	public static Comparator<Booking> waitingListComparator = new Comparator<Booking>() {
+		@Override
+		public int compare(Booking booking1, Booking booking2) {
+			return booking1.waitingListPriority - booking2.waitingListPriority;
+		}
+	};
+
 	public enum VisitType {
 		INDIVIDUAL, GROUP;
 	}
@@ -29,6 +40,7 @@ public class Booking {
 	private String status;
 
 	/**
+	 * A regular booking constructor
 	 * 
 	 * @param bookingId
 	 * @param dayOfVisit
@@ -318,7 +330,7 @@ public class Booking {
 	/**
 	 * @return finalPrice
 	 */
-	public float getFinalPrice() {
+	public int getFinalPrice() {
 		return finalPrice;
 	}
 

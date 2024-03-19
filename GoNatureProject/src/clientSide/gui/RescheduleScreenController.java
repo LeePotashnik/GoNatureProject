@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import clientSide.control.BookingController;
 import clientSide.control.ParkController;
+import common.communication.Communication;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
@@ -41,11 +42,12 @@ public class RescheduleScreenController extends AbstractScreen {
 	private BookingController control;
 	private Booking booking;
 	private ParkVisitor visitor;
+	private boolean isGroupReservation;
 
 	public RescheduleScreenController() {
 		control = BookingController.getInstance();
 	}
-	
+
 	////////////////////////////////////
 	/// INNER CLASS - AVAILABLE SLOT ///
 	////////////////////////////////////
@@ -99,6 +101,10 @@ public class RescheduleScreenController extends AbstractScreen {
 		}
 	}
 
+	//////////////////////////////////
+	/// FXML AND JAVAFX COMPONENTS ///
+	//////////////////////////////////
+
 	@FXML
 	private TableView<AvailableSlot> availableTable;
 	@FXML
@@ -124,7 +130,9 @@ public class RescheduleScreenController extends AbstractScreen {
 	@FXML
 	private ProgressIndicator progressIndicator;
 
-	///// EVENT METHODS /////
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
 
 	@FXML
 	void showClicked(ActionEvent event) {
@@ -153,6 +161,11 @@ public class RescheduleScreenController extends AbstractScreen {
 	}
 
 	@FXML
+	/**
+	 * In case the pane clicked, taking the focus
+	 * 
+	 * @param event
+	 */
 	void paneClicked(MouseEvent event) {
 		pane.requestFocus();
 	}
@@ -176,7 +189,108 @@ public class RescheduleScreenController extends AbstractScreen {
 		}
 	}
 
-	///// INSTANCE METHODS /////
+	/**
+	 * This method is called after the user double clicked on a slot from the table
+	 * 
+	 * @param event
+	 */
+	public void slotClicked(AvailableSlot chosenSlot) {
+		if (chosenSlot == null) {
+			showErrorAlert(ScreenManager.getInstance().getStage(),
+					"Please choose a row from the table in order to proceed");
+		} else {
+			LocalDate newDate = chosenSlot.getDate();
+			LocalTime newTime = chosenSlot.getTime();
+			int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+					"You're about to change your reservation dates:\n" + "From: " + booking.getDayOfVisit() + ", "
+							+ booking.getTimeOfVisit() + ", To: " + newDate + ", " + newTime,
+					Arrays.asList("Cancel", "Confirm"));
+
+			switch (choise) { // chose to cancel the operation
+			case 1: {
+				return;
+			}
+
+			case 2: { // confirmed the editing
+				booking.setDayOfVisit(chosenSlot.getDate());
+				booking.setTimeOfVisit(chosenSlot.getTime());
+			}
+
+				// first inserting the new booking to the database to update capacities and save
+				// the visitor's spot
+				control.insertNewBookingToActiveTable(booking);
+
+				int discountPrice = control.calculateFinalDiscountPrice(booking, isGroupReservation, false);
+				int preOrderPrice = control.calculateFinalDiscountPrice(booking, true, true);
+
+				// creating the pop up message
+				String payMessage = "Woohoo! You're almost set.";
+				if (isGroupReservation) {
+					payMessage += "\nPay now and get a special discount for paying ahead:";
+					payMessage += "\n        Your reservation's final price: " + discountPrice + "$";
+					payMessage += "\n        Your reservetion's price after paying ahead discount: " + preOrderPrice
+							+ "$";
+				} else {
+					payMessage += "\nYour reservation's final price (after pre-order discount) is: " + discountPrice
+							+ "$";
+				}
+
+				int payChoise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
+						Arrays.asList("Pay Now", "Pay Upon Arrival", "Cancel Reservation"));
+
+				switch (payChoise) {
+				// chose to pay now
+				case 1: {
+					booking.setPaid(true);
+					booking.setFinalPrice(isGroupReservation ? preOrderPrice : discountPrice);
+					// updating the payment columns in the database
+					control.updateBookingPayment(booking);
+					// showing the payment screen
+					try {
+						ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
+								"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
+								StageSettings.defaultSettings("Payment"),
+								new Pair<Booking, ParkVisitor>(booking, visitor));
+					} catch (StatefulException | ScreenException e) {
+						e.printStackTrace();
+					}
+					return;
+				}
+
+				// chose to pay upon arrival
+				case 2: {
+					booking.setPaid(false);
+					booking.setFinalPrice(discountPrice);
+					// updating the payment columns in the database
+					control.updateBookingPayment(booking);
+					// showing the confirmation screen
+					try {
+						ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+								"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
+								StageSettings.defaultSettings("Confirmation"),
+								new Pair<Booking, ParkVisitor>(booking, visitor));
+					} catch (StatefulException | ScreenException e) {
+						e.printStackTrace();
+					}
+					return;
+				}
+
+				// chose to cancel reservation
+				case 3: {
+					// deleting the new booking from the database cause it wat inserted in order to
+					// save the spot for the visitor, and returning to acount screen
+					control.deleteBooking(booking, Communication.activeBookings);
+					returnToPreviousScreen(null);
+					return;
+				}
+				}
+			}
+		}
+	}
+
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
 
 	/**
 	 * This method validates the entered dates for the date range
@@ -253,101 +367,21 @@ public class RescheduleScreenController extends AbstractScreen {
 	}
 
 	/**
-	 * This method is called after the user double clicked on a slot from the table
+	 * This method is used to hide/show all elements but the progress indicator and
+	 * its label
 	 * 
-	 * @param event
+	 * @param visible
 	 */
-	public void slotClicked(AvailableSlot chosenSlot) {
-		if (chosenSlot == null) {
-			showErrorAlert(ScreenManager.getInstance().getStage(),
-					"Please choose a row from the table in order to proceed");
-		} else {
-			int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
-					"You're about to change your reservation dates:\n" + "From: " + booking.getDayOfVisit() + ", "
-							+ booking.getTimeOfVisit() + ", To: " + chosenSlot.getDate() + ", " + chosenSlot.getTime(),
-					Arrays.asList("Cancel", "Confirm"));
-
-			switch (choise) {
-			case 1: {
-				return;
-			}
-
-			case 2: {
-				booking.setDayOfVisit(chosenSlot.getDate());
-				booking.setTimeOfVisit(chosenSlot.getTime());
-			}
-
-				// first inserting the new booking to the database to update capacities and save
-				// the visitor's spot
-				control.insertNewBookingToActiveTable(booking);
-
-				// calculating the final price for the booking. Sending visitor's type cause the
-				// price defers between regular and guided groups
-				int finalPrice = control.calculateFinalRegularPrice(booking,
-						visitor == null ? VisitorType.TRAVELLER : visitor.getVisitorType());
-				int discountPrice = control.calculateFinalDiscountPrice(booking,
-						visitor == null ? VisitorType.TRAVELLER : visitor.getVisitorType());
-
-				// creating the pop up message
-				String payMessage = "Woohoo! You're almost set.";
-				payMessage += "\nPay now and get a special discount for pre-ordering:";
-				payMessage += "\n        Your reservation final price: " + finalPrice + "$";
-				payMessage += "\n        Your reservetion price after the special discount: " + discountPrice + "$";
-				choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
-						Arrays.asList("Pay Now and Get Discount", "Pay Upon Arrival", "Exit Reservations"));
-
-				switch (choise) {
-				// chose to pay now and get discount
-				case 1: {
-					booking.setPaid(true);
-					booking.setFinalPrice(discountPrice);
-					// updating the payment columns in the database
-					control.updateBookingPayment(booking);
-					// showing the confirmation screen
-					try {
-						ScreenManager.getInstance().showScreen("LoadingScreenController",
-								"/clientSide/fxml/LoadingScreen.fxml", true, false,
-								StageSettings.defaultSettings("Payment"),
-								new Pair<Booking, ParkVisitor>(booking, visitor));
-					} catch (StatefulException | ScreenException e) {
-						e.printStackTrace();
-					}
-					return;
-				}
-
-				// chose to pay upon arrival
-				case 2: {
-					booking.setPaid(false);
-					booking.setFinalPrice(finalPrice);
-					// updating the payment columns in the database
-					control.updateBookingPayment(booking);
-					break;
-				}
-
-				// chose to cancel
-				case 3: {
-					// deleting the new booking from the database cause it wat inserted in order to
-					// save the spot for the visitor, and returning to acount screen
-					control.deleteBookingFromActiveTable(booking);
-					returnToPreviousScreen(null);
-					return;
-				}
-				}
-
-				// showing the confirmation screen
-				try {
-					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-							"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
-							StageSettings.defaultSettings("Confirmation"),
-							new Pair<Booking, ParkVisitor>(booking, visitor));
-				} catch (StatefulException | ScreenException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+	private void setVisible(boolean visible) {
+		progressIndicator.setVisible(!visible);
+		waitLabel.setVisible(!visible);
+		availableTable.setVisible(visible);
+		instructionsLbl.setVisible(visible);
 	}
 
-	///// JAVA-FX AND FXML METHODS /////
+	///////////////////////////////
+	/// ABSTRACT SCREEN METHODS ///
+	///////////////////////////////
 
 	@Override
 	/**
@@ -363,7 +397,6 @@ public class RescheduleScreenController extends AbstractScreen {
 
 		titleLbl.setAlignment(Pos.CENTER);
 		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
-//		makeReservationBtn.setDisable(true);
 		bookingLbl.getStyleClass().add("label-center-right");
 
 		// setting the back button image
@@ -381,8 +414,7 @@ public class RescheduleScreenController extends AbstractScreen {
 		// setting the empty-table labels
 		availableTable.setPlaceholder(new Label("Select dates range in order to proceed"));
 
-		// setting what will occur when double-clicking on a row of the future bookings
-		// table
+		// setting what will occur when double-clicking on a row of the future table
 		availableTable.setRowFactory(tv -> {
 			TableRow<AvailableSlot> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
@@ -415,28 +447,19 @@ public class RescheduleScreenController extends AbstractScreen {
 				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
 	}
 
-	/**
-	 * This method is used to hide/show all elements but the progress indicator and
-	 * its label
-	 * 
-	 * @param visible
-	 */
-	private void setVisible(boolean visible) {
-		progressIndicator.setVisible(!visible);
-		waitLabel.setVisible(!visible);
-		availableTable.setVisible(visible);
-		instructionsLbl.setVisible(visible);
-	}
-
-	///// ABSTRACT SCREEN METHODS /////
-
 	@Override
+	/**
+	 * Before showing the screen, a pair of booking and visitor is transfered to
+	 * this controller in order to load their information into the GUI components
+	 */
 	public void loadBefore(Object information) {
 		if (information instanceof Pair) {
 			@SuppressWarnings("unchecked")
 			Pair<Booking, ParkVisitor> pair = (Pair<Booking, ParkVisitor>) information;
 			booking = pair.getKey();
 			visitor = pair.getValue();
+
+			isGroupReservation = visitor.getVisitorType() == VisitorType.GROUPGUIDE ? true : false;
 
 			// setting the reservation type
 			typeLbl.setText("Review available slots in " + booking.getParkBooked().getParkName() + " park");
@@ -461,8 +484,10 @@ public class RescheduleScreenController extends AbstractScreen {
 	}
 
 	@Override
+	/**
+	 * Returns the screen's title
+	 */
 	public String getScreenTitle() {
 		return "Reschedule";
 	}
-
 }

@@ -1,6 +1,6 @@
 package clientSide.gui;
 
-import java.util.Arrays;
+ import java.util.Arrays;
 
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
@@ -11,6 +11,7 @@ import common.controllers.ScreenManager;
 import common.controllers.StageSettings;
 import common.controllers.Stateful;
 import common.controllers.StatefulException;
+import entities.Park;
 import entities.ParkManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -25,7 +26,8 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
 	private GoNatureUsersController userControl;	
 	private ParkController parkControl;
 	private ParkManager parkManager;
-	private String screenTitle;
+	//private String screenTitle;
+	private Park park;
 
 	@FXML
     private Label Title, privateName;
@@ -47,17 +49,7 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
      */
     @FXML
     void GoToParametersAdjustingScreen(ActionEvent event) {
-    	try {
-			ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-					"/clientSide/fxml/ConfirmationScreen.fxml", false, true,
-					StageSettings.defaultSettings("GoNature System - Client Connection"),parkManager  );
-		} catch (StatefulException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ScreenException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+   	
     }
 
     /**
@@ -67,11 +59,21 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
      */
     @FXML
     void GetCurrentMaximumCapacity(ActionEvent event) {
-    	String[] capacity = new String[3];
-    	capacity = parkControl.checkCurrentCapacity(parkManager.getManages());
-    	int actualCapacity = Integer.parseInt(capacity[0]) * Integer.parseInt(capacity[1]) / 100;
-    	showInformationAlert(ScreenManager.getInstance().getStage(), "The maximum visitors capacity is: " + capacity[0] +
-    		"\nThe maximum orders capacity is: " + actualCapacity + "\nThe current amount of visitors is: " + capacity[2]);
+    	//updates park parameters
+		String[] returnsVal = new String[4]; 
+		returnsVal = parkControl.checkCurrentCapacity(park.getParkName());
+		if (returnsVal != null) {
+			//sets the parameters
+			park.setMaximumVisitors(Integer.parseInt(returnsVal[0]));
+			park.setMaximumOrders(Integer.parseInt(returnsVal[1]));
+			park.setTimeLimit(Integer.parseInt(returnsVal[2])); 
+			park.setCurrentCapacity(Integer.parseInt(returnsVal[3])); 
+		}
+    	int actualCapacity = park.getMaximumOrders() * park.getMaximumVisitors() / 100;
+    	showInformationAlert(ScreenManager.getInstance().getStage(), "The maximum visitors capacity: " +
+    	park.getMaximumVisitors() + "\nThe maximum allowable quantity of visitors: " + actualCapacity +
+    	"\nThe current amount of visitors: " + park.getCurrentCapacity() + "\nThe time limit for each visit: " +
+    	park.getTimeLimit());
     }
 
     
@@ -126,13 +128,31 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
 	@Override
 	public void loadBefore(Object information) {
 		ParkManager PM = (ParkManager)information;
-		setParkManager(PM);		
+		setParkManager(PM);
+		//set the relevant park to the parkManager from database
+		setPark(parkControl.fetchManagerParksList("parkManagerId", parkManager.getIdNumber()).get(0)); 
+		parkManager.setParkObject(park);
+		String[] returnsVal = new String[4]; 
+		returnsVal = parkControl.checkCurrentCapacity(park.getParkName());
+		if (returnsVal != null) {
+			//updates park parameters
+			park.setMaximumVisitors(Integer.parseInt(returnsVal[0]));
+			park.setMaximumOrders(Integer.parseInt(returnsVal[1]));
+			park.setTimeLimit(Integer.parseInt(returnsVal[2])); 
+			park.setCurrentCapacity(Integer.parseInt(returnsVal[3])); 
+		}
 		this.privateName.setText("Hello " + parkManager.getFirstName() + " " + parkManager.getLastName());
 	    this.privateName.underlineProperty();
-		this.Title.setText(getScreenTitle());
+		this.Title.setText(park.getParkName() + "'s " + getScreenTitle());
 	    this.Title.underlineProperty();
 	}
 	
+	public Park getPark() {
+		return park;
+	}
+	public void setPark(Park park) {
+		this.park = park;
+	}
 	/**
 	 * Activated after the X is clicked on the window.
 	 *  The default isto show a Confirmation Alert with "Yes" and "No" options for the user tochoose. 
@@ -169,6 +189,7 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
 	@Override
 	public void saveState() {
 		userControl.saveUser(parkManager);
+		parkControl.savePark(park);
 	}
 
 	/**
@@ -178,9 +199,10 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
 	@Override
 	public void restoreState() {
 		this.parkManager = (ParkManager) userControl.restoreUser();
+		this.park = parkControl.restorePark();
 		this.privateName.setText("Hello " + parkManager.getFirstName() + " " + parkManager.getLastName());
 	    this.privateName.underlineProperty();
-		this.Title.setText(getScreenTitle());
+		this.Title.setText(park.getParkName() + "'s " + getScreenTitle());
 	    this.Title.underlineProperty();
 	}
 }

@@ -3,10 +3,12 @@ package serverSide.control;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import common.communication.Communication;
 import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
+import common.communication.Communication.SecondaryRequest;
 import common.communication.Communication.ServerMessageType;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
@@ -17,6 +19,8 @@ public class GoNatureServer extends AbstractServer {
 	private DatabaseController database;
 	private BackgroundManager backgroundManager;
 	private ArrayList<ConnectionToClient> clientsConnected = new ArrayList<>();
+	private NotificationsController notifications = NotificationsController.getInstance();
+	private StaffController staffController;
 
 	/**
 	 * The constructor creates a new server on the given port, and also creates an
@@ -39,7 +43,7 @@ public class GoNatureServer extends AbstractServer {
 	public void connectToDatabase(String databae, String root, String password) throws DatabaseException {
 		database = new DatabaseController(databae, root, password); // creates a new instance of the db connector
 	}
-	
+
 	/**
 	 * This method creates a new instance of the background tasks manager
 	 */
@@ -47,11 +51,9 @@ public class GoNatureServer extends AbstractServer {
 		if (database == null)
 			throw new NullPointerException();
 		backgroundManager = new BackgroundManager(database);
-		try {
-			backgroundManager.updateActiveTables();
-		} catch (DatabaseException e) {
-			e.printStackTrace();
-		}
+
+		// starting the background operations
+		backgroundManager.startBackgroundOperations();
 	}
 
 	@Override
@@ -98,6 +100,18 @@ public class GoNatureServer extends AbstractServer {
 		return clientsConnected.size() == 0;
 	}
 
+	/**
+	 * This method is called in order to import users data from the Users Management
+	 * System into GoNature database
+	 */
+	public boolean importUsersFromExternalSystem() {
+		if (staffController == null) {
+			staffController = new StaffController(database);
+		}
+		// initiating the users import from the external system into the database
+		return staffController.importUsers();
+	}
+
 	@Override
 	/**
 	 * This method gets a message from client-side and handles it
@@ -137,9 +151,31 @@ public class GoNatureServer extends AbstractServer {
 				boolean deleteQueryResult = database.executeDeleteQuery(request);
 				response.setQueryResult(deleteQueryResult);
 				break;
-			default:
-				return;
+			default: // NONE
+				break;
 			}
+
+			SecondaryRequest secondaryRequest = request.getSecondaryRequest();
+			if (secondaryRequest != null) {
+				// if the original request is an active booking cancellation
+				// there's a need to check the park's waiting list and possibly release some
+				// bookings and transfer them to the active booking table
+				if (secondaryRequest == SecondaryRequest.UPDATE_WAITING_LIST) {
+					backgroundManager.checkWaitingListReleasePossibility(request.getParkId(), request.getDate(),
+							request.getTime());
+				} else if (secondaryRequest == SecondaryRequest.SEND_CONFIRMATION) {
+					notifications.sendConfirmationEmailNotification(Arrays.asList(request.getEmail(),
+							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
+							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
+							request.isPaid()));
+				} else if (secondaryRequest == SecondaryRequest.SEND_CANCELLATION) {
+					notifications.sendCancellationEmailNotification(Arrays.asList(request.getEmail(),
+							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
+							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
+							request.isPaid()));
+				}
+			}
+
 			try {
 				client.sendToClient(response);
 			} catch (IOException e) {
@@ -150,9 +186,13 @@ public class GoNatureServer extends AbstractServer {
 		// if this is a combined query (transaction) request
 		if (request.getCommunicationType() == CommunicationType.TRANSACTION) {
 			Communication response = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
+			response.setServerMessageType(ServerMessageType.RESPONSE);
 			response.setUniqueId(request.getUniqueId());
 			boolean transactionResult = database.executeTransaction(request);
 			response.setQueryResult(transactionResult);
+
+			//// HERE: SHOULD ADD SOMETHING ABOUT SCREEN CONQUER /////
+
 			try {
 				client.sendToClient(response);
 			} catch (IOException e) {

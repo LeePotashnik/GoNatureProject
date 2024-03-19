@@ -39,6 +39,7 @@ public class ParkController {
 	}
 	
 	public String nameOfTable(Park park) {
+		
 		return park.getParkName().toLowerCase().replaceAll(" ", "_");
 	}
 	
@@ -179,14 +180,14 @@ public class ParkController {
      * @return 
      * 		It returns an array list of parks if exists. otherwise returns null 
      */
-	public ArrayList<Park> fetchDepartmentManagerParksList(String department) {
+	public ArrayList<Park> fetchManagerParksList(String field, String ID) {
 		ArrayList<Park> parks = new ArrayList<>();
     	Communication request = new Communication(CommunicationType.QUERY_REQUEST);
     	try {
 			request.setQueryType(QueryType.SELECT);
 	    	request.setTables(Arrays.asList("park"));
 	    	request.setSelectColumns(Arrays.asList("*")); //returns all the data according to the inserted department
-	    	request.setWhereConditions(Arrays.asList("department"), Arrays.asList("="),Arrays.asList(department));
+	    	request.setWhereConditions(Arrays.asList(field), Arrays.asList("="),Arrays.asList(ID));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
@@ -284,32 +285,6 @@ public class ParkController {
 		if (result)
 			return true;
 		return false;   
-    }
-    
-    /**
-     * A 'SELECT' SQL query is generated to access the 'pricing' table in the database.
-     * @param park
-     * @return 
-     * 		It returns the ticket cost based on the visitor type. 
-     */
-    public int checkPrice(ParkVisitor visitor) {	
-    	String field = visitor.getVisitorType() == VisitorType.GROUPGUIDE ? "groupFullPrice" : "individualFullPrice";
-    	Communication request = new Communication(CommunicationType.QUERY_REQUEST);
-    	try {
-			request.setQueryType(QueryType.SELECT);
-	    	request.setTables(Arrays.asList("pricing"));
-	    	request.setSelectColumns(Arrays.asList(field));
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-    	GoNatureClientUI.client.accept(request);
-    	ArrayList<Object[]> result = request.getResultList();
-        if (!result.isEmpty()) {
-            Object[] row = result.get(0); // Get the first and only row
-            System.out.println(row);
-            return Integer.parseInt(row[0].toString());    			
-        }	
-		return 0;
     }
     
     /**
@@ -490,13 +465,12 @@ public class ParkController {
 			case "cancelled":
 		    	insertRequest.setColumnsAndValues(Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking",
 			    	"visitType", "numberOfVisitors", "idNumber", "firstName", "lastName", "emailAddress", "phoneNumber",
-			    	"client has canceled"),
-			    Arrays.asList(newBooking.getBookingId(), newBooking.getDayOfVisit(), newBooking.getTimeOfVisit(),
-					newBooking.getDayOfBooking(), newBooking.getVisitType() == VisitType.GROUP ? "group" : "individual",
-					newBooking.getNumberOfVisitors(), newBooking.getIdNumber(), newBooking.getFirstName(), 
-					newBooking.getLastName(), newBooking.getEmailAddress(), newBooking.getPhoneNumber(), 
-					newBooking.getFinalPrice(), newBooking.getEntryParkTime(), newBooking.getExitParkTime()));
-			    System.out.println("inserted to cancelled bookings");
+			    	"cancellationReason"),
+		    		Arrays.asList(newBooking.getBookingId(), newBooking.getDayOfVisit(), newBooking.getTimeOfVisit(),
+							newBooking.getDayOfBooking(), newBooking.getVisitType() == VisitType.GROUP ? "group" : "individual",
+							newBooking.getNumberOfVisitors(), newBooking.getIdNumber(), newBooking.getFirstName(), 
+							newBooking.getLastName(), newBooking.getEmailAddress(), newBooking.getPhoneNumber(), 
+							"client has canceled"));
 			    break;
 			default: //active
 			    insertRequest.setColumnsAndValues(Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType", "numberOfVisitors",
