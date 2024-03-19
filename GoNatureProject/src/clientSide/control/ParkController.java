@@ -19,6 +19,7 @@ import entities.Booking;
 public class ParkController {
 	private static ParkController instance;
 	private Park park;
+	private ArrayList<Park> parks;
 
 	private ParkController() {
 		
@@ -36,6 +37,14 @@ public class ParkController {
 
 	public void savePark(Park park) {
 		this.park = park;
+	}
+	
+	public ArrayList<Park> restoreParkList() {
+		return parks;
+	}
+
+	public void saveParkList(ArrayList<Park> parks) {
+		this.parks = parks;
 	}
 	
 	public String nameOfTable(Park park) {

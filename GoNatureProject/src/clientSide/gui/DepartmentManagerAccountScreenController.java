@@ -61,7 +61,13 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
      */
     @FXML
     void GoToReportsScreen(ActionEvent event) {
-    	
+    	try {
+			ScreenManager.getInstance().showScreen("DepartmentManagerReportsScreenController",
+					"/clientSide/fxml/DepartmentManagerReportsScreen.fxml", false, true,
+					StageSettings.defaultSettings("GoNature System - Client Connection"), departmentManager);
+		} catch (StatefulException | ScreenException e) {
+			e.printStackTrace();
+		}
     }
 
   /**
@@ -181,12 +187,14 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
 	@Override
 	public void saveState() {
 		userControl.saveUser(departmentManager);
-		userControl.saveTitle(screenTitle);		
+		userControl.saveTitle(screenTitle);
+		parkControl.saveParkList(parks);
 	}
 
 	@Override
 	public void restoreState() {
 		departmentManager = (DepartmentManager) userControl.restoreUser();
+		this.parks = parkControl.restoreParkList();
 		this.privateName.setText("Hello " + departmentManager.getFirstName() + " " + departmentManager.getLastName());
 		setScreenTitle(userControl.restoreTitle());
 	    this.privateName.underlineProperty();
