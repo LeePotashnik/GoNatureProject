@@ -187,7 +187,7 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
 	}
 
 	@Override
-	public String getScreenTitle() { //need to check
+	public String getScreenTitle() { 
 		return screenTitle;
 	}
 
