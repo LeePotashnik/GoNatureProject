@@ -26,8 +26,7 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
 	private GoNatureUsersController userControl;	
 	private ParkController parkControl;
 	private ParkManager parkManager;
-	//private String screenTitle;
-	private Park park;
+
 
 	@FXML
     private Label Title, privateName;
@@ -61,19 +60,19 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
     void GetCurrentMaximumCapacity(ActionEvent event) {
     	//updates park parameters
 		String[] returnsVal = new String[4]; 
-		returnsVal = parkControl.checkCurrentCapacity(park.getParkName());
+		returnsVal = parkControl.checkCurrentCapacity(parkManager.getParkObject().getParkName());
 		if (returnsVal != null) {
 			//sets the parameters
-			park.setMaximumVisitors(Integer.parseInt(returnsVal[0]));
-			park.setMaximumOrders(Integer.parseInt(returnsVal[1]));
-			park.setTimeLimit(Integer.parseInt(returnsVal[2])); 
-			park.setCurrentCapacity(Integer.parseInt(returnsVal[3])); 
+			parkManager.getParkObject().setMaximumVisitors(Integer.parseInt(returnsVal[0]));
+			parkManager.getParkObject().setMaximumOrders(Integer.parseInt(returnsVal[1]));
+			parkManager.getParkObject().setTimeLimit(Integer.parseInt(returnsVal[2])); 
+			parkManager.getParkObject().setCurrentCapacity(Integer.parseInt(returnsVal[3])); 
 		}
-    	int actualCapacity = park.getMaximumOrders() * park.getMaximumVisitors() / 100;
+    	int actualCapacity = parkManager.getParkObject().getMaximumOrders() * parkManager.getParkObject().getMaximumVisitors() / 100;
     	showInformationAlert(ScreenManager.getInstance().getStage(), "The maximum visitors capacity: " +
-    	park.getMaximumVisitors() + "\nThe maximum allowable quantity of visitors: " + actualCapacity +
-    	"\nThe current amount of visitors: " + park.getCurrentCapacity() + "\nThe time limit for each visit: " +
-    	park.getTimeLimit());
+    	parkManager.getParkObject().getMaximumVisitors() + "\nThe maximum allowable quantity of visitors: " + actualCapacity +
+    	"\nThe current amount of visitors: " + parkManager.getParkObject().getCurrentCapacity() + "\nThe time limit for each visit: " +
+    	parkManager.getParkObject().getTimeLimit());
     }
 
     
@@ -137,33 +136,18 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
 		ParkManager PM = (ParkManager)information;
 		setParkManager(PM);
 		//set the relevant park to the parkManager from database
-		setPark(parkControl.fetchManagerParksList("parkManagerId", parkManager.getIdNumber()).get(0)); 
-		parkManager.setParkObject(park);
-		String[] returnsVal = new String[4]; 
-		returnsVal = parkControl.checkCurrentCapacity(park.getParkName());
-		if (returnsVal != null) {
-			//updates park parameters
-			park.setMaximumVisitors(Integer.parseInt(returnsVal[0]));
-			park.setMaximumOrders(Integer.parseInt(returnsVal[1]));
-			park.setTimeLimit(Integer.parseInt(returnsVal[2])); 
-			park.setCurrentCapacity(Integer.parseInt(returnsVal[3])); 
-		}
+		parkManager.setParkObject(parkControl.fetchManagerParksList("parkManagerId", parkManager.getIdNumber()).get(0)); 
+		//parkManager.setParkObject(park);
 		this.privateName.setText("Hello " + parkManager.getFirstName() + " " + parkManager.getLastName());
 	    this.privateName.underlineProperty();
-		this.Title.setText(park.getParkName() + "'s " + getScreenTitle());
+		this.Title.setText(parkManager.getParkObject().getParkName() + "'s " + getScreenTitle());
 	    this.Title.underlineProperty();
 	}
 	
-	public Park getPark() {
-		return park;
-	}
-	public void setPark(Park park) {
-		this.park = park;
-	}
 	/**
 	 * Activated after the X is clicked on the window.
-	 *  The default isto show a Confirmation Alert with "Yes" and "No" options for the user tochoose. 
-	 * "Yes" will check if the client is connected to the server, disconnectit if from the server and the system.
+	 *  The default isto show a Confirmation Alert with "Yes" and "No" options for the user to choose. 
+	 * "Yes" will check if the client is connected to the server, disconnected from the server and the system.
 	 */
 	@Override
 	public void handleCloseRequest(WindowEvent event) {
@@ -175,7 +159,6 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
 			logOut(null); //log out from go nature system
     		System.out.println("User logged out");
 			userControl.disconnectClientFromServer(); 
-			//    	if (userControl.checkLogOut() {
 
 		}
 	}
@@ -196,7 +179,6 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
 	@Override
 	public void saveState() {
 		userControl.saveUser(parkManager);
-		parkControl.savePark(park);
 	}
 
 	/**
@@ -206,10 +188,9 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
 	@Override
 	public void restoreState() {
 		this.parkManager = (ParkManager) userControl.restoreUser();
-		this.park = parkControl.restorePark();
 		this.privateName.setText("Hello " + parkManager.getFirstName() + " " + parkManager.getLastName());
 	    this.privateName.underlineProperty();
-		this.Title.setText(park.getParkName() + "'s " + getScreenTitle());
+		this.Title.setText(parkManager.getParkObject().getParkName() + "'s " + getScreenTitle());
 	    this.Title.underlineProperty();
 	}
 }

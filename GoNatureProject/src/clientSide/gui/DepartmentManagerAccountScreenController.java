@@ -1,8 +1,8 @@
 package clientSide.gui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
-import clientSide.control.BookingController;
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import common.communication.CommunicationException;
@@ -14,18 +14,17 @@ import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.DepartmentManager;
 import entities.Park;
-import entities.ParkEmployee;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.stage.WindowEvent;
 
 public class DepartmentManagerAccountScreenController extends AbstractScreen implements Stateful{
 
 	private static GoNatureUsersController userControl;
-	private ArrayList<Park> parks;
 	private ParkController parkControl;
 	private String screenTitle;
 	private DepartmentManager departmentManager;
@@ -78,21 +77,21 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
     @FXML
     void getCurrenetCapacities(ActionEvent event) {
     	//updates for each park the latest relevant parameters
-    	for (int i = 0; i<parks.size(); i++){
-    		String parkName = parks.get(i).getParkName();
+    	for (int i = 0; i<departmentManager.getResponsible().size(); i++){
+    		String parkName = departmentManager.getResponsible().get(i).getParkName();
         	String[] currCap = parkControl.checkCurrentCapacity(parkName);
     		if (currCap != null) {
     			//updates park parameters
-    			parks.get(i).setMaximumVisitors(Integer.parseInt(currCap[0]));
-    			parks.get(i).setMaximumOrders(Integer.parseInt(currCap[1]));
-    			parks.get(i).setTimeLimit(Integer.parseInt(currCap[2])); 
-    			parks.get(i).setCurrentCapacity(Integer.parseInt(currCap[3])); 
+    			departmentManager.getResponsible().get(i).setMaximumVisitors(Integer.parseInt(currCap[0]));
+    			departmentManager.getResponsible().get(i).setMaximumOrders(Integer.parseInt(currCap[1]));
+    			departmentManager.getResponsible().get(i).setTimeLimit(Integer.parseInt(currCap[2])); 
+    			departmentManager.getResponsible().get(i).setCurrentCapacity(Integer.parseInt(currCap[3])); 
     		}	
     	}
     	int i = 0;
     	String output = "";
-    	for (i = 0; i<parks.size(); i++){
-    		Park park = parks.get(i);
+    	for (i = 0; i<departmentManager.getResponsible().size(); i++){
+    		Park park = departmentManager.getResponsible().get(i);
         	//String[] currCap = parkControl.checkCurrentCapacity(parkName);
         	output+= "Capacity parameters in " + park.getParkName() + " park:\n	maximum visitors: " + park.getMaximumVisitors() +
         			"\n	maximum allowable quantity of visitors: " +park.getMaximumOrders() +"\n	current capacity:  " + park.getCurrentCapacity() +
@@ -129,6 +128,24 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
 	}
 	
 	/**
+	 * Activated after the X is clicked on the window.
+	 *  The default is to show a Confirmation Alert with "Yes" and "No" options for the user to choose. 
+	 * "Yes" will check if the client is connected to the server, disconnect it from the server and the system.
+	 */
+	@Override
+	public void handleCloseRequest(WindowEvent event) {
+		int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(), "Are you sure you want to leave?",
+				Arrays.asList("Yes", "No"));
+		if (decision == 2) // if the user clicked on "No"
+			event.consume();
+		else { // if the user clicked on "Yes" and he is connected to server
+			logOut(null); //log out from go nature system
+    		System.out.println("User logged out");
+			userControl.disconnectClientFromServer(); 
+		}
+	}
+	
+	/**
 	 * This method is called after the FXML is invoked
 	 */
 	@Override
@@ -156,23 +173,13 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
 		this.title.setText(screenTitle);
 	    this.title.underlineProperty();
 		//updating the list of parks managed by the department manager
-		parks = new ArrayList<>();
+	    ArrayList<Park> parks = new ArrayList<>();
 		parks = parkControl.fetchManagerParksList("departmentManagerId", departmentManager.getIdNumber());
-    	departmentManager.setResponsible(parks);
-    	//updates for each park the relevant parameters
-    	for (int i = 0; i<parks.size(); i++){
-    		String parkName = parks.get(i).getParkName();
-        	String[] currCap = parkControl.checkCurrentCapacity(parkName);
-    		if (currCap != null) {
-    			//updates park parameters
-    			parks.get(i).setMaximumVisitors(Integer.parseInt(currCap[0]));
-    			parks.get(i).setMaximumOrders(Integer.parseInt(currCap[1]));
-    			parks.get(i).setTimeLimit(Integer.parseInt(currCap[2])); 
-    			parks.get(i).setCurrentCapacity(Integer.parseInt(currCap[3])); 
-    		}	
+    	try {
+    		departmentManager.setResponsible(parks);	
+    	}catch (NullPointerException e) {
+    		System.out.println("cannot fetch parks list");
     	}
-    	
-			
 	}
 
 	public void setScreenTitle(String screenTitle) {
@@ -180,7 +187,7 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
 	}
 
 	@Override
-	public String getScreenTitle() { //need to check
+	public String getScreenTitle() { 
 		return screenTitle;
 	}
 
@@ -188,13 +195,11 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
 	public void saveState() {
 		userControl.saveUser(departmentManager);
 		userControl.saveTitle(screenTitle);
-		parkControl.saveParkList(parks);
 	}
 
 	@Override
 	public void restoreState() {
 		departmentManager = (DepartmentManager) userControl.restoreUser();
-		this.parks = parkControl.restoreParkList();
 		this.privateName.setText("Hello " + departmentManager.getFirstName() + " " + departmentManager.getLastName());
 		setScreenTitle(userControl.restoreTitle());
 	    this.privateName.underlineProperty();

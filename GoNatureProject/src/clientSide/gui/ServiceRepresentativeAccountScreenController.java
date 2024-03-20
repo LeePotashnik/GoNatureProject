@@ -46,8 +46,8 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
     void GoToGuideRegistrationScreen(ActionEvent event) {
     	//
     	try {
-			ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-					"/clientSide/fxml/ConfirmationScreen.fxml", false, true,
+			ScreenManager.getInstance().showScreen("GroupGuideRegistrationScreenController",
+					"/clientSide/fxml/GroupGuideRegistrationScreen.fxml", true, true,
 					StageSettings.defaultSettings("GoNature System - Client Connection"),representative );
 		} catch (StatefulException e) {
 			// TODO Auto-generated catch block
