@@ -28,7 +28,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Pair;
 
-
+/**
+ * Controller for the Department Manager Reports Screen.
+ * This class is responsible for handling user interactions with the screen for generating and viewing various reports related to park visitations.
+ */
 
 public class DepartmentManagerReportsScreenController extends AbstractScreen implements Stateful{
 	
@@ -46,6 +49,10 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
     @FXML
     private Button cancellationReportBtn;
     @FXML
+    private Button UsageReportBtn;
+    @FXML
+    private Button TotalNumberOfVisitorsBtn;
+    @FXML
     private ChoiceBox<String> choiceBoxMonth;
     @FXML
     private ChoiceBox<String> choiceBoxPark;
@@ -53,11 +60,7 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen imp
     private ChoiceBox<String> choiceBoxYear;
     @FXML
     private Label DepartmentName;
-    @FXML
-    private Button UsageReportBtn;
 
-    @FXML
-    private Button TotalNumberOfVisitorsBtn;
 
   
     /**

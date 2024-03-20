@@ -14,7 +14,12 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Pair;
 
-
+/**
+ * Controller class for the Total Number Of Visitors Report screen.
+ * This class handles the user interactions and data presentation for the
+ * total number of visitors report. It populates a pie chart with the distribution
+ * of single visitors versus visitors in groups based on the provided data.
+ */
 public class TotalNumberOfVisitorsReportController extends AbstractScreen {
 	
 	// JAVA FX COMPONENTS

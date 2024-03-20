@@ -19,6 +19,10 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+/**
+ * Controller for the Visit Report screen. This class manages the user interaction and data visualization for
+ * visitation patterns within a park, displaying group and individual visitor data on a scatter chart.
+ */
 public class VisitReportController extends AbstractScreen {
 	/// FXML AND JAVAFX COMPONENTS
     @FXML
@@ -119,8 +123,6 @@ public class VisitReportController extends AbstractScreen {
 	 else {
         showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred. Occupancy data is not available.");
 	 }
-	   
-   
 	}
 		
 	 /**

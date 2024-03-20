@@ -24,6 +24,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Pair;
 
+/**
+ * Controller for the Park Manager Report Screen.
+ * This class is responsible for handling user interactions on the park manager's report screen.
+ */
 public class ParkManagerReportScreenController extends AbstractScreen implements Stateful{
 	
 	private ReportsController control;//controller

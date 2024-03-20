@@ -25,6 +25,10 @@ import entities.ParkManager;
 import javafx.scene.chart.XYChart;
 import javafx.util.Pair;
 
+/**
+ * Controller class for managing report generation and data retrieval for park visitation statistics.
+ * This class provides functionality to check for data availability, generate various reports, and save report data.
+ */
 public class ReportsController {
 	
 	private static ReportsController instance;
@@ -499,7 +503,7 @@ public class ReportsController {
 
             String dayName = dayOfVisit.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
-            if ("Client cancelled the reminder".equals(cancellationReason)) {
+            if ("Client cancelled the reminder".equals(cancellationReason) || "Did not confirm".equals(cancellationReason)) {
                 cancelledOrdersStats.get(dayName).add(numberOfVisitors);
             } else if ("Did not arrive".equals(cancellationReason)) {
                 noShowVisitorsStats.get(dayName).add(numberOfVisitors);

@@ -2,8 +2,6 @@ package clientSide.gui;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +24,10 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+/**
+ * Controls the Cancellation Report screen, displaying a chart with cancellation data
+ * by reason and day, along with median values for cancellations and no-shows.
+ */
 public class CancellationReportController extends AbstractScreen {
 	/// FXML AND JAVAFX COMPONENTS
     @FXML
@@ -42,6 +44,10 @@ public class CancellationReportController extends AbstractScreen {
     private Label medianLabelCancelled;
     @FXML
     private Label medianLabelNoShow;
+    @FXML
+    private Label titleLabel;
+    
+    
     /**
    	 * This method is called after an event is created with clicking on the Back
    	 * button. Returns the user to the previous screen
@@ -57,7 +63,6 @@ public class CancellationReportController extends AbstractScreen {
     	  }
 	}
 
-    
     /**
  	 * This method is called by the FXML and JAVAFX and initializes the screen
  	 */
@@ -99,7 +104,7 @@ public class CancellationReportController extends AbstractScreen {
 	    List<Number> cancelledOrdersValues = new ArrayList<>();
 	    List<Number> noShowVisitorsValues = new ArrayList<>();
 	    aggregatedData.forEach((seriesName, dayCounts) -> {
-        if ("Client cancelled the reminder".equals(seriesName)) {
+        if ("Client cancelled the reminder".equals(seriesName) || "Did not confirm".equals(seriesName)) {
             dayCounts.forEach((day, count) -> {
                 seriesCancelledOrders.getData().add(new XYChart.Data<>(day, count));
             });
@@ -115,7 +120,7 @@ public class CancellationReportController extends AbstractScreen {
 	        dataList.forEach(data -> {
 	            // Assuming data.getYValue() returns the cancellation amount
 	            Number amount = data.getYValue();
-	            if ("Client cancelled the reminder".equals(reason)) {
+	            if ("Client cancelled the reminder".equals(reason) || "Did not confirm".equals(reason)) {
 	                cancelledOrdersValues.add(amount);
 	            } else if ("Did not arrive".equals(reason)) {
 	                noShowVisitorsValues.add(amount);
@@ -125,11 +130,6 @@ public class CancellationReportController extends AbstractScreen {
 	 // Calculate and update medians for Cancelled Orders and No-Show Visitors
 	    double medianCancelled = calculateMedian(cancelledOrdersValues);
 	    double medianNoShow = calculateMedian(noShowVisitorsValues);
-//	    System.out.println("Cancelled Orders Values: " + cancelledOrdersValues);
-//	    System.out.println("No-Show Visitors Values: " + noShowVisitorsValues);
-//	    System.out.println("Cancelled Orders Values: " + medianCancelled);
-//	    System.out.println("Cancelled Orders Values: " + medianNoShow);
-	 // Set the median labels
 	    medianLabelCancelled.setText(String.format("The median for cancelled booking: %.0f", medianCancelled));
 	    medianLabelNoShow.setText(String.format("The median for No-Show visitors: %.0f", medianNoShow));
 
@@ -140,6 +140,9 @@ public class CancellationReportController extends AbstractScreen {
 
 
 	}
+	/**
+	 * This method is calculate the median
+	 */
 	private double calculateMedian(List<Number> values) {
 	    List<Double> nonZeroValues = values.stream()
 	                                       .map(Number::doubleValue)
@@ -159,7 +162,12 @@ public class CancellationReportController extends AbstractScreen {
 	        return (nonZeroValues.get(middle - 1) + nonZeroValues.get(middle)) / 2.0;
 	    }
 	}
-	  
+	/**
+     * Aggregates cancellation data by day, preparing it for chart display.
+     * 
+     * @param chartData The raw chart data with cancellation reasons and corresponding day-wise counts.
+     * @return A map with aggregated data ready for display on the bar chart.
+     */
 	private Map<String, Map<String, Number>> aggregateDataByDay(Map<String, List<XYChart.Data<String, Number>>> chartData) {
 	    Map<String, Map<String, Number>> aggregatedData = new HashMap<>();
 
@@ -176,7 +184,6 @@ public class CancellationReportController extends AbstractScreen {
 	    return aggregatedData;
 	}
 
-
 	/**
 	 * This method is called in order to set pre-info into the GUI components
 	 */
@@ -190,8 +197,7 @@ public class CancellationReportController extends AbstractScreen {
         showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred. Cancellation data is not available.");
 	 }
 	}
-		
-	
+
 	 /**
 	  * This method returns the screen's name
 	  */

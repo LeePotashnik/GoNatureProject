@@ -40,5 +40,10 @@
             <Font name="Cambria" size="18.0" />
          </font>
       </Label>
+      <Label fx:id="titleLabel" layoutX="199.0" layoutY="85.0" prefHeight="46.0" prefWidth="302.0" textAlignment="CENTER">
+         <font>
+            <Font name="Cambria" size="18.0" />
+         </font>
+      </Label>
    </children>
 </Pane>
