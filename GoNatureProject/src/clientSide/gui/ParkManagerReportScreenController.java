@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
+import clientSide.control.ParkController;
 import clientSide.control.ReportsController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
@@ -74,11 +75,14 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
                	return;
         	   }
             Pair<Integer, Integer> visitorsData = control.generateTotalNumberOfVisitorsReport(selectedMonth, selectedYear, this.park);
+            boolean saveSuccess = control.saveTotalNumberOfVisitorsReport(selectedMonth, selectedYear, this.park);
+            System.out.println(saveSuccess); 
             ScreenManager.getInstance().showScreen("TotalNumberOfVisitorsReportController", "/clientSide/fxml/TotalNumberOfVisitorsReport.fxml",true, true, StageSettings.defaultSettings("Total number of visitors Report"), visitorsData);
         } catch (StatefulException | ScreenException e) {
             e.printStackTrace();
             showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred while generating the report.");
         }
+        
     }
     /**
 	 * This method is called after an event of clicking on "Usage report" button
@@ -100,8 +104,10 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
                	showErrorAlert(ScreenManager.getInstance().getStage(), "No data available for the selected time period.");                
                	return;
         	   }
-           	List<Pair<LocalDate, Integer>> visitorsData = control.generateUsageReport(selectedMonth, selectedYear, this.park);
-            ScreenManager.getInstance().showScreen("UsageReportController", "/clientSide/fxml/UsageReport.fxml", true, true, StageSettings.defaultSettings("Total number of visitors Report"), visitorsData);
+           	List<Pair<LocalDate, Integer>> usageData = control.generateUsageReport(selectedMonth, selectedYear, this.park);
+           	boolean saveSuccess = control.saveUsageReport(selectedMonth, selectedYear, this.park);
+            System.out.println(saveSuccess); 
+           	ScreenManager.getInstance().showScreen("UsageReportController", "/clientSide/fxml/UsageReport.fxml", true, true, StageSettings.defaultSettings("Total number of visitors Report"), usageData);
         } catch (StatefulException | ScreenException e) {
            e.printStackTrace();
            showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred while generating the report.");
@@ -117,7 +123,7 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
 	@FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(false,false);
+			ScreenManager.getInstance().goToPreviousScreen(false,true);
     	  } catch (ScreenException | StatefulException e) {
     	        e.printStackTrace();
     	  }
@@ -153,7 +159,7 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
     	// in case the user is logged in
     	if (information instanceof ParkManager) {
     		parkManager = (ParkManager)information;
-    		park = control.getManagerPark(parkManager.getManages());
+    		park= parkManager.getParkObject();
     		parkName.getStyleClass().add("label-center");
         	parkName.setText("Hello "+parkManager.getManages()+" manager!");
     	}
@@ -184,7 +190,7 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
 	@Override
 	public void restoreState() {
 		parkManager = control.restoreParkManager();
-		park = control.getManagerPark(parkManager.getManages());
+		park = ParkController.getInstance().restorePark();
 		parkName.getStyleClass().add("label-center");
     	parkName.setText("Hello "+parkManager.getManages()+" manager!");
 	}

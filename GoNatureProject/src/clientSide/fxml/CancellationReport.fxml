@@ -22,7 +22,7 @@
             <Font name="Cambria" size="31.0" />
          </font>
       </Label>
-      <BarChart fx:id="cancellationBarChart" animated="false" barGap="10" layoutX="43.0" layoutY="146.0" legendVisible="true" prefHeight="332.0" prefWidth="602.0">
+      <BarChart fx:id="cancellationBarChart" animated="false" barGap="10" layoutX="43.0" layoutY="119.0" legendVisible="true" prefHeight="332.0" prefWidth="602.0">
          <xAxis>
             <CategoryAxis fx:id="daysAxis" label="Day of the week" />
          </xAxis>
@@ -30,5 +30,15 @@
             <NumberAxis fx:id="amountAxis" autoRanging="false" label="Average Amount" lowerBound="0" tickUnit="10" upperBound="100" />
          </yAxis>
       </BarChart>
+      <Label fx:id="medianLabelCancelled" layoutX="34.0" layoutY="440.0" prefHeight="46.0" prefWidth="302.0" textAlignment="CENTER">
+         <font>
+            <Font name="Cambria" size="18.0" />
+         </font>
+      </Label>
+      <Label fx:id="medianLabelNoShow" layoutX="394.0" layoutY="443.0" prefHeight="46.0" prefWidth="292.0" textAlignment="CENTER">
+         <font>
+            <Font name="Cambria" size="18.0" />
+         </font>
+      </Label>
    </children>
 </Pane>

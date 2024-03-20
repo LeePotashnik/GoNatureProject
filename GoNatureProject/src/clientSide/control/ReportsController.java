@@ -7,6 +7,7 @@ import java.time.LocalTime;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +18,6 @@ import java.util.stream.Collectors;
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.Communication.CommunicationType;
-import common.communication.Communication.QueryType;
 import common.communication.CommunicationException;
 import entities.DepartmentManager;
 import entities.Park;
@@ -86,91 +86,49 @@ public class ReportsController {
 	    }
 	    return false;
 	}
-	public void generateReportForAllParks(String selectedMonth, String selectedYear) {
-	    
-	}
 	/**
-	 * Retrieves a Park object from the database based on the provided park name.
-	 * This method constructs a SELECT query to fetch all the details of a park
-	 * that matches the specified name. It uses a Communication object to send the
-	 * query request to the server side for execution.
+	 * Checks if a specific report from the park manager to the department manager is available
+	 * in the report tables for a given month, year, and park.
 	 *
-	 * @param parkName The name of the park to retrieve. This should match the
-	 *                 'parkName' column in the 'park' table in the database.
-	 * @return A Park object populated with data from the database if a matching
-	 *         park is found. Returns null if no park with the specified name is found.
+	 * @param selectedMonth The month for which the report's availability is to be checked.
+	 * @param selectedYear The year for which the report's availability is to be checked.
+	 * @param park The Park object for which the report's availability is to be checked.
+	 * @param reportType The type of the report to check for ("total_visitors" or "usage").
+	 * @return true if the report is available, false otherwise.
 	 */
-	public Park getManagerPark(String parkName) {
-		// creating a communication request to fetch the data from the database
-		Communication getPark = new Communication(CommunicationType.QUERY_REQUEST);
-		try {
-			getPark.setQueryType(QueryType.SELECT);
+	public boolean isParkManagerReportAvailable(String selectedMonth, String selectedYear, Park park, String reportType) {
+	    String reportTableName = reportType.equals("total_visitors") ? "total_number_of_visitors_report" : "usage_report";
+	    //String parkName = park.getParkName();
+	    String parkTableName=ParkController.getInstance().nameOfTable(park);
+	    if (park == null || selectedMonth == null || selectedYear == null) {
+	        System.out.println("One or more method arguments are null");
+	        return false;
+	    }
+	    Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
+	    try {
+			comm.setQueryType(Communication.QueryType.SELECT);
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		getPark.setTables(Arrays.asList("park"));
-		getPark.setSelectColumns(Arrays.asList("*"));
-		getPark.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="), Arrays.asList(parkName));
-		// sending the request to the server side
-		GoNatureClientUI.client.accept(getPark);
-
-		// getting the result
-		if (getPark.getResultList().isEmpty()) { // no park like that
-			return null;
-		}
-
-		// setting the park's data into a park object and returning it
-		Object[] row = getPark.getResultList().get(0);
-		Park park = new Park((Integer) row[0], (String) row[1], (String) row[2], (String) row[3], (String) row[4],
-				(String) row[5], (String) row[6], (Integer) row[7], (Integer) row[8], (Integer) row[9],
-				(Integer) row[10]);
-		return park;
+	    comm.setTables(Arrays.asList(reportTableName)); 
+	    comm.setSelectColumns(Arrays.asList("park_name", "date"));
+    	int month=Integer.parseInt(selectedMonth);
+	    int year=Integer.parseInt(selectedYear);
+	    LocalDate from= LocalDate.of(year, month, 1);
+	    LocalDate to=from.plusMonths(1).minusDays(1);
+	    comm.setWhereConditions(
+	    	    Arrays.asList("date", "date", "park_name"),
+	    	    Arrays.asList(">=", "AND", "<=", "AND","="),
+	    	    Arrays.asList(from.toString(), to.toString(),parkTableName)
+	    	);
+	    GoNatureClientUI.client.accept(comm);
+    	if (comm.getResultList() != null && !comm.getResultList().isEmpty()) {
+            // The report for this date and park already exists in the database
+        	return true;
+        }
+		return false;
 	}
 
-        	
-           
-	/**
-	 * Retrieves a list of Park objects from the database associated with a specific department.
-	 * This method constructs a SELECT query to fetch details of all parks that belong to the specified
-	 * department name. It utilizes a Communication object to send the query request to the server side
-	 * for execution.
-	 *
-	 * @param departmentName The name of the department for which parks are to be retrieved. The method
-	 *                       matches this name against the 'department' column in the 'park' table in the
-	 *                       database.
-	 * @return An ArrayList of Park objects, each populated with data from the database for a single park
-	 *         associated with the specified department. Returns an empty list if no parks are found for
-	 *         the specified department, or null if there's an issue with the database query execution.
-	 */
-	public ArrayList<Park> getDepartmentParks(String departmentName) {
-		Communication getParks = new Communication(CommunicationType.QUERY_REQUEST);
-		try {
-			getParks.setQueryType(QueryType.SELECT);
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-		getParks.setTables(Arrays.asList("park"));
-		getParks.setSelectColumns(Arrays.asList("*"));
-		getParks.setWhereConditions(Arrays.asList("department"), Arrays.asList("="), Arrays.asList(departmentName));
-		// sending the request to the server side
-		GoNatureClientUI.client.accept(getParks);
-
-		// getting the result
-		if (getParks.getResultList().isEmpty()) { // no park like that
-			return null;
-		}
-
-		// setting the park's data into a park object and returning it
-		ArrayList<Park> departmentParks = new ArrayList<>();
-		for (Object[] row : getParks.getResultList()) {
-			Park park = new Park((Integer) row[0], (String) row[1], (String) row[2], (String) row[3], (String) row[4],
-					(String) row[5], (String) row[6], (Integer) row[7], (Integer) row[8], (Integer) row[9],
-					(Integer) row[10]);
-			departmentParks.add(park);
-		}
-		return departmentParks;
-	}
-	
 	/**
 	 * Generates a usage report for a specific park over a given month and year. The report includes
 	 * the daily visitor count within the specified time frame. This method constructs a SELECT query
@@ -208,7 +166,57 @@ public class ReportsController {
     		GoNatureClientUI.client.accept(comm);
     		return processFetchedData(comm.getResultList());  		
 	}
-
+	 
+	 /**
+	  * Attempts to save a usage report for a given park, month, and year in the database.
+	  * It first checks if a report for the specified park and date range already exists
+	  * to avoid duplicate entries. If no such report exists, it proceeds to insert a new
+	  * record with the given park name and date into the 'usage_report' table.
+	  *
+	  * @param selectedMonth The month for which the report is being saved.
+	  * @param selectedYear The year for which the report is being saved.
+	  * @param park The Park object representing the park for which the report is being saved.
+	  * @return true if the insert operation is successful, false if the report already exists
+	  *         or if an error occurs during the operation.
+	  */
+	 public boolean saveUsageReport(String selectedMonth, String selectedYear, Park park) {
+			
+			String tableName = "usage_report";
+		    String date = selectedYear + "-" + selectedMonth + "-30";
+		    String parkTableName=ParkController.getInstance().nameOfTable(park);
+			// Set the type of the query
+		    try {
+		    	Communication select = new Communication(Communication.CommunicationType.QUERY_REQUEST);
+		    	select.setQueryType(Communication.QueryType.SELECT);
+		    	select.setTables(Arrays.asList(tableName)); 
+		    	select.setSelectColumns(Arrays.asList("park_name", "date"));
+		    	int month=Integer.parseInt(selectedMonth);
+			    int year=Integer.parseInt(selectedYear);
+			    LocalDate from= LocalDate.of(year, month, 1);
+			    LocalDate to=from.plusMonths(1).minusDays(1);
+			    select.setWhereConditions(
+			    	    Arrays.asList("date", "date", "park_name"),
+			    	    Arrays.asList(">=", "AND", "<=", "AND","="),
+			    	    Arrays.asList(from.toString(), to.toString(),parkTableName)
+			    	);
+		    	GoNatureClientUI.client.accept(select);
+		    	if (select.getResultList() != null && !select.getResultList().isEmpty()) {
+		            // The report for this date and park already exists in the database
+		        	return false;
+		        }
+		        Communication comm = new Communication(CommunicationType.QUERY_REQUEST);
+			    comm.setQueryType(Communication.QueryType.INSERT);
+			    comm.setTables(Collections.singletonList(tableName));
+			    comm.setColumnsAndValues(Arrays.asList("park_name", "date"), Arrays.asList(parkTableName, date));
+			    // Send the insert operation request
+			    GoNatureClientUI.client.accept(comm);
+			    return comm.getQueryResult(); 
+		    } catch (CommunicationException e) {
+				e.printStackTrace();
+			} 
+		    return false;
+		}
+	 
 	 /**
 	  * Processes data fetched from the database to aggregate visitor counts by date. This method
 	  * takes a list of data entries, where each entry consists of a date and a corresponding number
@@ -257,7 +265,6 @@ public class ReportsController {
 	public Pair<Integer, Integer> generateTotalNumberOfVisitorsReport(String selectedMonth,String selectedYear ,Park park) {
 		// Create a new Communication object for a query request
 		if (park == null) {
-			System.out.println("null");
 		    throw new IllegalArgumentException("Park cannot be null");
 		}
 		String parkTableName=ParkController.getInstance().nameOfTable(park)+"_park_done_booking";
@@ -293,6 +300,55 @@ public class ReportsController {
 		return pairResult;
 	}
 	
+	 /**
+	  * Attempts to save a total number of visitors report for a given park, month, and year in the database.
+	  * It first checks if a report for the specified park and date range already exists
+	  * to avoid duplicate entries. If no such report exists, it proceeds to insert a new
+	  * record with the given park name and date into the 'total_number_of_visitors_report' table.
+	  *
+	  * @param selectedMonth The month for which the report is being saved.
+	  * @param selectedYear The year for which the report is being saved.
+	  * @param park The Park object representing the park for which the report is being saved.
+	  * @return true if the insert operation is successful, false if the report already exists
+	  *         or if an error occurs during the operation.
+	  */
+	public boolean saveTotalNumberOfVisitorsReport(String selectedMonth, String selectedYear, Park park) {
+		
+		String tableName = "total_number_of_visitors_report";
+	    String date = selectedYear + "-" + selectedMonth + "-30";
+	    String parkTableName=ParkController.getInstance().nameOfTable(park);
+		// Set the type of the query
+	    try {
+	    	Communication select = new Communication(Communication.CommunicationType.QUERY_REQUEST);
+	    	select.setQueryType(Communication.QueryType.SELECT);
+	    	select.setTables(Arrays.asList(tableName)); 
+	    	select.setSelectColumns(Arrays.asList("park_name", "date"));
+	    	int month=Integer.parseInt(selectedMonth);
+		    int year=Integer.parseInt(selectedYear);
+		    LocalDate from= LocalDate.of(year, month, 1);
+		    LocalDate to=from.plusMonths(1).minusDays(1);
+		    select.setWhereConditions(
+		    	    Arrays.asList("date", "date", "park_name"),
+		    	    Arrays.asList(">=", "AND", "<=", "AND","="),
+		    	    Arrays.asList(from.toString(), to.toString(),parkTableName)
+		    	);
+	    	GoNatureClientUI.client.accept(select);
+	    	if (select.getResultList() != null && !select.getResultList().isEmpty()) {
+	            // The report for this date and park already exists in the database
+	        	return false;
+	        }
+	        Communication comm = new Communication(CommunicationType.QUERY_REQUEST);
+		    comm.setQueryType(Communication.QueryType.INSERT);
+		    comm.setTables(Collections.singletonList(tableName));
+		    comm.setColumnsAndValues(Arrays.asList("park_name", "date"), Arrays.asList(parkTableName, date));
+		    // Send the insert operation request
+		    GoNatureClientUI.client.accept(comm);
+		    return comm.getQueryResult(); 
+	    } catch (CommunicationException e) {
+			e.printStackTrace();
+		} 
+	    return false;
+	}
 
 /**
  * Generates a report for park visits within a specified month and year for a given park.
@@ -414,6 +470,7 @@ public class ReportsController {
 	    return processFetchedCancellationDataForChart(comm.getResultList());
 	  
 	}
+   
     /**
      * Processes fetched data to prepare it for visualization in a chart. This method calculates the average number of
      * visitors for each cancellation reason and organizes the data by days of the week.
@@ -424,17 +481,17 @@ public class ReportsController {
      *         each representing the average number of cancellations for a day of the week.
      */
     private Map<String, List<XYChart.Data<String, Number>>> processFetchedCancellationDataForChart(List<Object[]> resultList) {
-    	Map<String, Pair<Integer, Integer>> cancelledOrdersStats = new HashMap<>();
-        Map<String, Pair<Integer, Integer>> noShowVisitorsStats = new HashMap<>();
+    	Map<String, List<Integer>> cancelledOrdersStats = new HashMap<>();
+        Map<String, List<Integer>> noShowVisitorsStats = new HashMap<>();
 
-        // Fill the maps with zeros for each day of the week
+        // Initialize lists for each day of the week
         for (DayOfWeek day : DayOfWeek.values()) {
             String dayName = day.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
-            cancelledOrdersStats.put(dayName, new Pair<>(0, 0)); // (total, count)
-            noShowVisitorsStats.put(dayName, new Pair<>(0, 0)); // (total, count)
+            cancelledOrdersStats.put(dayName, new ArrayList<>());
+            noShowVisitorsStats.put(dayName, new ArrayList<>());
         }
 
-        // Process the results from the database
+        // Process the results
         for (Object[] row : resultList) {
             LocalDate dayOfVisit = ((java.sql.Date) row[0]).toLocalDate();
             String cancellationReason = (String) row[1];
@@ -443,28 +500,28 @@ public class ReportsController {
             String dayName = dayOfVisit.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
             if ("Client cancelled the reminder".equals(cancellationReason)) {
-                Pair<Integer, Integer> stats = cancelledOrdersStats.get(dayName);
-                cancelledOrdersStats.put(dayName, new Pair<>(stats.getKey() + numberOfVisitors, stats.getValue() + 1));
+                cancelledOrdersStats.get(dayName).add(numberOfVisitors);
             } else if ("Did not arrive".equals(cancellationReason)) {
-                Pair<Integer, Integer> stats = noShowVisitorsStats.get(dayName);
-                noShowVisitorsStats.put(dayName, new Pair<>(stats.getKey() + numberOfVisitors, stats.getValue() + 1));
+                noShowVisitorsStats.get(dayName).add(numberOfVisitors);
             }
         }
 
         // Calculate averages and prepare chart data
         List<XYChart.Data<String, Number>> cancelledOrdersAvgData = cancelledOrdersStats.entrySet().stream()
-              .map(e -> new XYChart.Data<String, Number>(e.getKey(), (Number) (e.getValue().getKey() / (double) e.getValue().getValue())))
-              .collect(Collectors.toList());
+                .map(e -> new XYChart.Data<>(e.getKey(), e.getValue().isEmpty() ? 0 : (Number) (e.getValue().stream().mapToInt(Integer::intValue).sum() / (double) e.getValue().size())))
+                .collect(Collectors.toList());
         List<XYChart.Data<String, Number>> noShowVisitorsAvgData = noShowVisitorsStats.entrySet().stream()
-              .map(e -> new XYChart.Data<String, Number>(e.getKey(), (Number) (e.getValue().getKey() / (double) e.getValue().getValue())))
-              .collect(Collectors.toList());
+                .map(e -> new XYChart.Data<>(e.getKey(), e.getValue().isEmpty() ? 0 : (Number) (e.getValue().stream().mapToInt(Integer::intValue).sum() / (double) e.getValue().size())))
+                .collect(Collectors.toList());
 
         Map<String, List<XYChart.Data<String, Number>>> chartData = new HashMap<>();
         chartData.put("Client cancelled the reminder", cancelledOrdersAvgData);
         chartData.put("Did not arrive", noShowVisitorsAvgData);
 
         return chartData;
+ 
     }
+  
     
     /**
 	 * @param savedParkManager the savedParkManager to be saved

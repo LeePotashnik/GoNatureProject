@@ -31,15 +31,17 @@ public class TemporaryRunner {
 		parks.add(Congaree);
 		parks.add(Everglades);
 		ParkManager pm = new ParkManager("151071559", "Reese", "Moore", "reese.moore@gonature.com","0503868747","Hawaii Volcanoes","reese.moore", "Reese8##649112", false);
+		ParkManager pm1 = new ParkManager("883879564", "Skyler", "Wilson", "skyler.wilson@gonature.com","0502794596","Big Bend","skyler.wilson", "Skyler373656@0", false);
+		ParkManager pm2 = new ParkManager("450849137", "Quinn", "Thomas", "quinn.thomas@gonature.com","0541959495","Everglades","quinn.thomas", "Quinn!413#3!@@6", false);
 		DepartmentManager dm = new DepartmentManager("104666977", "Peyton", "Martin","Peyton.Martin@gonature.com","0547654321","Southern", "Peyton.Martin", "Peyton5678%",
 		false);
 
 //
-//		ScreenManager.getInstance().showScreen("ParkManagerReportScreenController",
-//				"/clientSide/fxml/ParkManagerReportScreen.fxml", false, false,
+//		ScreenManager.getInstance().showScreen("ParkManagerAccountScreenController",
+//				"/clientSide/fxml/ParkManagerAccountScreen.fxml", false, false,
 //				StageSettings.defaultSettings("GoNature System - Reservations"),pm);
-		ScreenManager.getInstance().showScreen("DepartmentManagerReportsScreenController",
-				"/clientSide/fxml/DepartmentManagerReportsScreen.fxml", false,false,
+		ScreenManager.getInstance().showScreen("DepartmentManagerAccountScreenController",
+				"/clientSide/fxml/DepartmentManagerAccountScreen.fxml", false,false,
 				StageSettings.defaultSettings("GoNature System - Reservations"),dm);
 		
 		

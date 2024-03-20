@@ -14,12 +14,12 @@
             <Font name="Cambria" size="35.0" />
          </font>
       </Label>
-      <Button fx:id="visitReportBtn" layoutX="418.0" layoutY="385.0" mnemonicParsing="false" onAction="#visitReport" prefHeight="62.0" prefWidth="210.0" text="Visit report">
+      <Button fx:id="visitReportBtn" layoutX="245.0" layoutY="332.0" mnemonicParsing="false" onAction="#visitReport" prefHeight="62.0" prefWidth="210.0" text="Visit report">
          <font>
             <Font size="20.0" />
          </font>
       </Button>
-      <Button fx:id="cancellationReportBtn" layoutX="78.0" layoutY="385.0" mnemonicParsing="false" onAction="#cancellationReport" prefHeight="62.0" prefWidth="210.0" text="Cancellation report">
+      <Button fx:id="cancellationReportBtn" layoutX="24.0" layoutY="332.0" mnemonicParsing="false" onAction="#cancellationReport" prefHeight="62.0" prefWidth="210.0" text="Cancellation report">
          <font>
             <Font size="20.0" />
          </font>
@@ -53,5 +53,15 @@
             <Font name="Calibri Light" size="20.0" />
          </font>
       </Label>
+      <Button fx:id="UsageReportBtn" layoutX="466.0" layoutY="332.0" mnemonicParsing="false" onAction="#UsageReport" prefHeight="62.0" prefWidth="210.0" text="Usage report">
+         <font>
+            <Font size="20.0" />
+         </font>
+      </Button>
+      <Button fx:id="TotalNumberOfVisitorsBtn" layoutX="190.0" layoutY="409.0" mnemonicParsing="false" onAction="#TotalNumberOfVisitorsReport" prefHeight="62.0" prefWidth="321.0" text="TotalNumber Of Visitors Report">
+         <font>
+            <Font size="20.0" />
+         </font>
+      </Button>
    </children>
 </Pane>
