@@ -13,7 +13,6 @@ import common.communication.Communication;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.StageSettings;
 import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.Booking;
@@ -53,7 +52,6 @@ import javafx.util.Pair;
  * operations.
  */
 public class BookingScreenController extends AbstractScreen implements Stateful {
-
 	private BookingController control; // controller
 	private ObservableList<Park> parksList; // list of the parks
 	private ObservableList<String> parksStrings; // list of the parks as strings for the parks combox box
@@ -67,6 +65,11 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	private Booking booking;
 	private String bookingId;
 	private int parkIndexInCombobox;
+
+	private static final String digitsOnly = "\\d+";
+	private static final String lettersInput = "[a-zA-Z]+( [a-zA-Z]+)?";
+	private static final String emailInput = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+	private static final String phoneInput = "^(052|054|050)\\d{7}$";
 
 	/**
 	 * Constructor, initializes the booking controller instance
@@ -168,7 +171,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			payMessage += "\nYour reservation's final price (after pre-order discount) is: " + discountPrice + "$";
 		}
 
-		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
+		int choise = showConfirmationAlert(payMessage,
 				Arrays.asList("Pay Now", "Pay Upon Arrival", "Cancel Reservation"));
 
 		switch (choise) {
@@ -181,8 +184,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			// showing the payment screen
 			try {
 				ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
-						"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
-						StageSettings.defaultSettings("Payment"), new Pair<Booking, ParkVisitor>(booking, visitor));
+						"/clientSide/fxml/PaymentSystemScreen.fxml", true, false, booking);
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
@@ -208,9 +210,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 					}).start();
 
 					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-							"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
-							StageSettings.defaultSettings("Confirmation"),
-							new Pair<Booking, ParkVisitor>(booking, visitor));
+							"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
 //					return;
 				} catch (StatefulException | ScreenException e1) {
 					e1.printStackTrace();
@@ -237,7 +237,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 */
 	private void dateIsNotAvailable() {
 		// creating a pop up message for the user to choose what to do next
-		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+		int choise = showConfirmationAlert(
 				"We care for your experience in " + booking.getParkBooked().getParkName()
 						+ " Park, so we limit the volume of visitors in the park."
 						+ "\nUnfortunately, the date and time you chose are not available at this moment.",
@@ -253,8 +253,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		case 2: {
 			try {
 				ScreenManager.getInstance().showScreen("RescheduleScreenController",
-						"/clientSide/fxml/RescheduleScreen.fxml", true, true,
-						StageSettings.defaultSettings("Reschedule"), new Pair<Booking, ParkVisitor>(booking, visitor));
+						"/clientSide/fxml/RescheduleScreen.fxml", true, true, booking);
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
@@ -266,8 +265,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			// showing the waiting list screen
 			try {
 				ScreenManager.getInstance().showScreen("WaitingListScreenController",
-						"/clientSide/fxml/WaitingListScreen.fxml", true, true,
-						StageSettings.defaultSettings("Waiting List"), booking);
+						"/clientSide/fxml/WaitingListScreen.fxml", true, true, booking);
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
@@ -577,7 +575,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 		// checking the first name
 		if (!firstNameTxt.isDisabled()
-				&& (firstNameTxt.getText().isEmpty() || !firstNameTxt.getText().matches("[a-zA-Z]+( [a-zA-Z]+)?"))) {
+				&& (firstNameTxt.getText().isEmpty() || !firstNameTxt.getText().matches(lettersInput))) {
 			firstNameTxt.setStyle(setFieldToError());
 			error += "• enter a valid first name\n";
 			valid = false;
@@ -585,14 +583,14 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 		// checking the last name
 		if (!lastNameTxt.isDisabled()
-				&& (lastNameTxt.getText().isEmpty() || !lastNameTxt.getText().matches("[a-zA-Z]+( [a-zA-Z]+)?"))) {
+				&& (lastNameTxt.getText().isEmpty() || !lastNameTxt.getText().matches(lettersInput))) {
 			lastNameTxt.setStyle(setFieldToError());
 			error += "• enter a valid last name\n";
 			valid = false;
 		}
 
 		// checking the visitors number
-		if (visitorsTxt.getText().isEmpty() || !visitorsTxt.getText().matches("\\d+")) {
+		if (visitorsTxt.getText().isEmpty() || !visitorsTxt.getText().matches(digitsOnly)) {
 			visitorsTxt.setStyle(setFieldToError());
 			error += "• enter a digit-only number of visitors\n";
 			valid = false;
@@ -623,22 +621,21 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		}
 
 		// checking the email address
-		if (emailTxt.getText().isEmpty()
-				|| !emailTxt.getText().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+		if (emailTxt.getText().isEmpty() || !emailTxt.getText().matches(emailInput)) {
 			emailTxt.setStyle(setFieldToError());
 			error += "• enter a valid email address\n";
 			valid = false;
 		}
 
 		// checking the phone number
-		if (phoneTxt.getText().isEmpty() || !phoneTxt.getText().matches("^(052|054|050)\\d{7}$")) {
+		if (phoneTxt.getText().isEmpty() || !phoneTxt.getText().matches(phoneInput)) {
 			phoneTxt.setStyle(setFieldToError());
 			error += "• enter a valid phone number\n";
 			valid = false;
 		}
 
 		if (!valid)
-			showErrorAlert(ScreenManager.getInstance().getStage(), error);
+			showErrorAlert(error);
 		return valid;
 	}
 
@@ -707,7 +704,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		textField.textProperty().addListener(new ChangeListener<String>() {
 			@Override
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				if (!newValue.matches("\\d*")) {
+				if (!newValue.matches(digitsOnly)) {
 					textField.setText(newValue.replaceAll("[^\\d]", ""));
 				}
 			}
@@ -723,7 +720,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		textField.textProperty().addListener(new ChangeListener<String>() {
 			@Override
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				if (!newValue.matches("[a-zA-Z]+( [a-zA-Z]+)*")) {
+				if (!newValue.matches(lettersInput)) {
 					textField.setText(newValue.replaceAll("[^a-zA-Z ]", ""));
 				}
 			}

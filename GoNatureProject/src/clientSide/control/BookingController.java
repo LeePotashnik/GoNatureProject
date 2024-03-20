@@ -32,28 +32,28 @@ public class BookingController {
 	/**
 	 * What is the future booking range, in months. Default: 4 months
 	 */
-	public final int futureBookingsRange = 4;
+	public int futureBookingsRange = 4;
 	/**
 	 * opening hour for the parks. Default: 8AM
 	 */
-	public final int openHour = 8;
+	public int openHour = 8;
 	/**
 	 * closing hour for the parks. Default: 18PM + Park's time limit
 	 */
-	public final int closeHour = 18;
+	public int closeHour = 18;
 	/**
 	 * sets the minutes of the available hours. Default: 0, which means reservations
 	 * can be made in jumpings of one hour
 	 */
-	public final int minutes = 0;
+	public int minutes = 0;
 	/**
 	 * minimum visitors in reservation
 	 */
-	public final int minimumVisitorsInReservation = 1;
+	public int minimumVisitorsInReservation = 1;
 	/**
 	 * maximum visitors in reservation
 	 */
-	public final int maximumVisitorsInGroupReservation = 15;
+	public int maximumVisitorsInGroupReservation = 15;
 
 	// for saving and restoring purposes of the screens
 	private Booking booking;
@@ -427,7 +427,7 @@ public class BookingController {
 								((Time) row[2]).toLocalTime(), ((Date) row[3]).toLocalDate(),
 								((String) row[4]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL,
 								(Integer) row[5], (String) row[6], (String) row[7], (String) row[8], (String) row[9],
-								(String) row[10], (Integer) row[11], false, false,
+								(String) row[10], (Integer) row[11], true, false,
 								((Time) row[12]) == null ? null : ((Time) row[12]).toLocalTime(),
 								((Time) row[13]) == null ? null : ((Time) row[13]).toLocalTime(), false, null, park);
 						addBooking.setStatus("Finished");

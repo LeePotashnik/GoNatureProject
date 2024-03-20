@@ -3,7 +3,6 @@ package serverSide.gui;
 import java.io.IOException;
 
 import common.controllers.ScreenManager;
-import common.controllers.StageSettings;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import serverSide.control.GoNatureServer;
@@ -11,6 +10,7 @@ import serverSide.jdbc.DatabaseException;
 
 public class GoNatureServerUI extends Application {
 	public static GoNatureServer server;
+	public static ServerConnectionController connection;
 
 	/**
 	 * This method runs the server with the entered port number (from the text field
@@ -69,7 +69,7 @@ public class GoNatureServerUI extends Application {
 	 */
 	public void start(Stage primaryStage) throws Exception {
 		ScreenManager.getInstance().showScreen("ServerConnectionController", "/serverSide/fxml/ServerConnection.fxml",
-				true, false, StageSettings.defaultSettings("GoNature System - Server Connection"), null);
+				true, false, null);
 	}
 
 	public static void main(String[] args) {

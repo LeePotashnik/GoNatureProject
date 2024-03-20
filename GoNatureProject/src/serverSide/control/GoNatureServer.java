@@ -10,6 +10,8 @@ import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.SecondaryRequest;
 import common.communication.Communication.ServerMessageType;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
 import serverSide.jdbc.DatabaseController;
@@ -19,6 +21,7 @@ public class GoNatureServer extends AbstractServer {
 	private DatabaseController database;
 	private BackgroundManager backgroundManager;
 	private ArrayList<ConnectionToClient> clientsConnected = new ArrayList<>();
+	public static final ObservableList<ConnectedClient> connectedToGUI = FXCollections.observableArrayList();
 	private NotificationsController notifications = NotificationsController.getInstance();
 	private StaffController staffController;
 
@@ -56,6 +59,84 @@ public class GoNatureServer extends AbstractServer {
 		backgroundManager.startBackgroundOperations();
 	}
 
+	//////////////////////////////////////
+	/// INNER CLASS - CONNECTED CLIENT ///
+	//////////////////////////////////////
+
+	/**
+	 * A class for holding an available slot
+	 */
+	public static class ConnectedClient {
+		private String ip, status;
+		private LocalTime enterTime, exitTime;
+
+		/**
+		 * Constructor for the connected client
+		 */
+		public ConnectedClient(String ip, String status, LocalTime enterTime, LocalTime exitTime) {
+			this.ip = ip;
+			this.status = status;
+			this.enterTime = enterTime;
+			this.exitTime = exitTime;
+		}
+
+		/**
+		 * @return the ip address
+		 */
+		public String getIp() {
+			return ip;
+		}
+
+		/**
+		 * @return the connection status
+		 */
+		public String getStatus() {
+			return status;
+		}
+
+		/**
+		 * @return the entrance time
+		 */
+		public LocalTime getEnterTime() {
+			return enterTime;
+		}
+
+		/**
+		 * @return the exit time
+		 */
+		public LocalTime getExitTime() {
+			return exitTime;
+		}
+
+		/**
+		 * @param ip
+		 */
+		public void setIp(String ip) {
+			this.ip = ip;
+		}
+
+		/**
+		 * @param status
+		 */
+		public void setStatus(String status) {
+			this.status = status;
+		}
+
+		/**
+		 * @param enterTime
+		 */
+		public void setEnterTime(LocalTime enterTime) {
+			this.enterTime = enterTime;
+		}
+
+		/**
+		 * @param exitTime
+		 */
+		public void setExitTime(LocalTime exitTime) {
+			this.exitTime = exitTime;
+		}
+	}
+
 	@Override
 	/**
 	 * This method adds the sent client to the clientsConnected list.
@@ -66,6 +147,8 @@ public class GoNatureServer extends AbstractServer {
 		} else {
 			clientsConnected.add(client);
 			System.out.println(client + " is connected to server");
+			connectedToGUI.add(new ConnectedClient(client.getInetAddress().getHostAddress().toString(), "Connected",
+					LocalTime.now(), null));
 		}
 	}
 
@@ -79,6 +162,14 @@ public class GoNatureServer extends AbstractServer {
 		} else {
 			clientsConnected.remove(client);
 			System.out.println(client + " is disconnected");
+			for (int i = 0; i < connectedToGUI.size(); i++) {
+				if (connectedToGUI.get(i).getIp().equals(client.getInetAddress().getHostAddress().toString())
+						&& connectedToGUI.get(i).getExitTime() == null) {
+					ConnectedClient update = new ConnectedClient(connectedToGUI.get(i).getIp(), "Disconnected",
+							connectedToGUI.get(i).getEnterTime(), LocalTime.now());
+					connectedToGUI.set(i, update);
+				}
+			}
 		}
 	}
 
@@ -172,7 +263,7 @@ public class GoNatureServer extends AbstractServer {
 					notifications.sendCancellationEmailNotification(Arrays.asList(request.getEmail(),
 							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
 							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
-							request.isPaid()));
+							request.isPaid()), "Visitor chose to cancel.");
 				}
 			}
 

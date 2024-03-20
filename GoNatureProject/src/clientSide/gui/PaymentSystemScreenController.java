@@ -6,10 +6,8 @@ import clientSide.control.BookingController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.StageSettings;
 import common.controllers.StatefulException;
 import entities.Booking;
-import entities.ParkVisitor;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.beans.value.ChangeListener;
@@ -31,17 +29,22 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
-import javafx.util.Pair;
 
 public class PaymentSystemScreenController extends AbstractScreen {
 	private Booking booking;
-	private Pair<Booking, ParkVisitor> pair;
+	private static final String nameInput = "^[a-zA-Z]+ [a-zA-Z]+$";
+	private static final String fourDigits = "\\d{4}";
+	private static final String digitsOnly = "\\d*";
 
-	// properties for the images anymation
+	// properties for the images animation
 	private final static int IMAGE_VIEW_COUNT = 3; // Display 3 images at a time
 	private final ArrayList<String> imagePaths = new ArrayList<>(); // List to hold all your image paths
 	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT]; // Array for ImageViews
 	private int currentIndex = 0; // Index to track current image set
+
+	//////////////////////////////////
+	/// JAVAFX ANF FXML COMPONENTS ///
+	//////////////////////////////////
 
 	@FXML
 	private ImageView goNatureLogo, image1, image2, image3, visaImage, mastercardImage, amexImage;
@@ -87,8 +90,7 @@ public class PaymentSystemScreenController extends AbstractScreen {
 					}).start();
 
 					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-							"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
-							StageSettings.defaultSettings("Confirmation"), pair);
+							"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
 				} catch (StatefulException | ScreenException e1) {
 					e1.printStackTrace();
 				}
@@ -96,20 +98,6 @@ public class PaymentSystemScreenController extends AbstractScreen {
 			pause.play();
 		}
 	}
-
-//	/**
-//	 * Returns to the previous screen.
-//	 *
-//	 * @param event The action event that triggers the return.
-//	 * @throws ScreenException   if there is an issue navigating back.
-//	 * @throws StatefulException if there is a state management issue during
-//	 *                           navigation.
-//	 */
-//	@FXML
-//	void returnToPreviousScreen(ActionEvent event) throws ScreenException, StatefulException {
-//		ScreenManager.getInstance().goToPreviousScreen(false, true);
-//
-//	}
 
 	///////////////////////////////////
 	/// JAVAFX FLOW CONTROL METHODS ///
@@ -221,13 +209,13 @@ public class PaymentSystemScreenController extends AbstractScreen {
 			valid = false;
 		}
 		// Validate holder name: non-empty, only letters, and exactly two words
-		if (holderNameTxt.getText() == null || !holderNameTxt.getText().matches("^[a-zA-Z]+ [a-zA-Z]+$")) {
+		if (holderNameTxt.getText() == null || !holderNameTxt.getText().matches(nameInput)) {
 			holderNameTxt.setStyle(setFieldToError());
 			showMessage += "\n- Name is not valid.";
 			valid = false;
 		}
 		if (!valid) {
-			showErrorAlert(ScreenManager.getInstance().getStage(), "Errors:" + showMessage);
+			showErrorAlert("Errors:" + showMessage);
 		}
 		return valid; // All validations passed
 	}
@@ -304,7 +292,7 @@ public class PaymentSystemScreenController extends AbstractScreen {
 	 * @return true if the field is valid, false otherwise.
 	 */
 	private boolean validateCardField(TextField cardField) {
-		return cardField.getText() != null && cardField.getText().matches("\\d{4}");
+		return cardField.getText() != null && cardField.getText().matches(fourDigits);
 	}
 
 	/**
@@ -336,7 +324,7 @@ public class PaymentSystemScreenController extends AbstractScreen {
 		currentField.textProperty().addListener(new ChangeListener<String>() {
 			@Override
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				if (!newValue.matches("\\d*")) {
+				if (!newValue.matches(digitsOnly)) {
 					currentField.setText(newValue.replaceAll("[^\\d]", ""));
 				} else {
 					// Check the length of input is not greater than 4 characters
@@ -446,7 +434,7 @@ public class PaymentSystemScreenController extends AbstractScreen {
 		setupTextField(cardNumber3Txt, cardNumber4Txt);
 		setupTextField(cardNumber4Txt, null);
 		cvvTxt.textProperty().addListener((observable, oldValue, newValue) -> {
-			if (!newValue.matches("\\d*")) { // If new value is not a digit
+			if (!newValue.matches(digitsOnly)) { // If new value is not a digit
 				cvvTxt.setText(newValue.replaceAll("[^\\d]", "")); // Remove non-digits
 			} else if (newValue.length() > 3) { // If new value has more than 3 digits
 				cvvTxt.setText(newValue.substring(0, 3)); // Truncate to 3 digits
@@ -469,14 +457,11 @@ public class PaymentSystemScreenController extends AbstractScreen {
 	 *
 	 * @param information The booking and visitor information passed to the screen.
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public void loadBefore(Object information) {
-		if (information != null && information instanceof Pair) {
-			pair = (Pair<Booking, ParkVisitor>) information;
-			booking = pair.getKey();
+		if (information != null && information instanceof Booking) {
+			booking = (Booking) information;
 			updateAmountLabel();
-
 		}
 
 	}

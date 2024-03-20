@@ -29,7 +29,7 @@
          </font>
       </Label>
       <Separator fx:id="seperator1" layoutX="26.0" layoutY="149.0" prefHeight="7.0" prefWidth="647.0" />
-      <Label fx:id="doubleClickLabel" layoutX="365.0" layoutY="127.0" prefHeight="22.0" prefWidth="308.0" text="Double click on a booking to edit it" textAlignment="RIGHT">
+      <Label fx:id="doubleClickLabel" layoutX="365.0" layoutY="127.0" prefHeight="22.0" prefWidth="308.0" text="Double click on a booking to select it" textAlignment="RIGHT">
          <font>
             <Font name="Calibri" size="18.0" />
          </font>

@@ -1,30 +1,34 @@
 package clientSide.gui;
 
+import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import common.controllers.AbstractScreen;
-import common.controllers.ScreenManager;
 import entities.Booking;
+import entities.ParkEmployee;
 import entities.ParkVisitor;
+import entities.SystemUser;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
-import javafx.util.Pair;
 
 /**
  * The ConfirmationScreenController is called after a booking if successfully
- * proccessed, showing a confirmation to the user.
+ * proccessed, showing a confirmation (invoice) to the user.
  */
 public class ConfirmationScreenController extends AbstractScreen {
-	private ParkVisitor visitor;
 
-	// GUI COMPONENTS
+	//////////////////////////////////
+	/// JAVAFX AND FXML COMPONENTS ///
+	//////////////////////////////////
+			
 	@FXML
 	private Label bookingIdLabel, dateLabel, emailLabel, holderLabel, isPaidLabel, parkAddressLabel, parkNameLabel,
-			phoneLabel, priceLabel, timeLabel, visitorsLabel;
+			phoneLabel, priceLabel, timeLabel, visitorsLabel, titleLbl, secondLbl;
 	@FXML
 	private ImageView goNatureLogo, parkImage;
 	@FXML
@@ -43,10 +47,16 @@ public class ConfirmationScreenController extends AbstractScreen {
 	 * @param event
 	 */
 	void returnToAccount(ActionEvent event) {
-		if (visitor == null) { // is not connected to the system, entered only with id
-			showInformationAlert(ScreenManager.getInstance().getStage(), "Now returning to main screen.");
-		} else {
-			showInformationAlert(ScreenManager.getInstance().getStage(), "Now returning to account screen.");
+		SystemUser user = GoNatureUsersController.getInstance().restoreUser();
+		if (user instanceof ParkVisitor) {
+			showInformationAlert("Return to park visitor's screen.");
+//			ScreenManager.getInstance().resetScreensStack();
+//			ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController, getScreenTitle(), false, false, null, user);
+		}
+		if (user instanceof ParkEmployee) {
+			showInformationAlert("Return to park employee's screen.");
+//			ScreenManager.getInstance().resetScreensStack();
+//			ScreenManager.getInstance().showScreen("ParkEmployeeAccountScreenController, getScreenTitle(), false, false, null, user);
 		}
 	}
 
@@ -62,6 +72,14 @@ public class ConfirmationScreenController extends AbstractScreen {
 		// initializing the image component and centering it
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+
+		// centering the title labels
+		titleLbl.setAlignment(Pos.CENTER);
+		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
+		titleLbl.setStyle("-fx-text-alignment: center;");
+		secondLbl.setAlignment(Pos.CENTER);
+		secondLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
+		secondLbl.setStyle("-fx-text-alignment: center;");
 	}
 
 	@Override
@@ -71,11 +89,8 @@ public class ConfirmationScreenController extends AbstractScreen {
 	 */
 	public void loadBefore(Object information) {
 		Booking booking;
-		if (information != null && information instanceof Pair) {
-			@SuppressWarnings("unchecked")
-			Pair<Booking, ParkVisitor> pair = (Pair<Booking, ParkVisitor>) information;
-			booking = pair.getKey();
-			visitor = pair.getValue();
+		if (information != null && information instanceof Booking) {
+			booking = (Booking) information;
 
 			parkNameLabel.setText("Park Name: " + booking.getParkBooked().getParkName());
 			parkAddressLabel.setText("Park Location: " + booking.getParkBooked().getParkCity() + ", "
@@ -96,7 +111,6 @@ public class ConfirmationScreenController extends AbstractScreen {
 
 			String parkImagePath = "/" + ParkController.getInstance().nameOfTable(booking.getParkBooked()) + ".jpg";
 			parkImage.setImage(new Image(getClass().getResourceAsStream(parkImagePath)));
-
 		}
 	}
 
@@ -107,5 +121,4 @@ public class ConfirmationScreenController extends AbstractScreen {
 	public String getScreenTitle() {
 		return "Reservation Confirmation";
 	}
-
 }
