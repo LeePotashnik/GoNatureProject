@@ -2,7 +2,6 @@ package clientSide.gui;
 
 import clientSide.control.ParkController;
 import common.controllers.AbstractScreen;
-import common.controllers.ScreenManager;
 import entities.Booking;
 import entities.ParkVisitor;
 import javafx.event.ActionEvent;
@@ -21,7 +20,10 @@ import javafx.util.Pair;
 public class CancellationScreenController extends AbstractScreen {
 	private ParkVisitor visitor;
 
-	// GUI COMPONENTS
+	//////////////////////////////////
+	/// JAVAFX ANF FXML COMPONENTS ///
+	//////////////////////////////////
+	
 	@FXML
 	private Label bookingIdLabel, dateLabel, emailLabel, holderLabel, isPaidLabel, parkAddressLabel, parkNameLabel,
 			phoneLabel, priceLabel, timeLabel, visitorsLabel;
@@ -45,14 +47,14 @@ public class CancellationScreenController extends AbstractScreen {
 	void returnToAccount(ActionEvent event) {
 		/// HERE: only connected visitors arrive!
 		if (visitor == null) { // is not connected to the system, entered only with id
-			showInformationAlert(ScreenManager.getInstance().getStage(), "Now returning to main screen.");
+			showInformationAlert("Now returning to main screen.");
 		} else {
-			showInformationAlert(ScreenManager.getInstance().getStage(), "Now returning to account screen.");
+			showInformationAlert("Now returning to account screen.");
 		}
 	}
 
 	///////////////////////////////
-	/// JAVAFX AND FXML METHODS ///
+	/// ABSTRACT SCREEN METHODS ///
 	///////////////////////////////
 
 	@Override
@@ -108,5 +110,4 @@ public class CancellationScreenController extends AbstractScreen {
 	public String getScreenTitle() {
 		return "Reservation Confirmation";
 	}
-
 }

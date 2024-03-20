@@ -27,6 +27,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 
+/**
+ * The WaitingListScreenController class manages the waiting list observation of
+ * a specific park for specific date and time frame.
+ */
 public class WaitingListScreenController extends AbstractScreen {
 	private BookingController control; // controller
 	private Booking booking;
@@ -38,6 +42,10 @@ public class WaitingListScreenController extends AbstractScreen {
 	public WaitingListScreenController() {
 		control = BookingController.getInstance();
 	}
+
+	//////////////////////////////////
+	/// JAVAFX AND FXML COMPONENTS ///
+	//////////////////////////////////
 
 	@FXML
 	private ImageView goNatureLogo;
@@ -62,6 +70,10 @@ public class WaitingListScreenController extends AbstractScreen {
 	@FXML
 	private TableColumn<Booking, Integer> groupSizeColumn;
 
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
+
 	@FXML
 	/**
 	 * This method is called if the user chose to enter into the waiting list
@@ -75,14 +87,13 @@ public class WaitingListScreenController extends AbstractScreen {
 			waitingListTable.setItems(control.getWaitingListForPark(booking));
 
 			event.consume();
-			showInformationAlert(ScreenManager.getInstance().getStage(), "Your reservation entered the waiting list of "
-					+ booking.getParkBooked().getParkName() + " park successfully");
+			showInformationAlert("Your reservation entered the waiting list of " + booking.getParkBooked().getParkName()
+					+ " park successfully");
 			enterWaitingBtn.setDisable(true);
 			backButton.setDisable(true);
 
 		} else {
-			showErrorAlert(ScreenManager.getInstance().getStage(),
-					"An error occured while trying to enter you to the waiting list. Please try again later.");
+			showErrorAlert("An error occured while trying to enter you to the waiting list. Please try again later.");
 			event.consume();
 			// here: returning to account screen
 		}
@@ -112,6 +123,10 @@ public class WaitingListScreenController extends AbstractScreen {
 		}
 	}
 
+	///////////////////////////////////
+	/// JAVAFX FOCUS CONTROL METHOD ///
+	///////////////////////////////////
+
 	@FXML
 	/**
 	 * sets the request to the root
@@ -121,6 +136,29 @@ public class WaitingListScreenController extends AbstractScreen {
 	void paneClicked(MouseEvent event) {
 		pane.requestFocus();
 	}
+
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
+
+	/**
+	 * This method sets the table view and its columns
+	 */
+	private void setTable() {
+		waitingOrderColumn.setCellValueFactory(new PropertyValueFactory<>("waitingListPriority"));
+		bookingIdColumn.setCellValueFactory(new PropertyValueFactory<>("bookingId"));
+		timeOfVisitColumn.setCellValueFactory(new PropertyValueFactory<>("timeOfVisit"));
+		dayOfBookingColumn.setCellValueFactory(new PropertyValueFactory<>("dayOfBooking"));
+		visitTypeColumn.setCellValueFactory(new PropertyValueFactory<>("visitType"));
+		groupSizeColumn.setCellValueFactory(new PropertyValueFactory<>("numberOfVisitors"));
+
+		waitingListTable.setItems(waitingList);
+		waitingListTable.getSortOrder().add(waitingOrderColumn);
+	}
+
+	///////////////////////////////
+	/// ABSTRACT SCREEN METHODS ///
+	///////////////////////////////
 
 	@Override
 	/**
@@ -187,22 +225,6 @@ public class WaitingListScreenController extends AbstractScreen {
 		}
 	}
 
-	/**
-	 * This method sets the table view and its columns
-	 */
-	private void setTable() {
-		waitingOrderColumn.setCellValueFactory(new PropertyValueFactory<>("waitingListPriority"));
-		bookingIdColumn.setCellValueFactory(new PropertyValueFactory<>("bookingId"));
-		timeOfVisitColumn.setCellValueFactory(new PropertyValueFactory<>("timeOfVisit"));
-		dayOfBookingColumn.setCellValueFactory(new PropertyValueFactory<>("dayOfBooking"));
-		visitTypeColumn.setCellValueFactory(new PropertyValueFactory<>("visitType"));
-		groupSizeColumn.setCellValueFactory(new PropertyValueFactory<>("numberOfVisitors"));
-
-		waitingListTable.setItems(waitingList);
-		waitingListTable.getSortOrder().add(waitingOrderColumn);
-
-	}
-
 	@Override
 	/**
 	 * returns the screen's title
@@ -210,5 +232,4 @@ public class WaitingListScreenController extends AbstractScreen {
 	public String getScreenTitle() {
 		return "Waiting List";
 	}
-
 }

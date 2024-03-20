@@ -119,8 +119,9 @@ public class NotificationsController {
 	 *
 	 * @param ArrayList that contains The booking details for which the confirmation
 	 *                  is sent.
+	 * @param reason	the reason for the cancellation
 	 */
-	public void sendCancellationEmailNotification(List<Object> details) {
+	public void sendCancellationEmailNotification(List<Object> details, String reason) {
 		String emailAddress = (String) details.get(0);
 // 		String phoneNumber = (String)details.get(1);
 		String parkName = (String) details.get(2);
@@ -133,6 +134,7 @@ public class NotificationsController {
 		boolean isPaid = (boolean) details.get(9);
 		String message = "Hello, " + fullName + "!";
 		message += "\n\nWe are sorry to confirm that your booking to " + parkName + " is now cancelled.";
+		message += "\nCancellation reason: " + reason + "\n";
 		message += isPaid ? "\nYou will be fully refunded within 48 hours." : "";
 		message += "\n\nThank you and we are looking forward to see you some day in the near future!";
 		message += "\n\nYour booking details:";
