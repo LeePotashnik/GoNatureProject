@@ -1,31 +1,180 @@
 package clientSide.gui;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Arrays;
+
+import clientSide.control.ParametersController;
 import common.controllers.AbstractScreen;
+import common.controllers.ScreenManager;
+import entities.Booking;
+import entities.DepartmentManager;
+import entities.ParamenterAdjustment;
+import entities.PendingAdjustment;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 
 public class ParametersApprovingScreenConrtroller extends AbstractScreen {
 
+	private ParametersController control; // controller
+	private DepartmentManager departmentManager;
+	ObservableList<PendingAdjustment> pendingAdjustmentList = FXCollections.observableArrayList();
+	
+	public ParametersApprovingScreenConrtroller() {
+		control = new ParametersController();
+	}
+
+	@FXML
+	private Pane pane;
+
+	@FXML
+	private ImageView goNatureLogo;
+
+	@FXML
+	private Label titleLbl;
+
+	@FXML
+	private TableView<PendingAdjustment> pendingAdjustmentTable;
+
+	@FXML
+	private TableColumn<PendingAdjustment, String> parkNameColumn;
+
+	@FXML
+	private TableColumn<PendingAdjustment, LocalDate> dayColumn;
+
+	@FXML
+	private TableColumn<PendingAdjustment, LocalTime> timeColumn;
+
+	@FXML
+	private TableColumn<PendingAdjustment, String> byColumn;
+
+	@FXML
+	private TableColumn<PendingAdjustment, Integer> beforeColumn;
+
+	@FXML
+	private TableColumn<PendingAdjustment, Integer> afterColumn;
+
+	@FXML
+	private TableColumn<PendingAdjustment, String> typeColumn;
+
+	@FXML
+	private Button returnToAccountBtn, backButton;
+
+	@FXML
+	void paneClicked(MouseEvent event) {
+		pane.requestFocus();
+		event.consume();
+	}
+
+	@FXML
+
+	void returnToAccount(ActionEvent event) {
+
+	}
+
+	@FXML
+	void returnToPreviousScreen(ActionEvent event) {
+
+	}
+	
+
+	private void parameterClicked(PendingAdjustment chosenParameter) {
+		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), "Please choose", Arrays.asList("Disapprove", "Approve"));
+		
+		switch (choise) {
+		case 1: // disapprove
+			pendingAdjustmentList.remove(chosenParameter);
+			// control.update...
+			break;
+		
+		case 2: // approve
+			pendingAdjustmentList.remove(chosenParameter);
+			// control.update...
+			break;
+		}
+		pane.requestFocus();
+		
+	}
 
 	@Override
-	public void initialize() 
-	{
-		/*goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));		
-		//setting the back button image:
+	public void initialize() {
+		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+		// setting the back button image:
 		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
 		backImage.setFitHeight(30);
 		backImage.setFitWidth(30);
 		backImage.setPreserveRatio(true);
 		backButton.setGraphic(backImage);
-		backButton.setPadding(new Insets(1, 1, 1, 1));*/
+		backButton.setPadding(new Insets(1, 1, 1, 1));
+
+		parkNameColumn.setResizable(false);
+		dayColumn.setResizable(false);
+		timeColumn.setResizable(false);
+		byColumn.setResizable(false);
+		beforeColumn.setResizable(false);
+		afterColumn.setResizable(false);
+		typeColumn.setResizable(false);
+
+		// setting what will occur when double-clicking on a row of the table
+		pendingAdjustmentTable.setRowFactory(tv -> {
+			TableRow<PendingAdjustment> row = new TableRow<>();
+			row.setOnMouseClicked(event -> {
+				if (!row.isEmpty() && event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
+					PendingAdjustment clickedRowData = row.getItem();
+					parameterClicked(clickedRowData);
+				}
+			});
+			return row;
+		});
+		
+		pendingAdjustmentTable.setPlaceholder(new Label("No pending adjustments"));
+
 	}
 
 	@Override
 	public void loadBefore(Object information) {
-		// TODO Auto-generated method stub
-		
+		if (information instanceof DepartmentManager) {
+			departmentManager = (DepartmentManager) information;
+			// getting the pending adjustment list of the departmentManager department
+			pendingAdjustmentList = control.getParameterAdjustmentListForDepartment(departmentManager);
+
+			//infoLabel.setText("...");
+			
+			// now adding the pendingAdjustment list to the table view
+			setTable();
+		}
+
+	}
+
+	/**
+	 * This method sets the table view and its columns
+	 */
+	private void setTable() {
+		parkNameColumn.setCellValueFactory(new PropertyValueFactory<>("parkName"));
+		dayColumn.setCellValueFactory(new PropertyValueFactory<>("dayOfAdjusting"));
+		timeColumn.setCellValueFactory(new PropertyValueFactory<>("timeOfAdjusting"));
+		byColumn.setCellValueFactory(new PropertyValueFactory<>("adjustedBy"));
+		beforeColumn.setCellValueFactory(new PropertyValueFactory<>("parameterBefore"));
+		afterColumn.setCellValueFactory(new PropertyValueFactory<>("parameterAfter"));
+		typeColumn.setCellValueFactory(new PropertyValueFactory<>("parameterType"));
+
+		pendingAdjustmentTable.setItems(pendingAdjustmentList);
+		// pendingAdjustmentTable.getSortOrder().add(waitingOrderColumn);
+
 	}
 
 	@Override
