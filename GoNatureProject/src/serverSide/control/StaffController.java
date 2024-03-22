@@ -34,6 +34,7 @@ public class StaffController {
 			importUsersType("Employee");
 			importUsersType("Park Manager");
 			importUsersType("Department Manager");
+			importUsersType("Representative");
 		} catch (DatabaseException e) {
 			return false;
 		}
@@ -88,6 +89,13 @@ public class StaffController {
 				for (Object[] row : results) {
 					parkManagerInsertToParkManagerTable((String) row[0], (String) row[1], (String) row[2],
 							(String) row[3], (String) row[4], (String) row[6], (String) row[7], (String) row[8]);
+					userDeleteFromUserTable((String) row[0]);
+				}
+			}
+			if (type.matches("Representative")) {
+				for (Object[] row : results) {
+					RepresentativeInsertToRepresentativeTable((String) row[0], (String) row[1], (String) row[2],
+							(String) row[3], (String) row[4], (String) row[7], (String) row[8]);
 					userDeleteFromUserTable((String) row[0]);
 				}
 			}
@@ -223,6 +231,38 @@ public class StaffController {
 		boolean insertResult = database.executeInsertQuery(request);
 		if (!insertResult) {
 			throw new DatabaseException("Problem with Department Manager INSERT query");
+		}
+	}
+
+	/**
+	 * Inserts Representative details into the Representative table.
+	 * 
+	 * @param id        The Representative's ID.
+	 * @param firstName The Representative's first name.
+	 * @param lastName  The Representative's last name.
+	 * @param email     The Representative's email address.
+	 * @param phone     The Representative's phone number.
+	 * @param userName  The Representative's username.
+	 * @param password  The Representative's password.
+	 * @throws DatabaseException if there's an issue executing the insert operation.
+	 */
+	public void RepresentativeInsertToRepresentativeTable(String id, String firstName, String lastName, String email,
+			String phone, String userName, String password) throws DatabaseException {
+		Communication request = new Communication(CommunicationType.SELF);
+		try {
+			request.setQueryType(QueryType.INSERT);
+			request.setTables(Arrays.asList(Communication.representative));
+			request.setColumnsAndValues(
+					Arrays.asList("departmentManagerId", "firstName", "lastName", "emailAddress", "phoneNumber",
+							"userName", "password", "isLoggedIn"),
+					Arrays.asList(id, firstName, lastName, email, phone, userName, password, 0));
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+
+		boolean insertResult = database.executeInsertQuery(request);
+		if (!insertResult) {
+			throw new DatabaseException("Problem with Representative INSERT query");
 		}
 	}
 }
