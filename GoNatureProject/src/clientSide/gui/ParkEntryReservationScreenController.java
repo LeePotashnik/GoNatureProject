@@ -3,21 +3,24 @@ package clientSide.gui;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
+import clientSide.control.BookingController;
+import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import clientSide.control.PaymentController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.StageSettings;
+import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.Booking;
 import entities.Park;
 import entities.ParkEmployee;
 import entities.ParkVisitor;
 import entities.Booking.VisitType;
-import entities.ParkVisitor.VisitorType;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -29,15 +32,26 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.WindowEvent;
-import javafx.util.Pair;
 
-public class ParkEntryReservationScreenController extends AbstractScreen{
+/**
+ * The ParkEntryReservationScreenController class is responsible for managing the park entry reservation process
+ * from the employee's perspective within the GoNature application. It facilitates the creation of new bookings
+ * for visitors who physically arrive at the park, ensuring that all necessary information is collected and validated
+ * before proceeding with the reservation.
+ *
+ * This controller collaborates with ParkController for capacity checks and PaymentController for pricing calculations.
+ * It handles form input validation, booking creation, and navigational actions on the park entry reservation screen.
+ *
+ * This class extends AbstractScreen, leveraging common functionalities provided for screen management and state handling
+ * within the application.
+ */
+public class ParkEntryReservationScreenController extends AbstractScreen implements Stateful{
 
+	private static ParkController parkControl;
 	private ParkEmployee parkEmployee;
 	private Booking newBooking; 
-	private static ParkController parkControl;
 	private ParkVisitor parkVisitor;
-	private Park park;
+    Map<String, String> bookingDetails = new HashMap<>();
 	
 	@FXML
     private Button backButton, makeReservationBtn;
@@ -61,15 +75,28 @@ public class ParkEntryReservationScreenController extends AbstractScreen{
 		parkControl = ParkController.getInstance();
 	}
 	
-    /**
-     * @param event
-     * Process reservation for a customer who physically arrived at the park by an employee. 
-     * If all provided details are valid and there is available space in the park for the booking's quantity of visitors,
-     *  a booking will be created in the system, and the price will be determined based on the customer type. 
-     *  If the customer is a group guide exist in the database, the visitors will receive a 10% discount for each visitor. 
-     *  Otherwise, the regular price will apply.
-     *  Finally, the booking will be added to the park_active_booking table in the relevant park's database.
-     */
+	public ParkEmployee getParkEmployee() {
+		return parkEmployee;
+	}
+
+	public void setParkEmployee(ParkEmployee parkEmployee) {
+		this.parkEmployee = parkEmployee;
+	}
+	
+	/**
+	 * Processes a park entry reservation made by the park employee for a visitor. This method first validates the input
+	 * details. If the input is valid and the park has available capacity for the specified number of visitors,
+	 * a new booking is created.
+	 *
+	 * Discounts are applied if the visitor is recognized as a group guide in the database.
+	 * The booking is then added to the active bookings table for the park, 
+	 * and the park's current capacity is updated accordingly.
+	 *
+	 * Upon successful reservation, a confirmation dialog is shown to indicate the payment method. Depending on the
+	 * selection, the user may be directed to the payment screen or shown a confirmation screen directly.
+	 *
+	 * @param event The ActionEvent triggered by pressing the 'Make Reservation' button.
+	 */
     @FXML
     void makeReservation(ActionEvent event) {
     	boolean valid = false;
@@ -78,21 +105,26 @@ public class ParkEntryReservationScreenController extends AbstractScreen{
     		//checks if there is place for new group reservation at current date
     		//Update parameters if they have changed in the previous screen.
     		String[] returnsVal = new String[4]; 
-    		returnsVal = parkControl.checkCurrentCapacity(park.getParkName());
+    		returnsVal = parkControl.checkCurrentCapacity(parkEmployee.getWorkingIn().getParkName());
     		if (returnsVal != null) {
     			//updates park parameters
-    			park.setMaximumVisitors(Integer.parseInt(returnsVal[0]));
-    			park.setMaximumOrders(Integer.parseInt(returnsVal[1]));
-    			park.setTimeLimit(Integer.parseInt(returnsVal[2])); 
-    			park.setCurrentCapacity(Integer.parseInt(returnsVal[3])); 
+    			parkEmployee.getWorkingIn().setMaximumVisitors(Integer.parseInt(returnsVal[0]));
+    			parkEmployee.getWorkingIn().setMaximumOrders(Integer.parseInt(returnsVal[1]));
+    			parkEmployee.getWorkingIn().setTimeLimit(Integer.parseInt(returnsVal[2])); 
+    			parkEmployee.getWorkingIn().setCurrentCapacity(Integer.parseInt(returnsVal[3]));
+	    		System.out.println("HERE1");
+
     		}
-    		int available = park.getMaximumVisitors() * park.getMaximumOrders() / 100;
-    		if (available - park.getCurrentCapacity() > Integer.parseInt(visitorsAmountTxt.getText()))
-				valid = true;    		
+    		int available = parkEmployee.getWorkingIn().getMaximumVisitors() * parkEmployee.getWorkingIn().getMaximumOrders() / 100;
+    		if (available - parkEmployee.getWorkingIn().getCurrentCapacity() > Integer.parseInt(visitorsAmountTxt.getText()))
+				valid = true;
+    		else
+	    		showErrorAlert("Unfortunately, there is no space available in the park for the number of people in the reservation");
     	}
     	if (valid) {
     		//if there is a place for the new group reservation
     		int flag = 0;
+    		boolean paid = false;
     		int finalPrice, amount;
     		parkVisitor = null;
     		parkVisitor = (ParkVisitor) parkControl.checkIfVisitorExists("group_guide", "groupGuideId", visitorIDTxt.getText());
@@ -113,30 +145,45 @@ public class ParkEntryReservationScreenController extends AbstractScreen{
 			//updates the final price due visitors amount and relevant price
 			newBooking.setFinalPrice(finalPrice);
 			System.out.println("final price =" + finalPrice);
-			if(parkControl.checkParkAvailabilityForBooking(newBooking))
-				parkControl.insertBookingToTable(newBooking, parkVisitor,"_park_active_booking", "active");
-			//updating park capacity
-			parkControl.updateCurrentCapacity(newBooking.getParkBooked().getParkName(), amount);
-			int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(),
-					"Please charge the customer: " + finalPrice,
-					Arrays.asList("Cash", "CreditCard"));
-			if (decision == 2) {// if the user clicked on "Credit Card" he will redirect to pay screen and then to confirmation screen
-				event.consume();
-				try {
-					ScreenManager.getInstance().showScreen("PaymentSystemScreenController", "/clientSide/fxml/PaymentSystemScreen.fxml",
-							true, false, StageSettings.defaultSettings("Payment"), new Pair<Booking, ParkEmployee>(newBooking, parkEmployee));
-				} catch (StatefulException | ScreenException e) {
-					e.printStackTrace();
-				} 
-			}// else // user clicked on "Cash", showing the confirmation screen
-			//	try {
-			//		ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-			//				"/clientSide/fxml/ConfirmationScreen.fxml", true, true,
-			//				StageSettings.defaultSettings("Confirmation"), new Pair<Booking, ParkEmployee>(newBooking, parkEmployee));
-			//	} catch (StatefulException | ScreenException e) {
-			//		e.printStackTrace();
-			//	}	
-    		}
+			if(parkControl.checkParkAvailabilityForBooking(newBooking)) {
+				if (parkControl.checkParkAvailabilityForBooking(newBooking)) {
+				    int decision = showConfirmationAlert("Please charge the customer: " + finalPrice, 
+				        Arrays.asList("Cash", "Credit Card", "Edit Booking"));
+				    switch (decision) {
+				        case 1: // Cash
+				        	paid =true;
+				            try { 
+				            	ScreenManager.getInstance().showScreen("ConfirmationScreenController", 
+					                    "/clientSide/fxml/ConfirmationScreen.fxml", true, false, newBooking);
+				            } catch (StatefulException | ScreenException e) {
+				                e.printStackTrace();
+				            }
+				            break;
+				        case 2: // Credit Card
+				            event.consume();
+				            try {
+				            	ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
+				                		"/clientSide/fxml/PaymentSystemScreen.fxml", true, false, newBooking);
+				            } catch (StatefulException | ScreenException e) {
+				                e.printStackTrace();
+				            }
+				            paid = true;
+				            break;
+				        default: // Edit Booking
+				        	event.consume();
+				        	break;
+				    }
+				    if (paid) {
+					    parkControl.insertBookingToTable(newBooking, "_park_active_booking", "active");
+					    //updating park capacity
+					    int update = amount + parkEmployee.getWorkingIn().getCurrentCapacity();
+					    parkControl.updateCurrentCapacity(newBooking.getParkBooked().getParkName(), update);
+				    }
+				} else {
+				    showErrorAlert("Unfortunately, there is no space available in the park for the number of people in the reservation");
+				}
+			}
+		}
     }
     
 	/**
@@ -188,7 +235,7 @@ public class ParkEntryReservationScreenController extends AbstractScreen{
 		}
 
 		if (!valid)
-			showErrorAlert(ScreenManager.getInstance().getStage(), error);
+			showErrorAlert(error);
 		return valid;
 	}
 
@@ -206,11 +253,14 @@ public class ParkEntryReservationScreenController extends AbstractScreen{
 		}
     }
 
-	/**
-	 * This method is called after the FXML is invoked
-	 */
+    /**
+     * Initializes the class. This method is automatically invoked after the FXML file has been loaded.
+     * It sets up the initial appearance of the GUI elements, including styling for labels and the reservation button,
+     * and configures the back button with an icon. The GoNature logo is also loaded and displayed on the screen.
+     */
 	@Override
 	public void initialize() {
+		parkEmployee = (ParkEmployee) GoNatureUsersController.getInstance().restoreUser();
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		bookingLbl.setStyle("-fx-alignment: center-right;"); //label component
 		dateLbl.setStyle("-fx-alignment: center-right;"); //label component
@@ -219,7 +269,9 @@ public class ParkEntryReservationScreenController extends AbstractScreen{
 		titleLbl.setStyle("-fx-alignment: center-right;");
 		visitorsLbl.setStyle("-fx-alignment: center-right;");
 		makeReservationBtn.setStyle("-fx-alignment: center-right;");
-		
+		this.bookingLbl.setText(parkEmployee.getWorkingIn().getParkName());
+	    this.bookingLbl.underlineProperty();
+	    
 		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
 		backImage.setFitHeight(30);
 		backImage.setFitWidth(30);
@@ -229,46 +281,61 @@ public class ParkEntryReservationScreenController extends AbstractScreen{
 		backButton.setStyle("-fx-alignment: center-right;");
 
 	}
-	
-	/**
-	 *  Activated after the X is clicked on the window.
-	 *  The default is to show a Confirmation Alert with "Yes" and "No" options for the user to choose. 
-	 *  "Yes" will check if the client is connected to the server, disconnect it from the server and the system.
-	 */ /*
-	@Override
-	public void handleCloseRequest(WindowEvent event) {
-		int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(), "Are you sure you want to leave?",
-				Arrays.asList("Yes", "No"));
-		if (decision == 2) // if the user clicked on "No"
-			event.consume();
-		else { // if the user clicked on "Yes" and he is connected to server
-			logOut(null); //log out from go nature system
-    		System.out.println("User logged out");
-			UuserController.getInstance().disconnectClientFromServer(); 
-		}
-	}*/
 
+	/**
+	 * Prepares the screen with necessary data before it is displayed. This method receives a ParkEmployee instance
+	 * from the account screen, which is used to set the park employee field and update the park information.
+	 * It ensures that the booking label is updated to display the correct park name where the employee works,
+	 * providing context for the reservation being made.
+	 *
+	 * @param information 
+	 * 		The ParkEmployee object passed from the previous screen, containing details about the employee
+	 *      and the park they are associated with.
+	 */
 	@Override
-	public void loadBefore(Object information) {
-		ParkEmployee PE = (ParkEmployee)information;
-		setParkEmployee(PE);	
-		park = PE.getWorkingIn();
-		this.bookingLbl.setText(getScreenTitle());
-	    this.bookingLbl.underlineProperty();
+	public void loadBefore(Object information) {	
 	}
 
 	@Override
 	public String getScreenTitle() {
-		return parkEmployee.getWorkingIn().getParkName();
-	}
-	
-	public ParkEmployee getParkEmployee() {
-		return parkEmployee;
+		return parkEmployee.getWorkingIn().getParkName() + " booking reservation";
 	}
 
-	public void setParkEmployee(ParkEmployee parkEmployee) {
-		this.parkEmployee = parkEmployee;
-	}
-			
+	/**
+	 * Saves the current state of the booking details entered in the text fields into a shared controller.
+	 * This method captures the contents of text fields related to the booking process and stores them.  
+	 */
+	@Override
+	public void saveState() {
+	    bookingDetails.put("email", emailTxt.getText());
+	    bookingDetails.put("phone", phoneTxt.getText());
+	    bookingDetails.put("visitorsAmount", visitorsAmountTxt.getText());
+	    bookingDetails.put("visitorID", visitorIDTxt.getText());
+	    bookingDetails.put("name", nameTxt.getText());
+	    bookingDetails.put("lastName", lastNameTxt.getText());
 
+	    parkControl.setBookingDetails(bookingDetails);
+	}
+
+	/**
+	* Restores the state of booking details previously saved, updating the text fields on the screen with these values.
+	* This method retrieves a map of booking details from the {@code ParkController} and uses it to populate
+	* the text fields on the screen. It ensures that if the user previously entered information into these fields
+	* and then navigated away from the screen, the same information will be displayed upon returning.
+	* If the retrieved details are not null or empty, each text field is updated with its value from the map.
+	 */
+	@Override
+	public void restoreState() {
+	    Map<String, String> bookingDetails = parkControl.getBookingDetails();
+
+	    if (bookingDetails != null && !bookingDetails.isEmpty()) {
+	        emailTxt.setText(bookingDetails.getOrDefault("email", ""));
+	        phoneTxt.setText(bookingDetails.getOrDefault("phone", ""));
+	        visitorsAmountTxt.setText(bookingDetails.getOrDefault("visitorsAmount", ""));
+	        visitorIDTxt.setText(bookingDetails.getOrDefault("visitorID", ""));
+	        nameTxt.setText(bookingDetails.getOrDefault("name", ""));
+	        lastNameTxt.setText(bookingDetails.getOrDefault("lastName", ""));
+	    }
+		
+	}
 }

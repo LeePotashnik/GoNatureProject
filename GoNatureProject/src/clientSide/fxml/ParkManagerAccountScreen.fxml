@@ -6,10 +6,10 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkManagerAccountScreenController">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkManagerAccountScreenController">
    <children>
       <ImageView fx:id="goNatureLogo" fitHeight="260.0" fitWidth="650.0" layoutX="90.0" layoutY="12.0" pickOnBounds="true" preserveRatio="true" />
-      <Label fx:id="Title" layoutX="65.0" layoutY="265.0" prefHeight="38.0" prefWidth="397.0" text="Label">
+      <Label fx:id="Title" layoutX="65.0" layoutY="257.0" prefHeight="38.0" prefWidth="599.0" text="Label">
       <font>
             <Font name="Calibri" size="30.0" />
          </font>

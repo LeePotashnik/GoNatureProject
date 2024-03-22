@@ -1,15 +1,11 @@
 package clientSide.gui;
 
-import java.util.Arrays;
-
 import clientSide.control.GoNatureUsersController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.StageSettings;
 import common.controllers.Stateful;
 import common.controllers.StatefulException;
-import entities.ParkEmployee;
 import entities.Representative;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -17,8 +13,18 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.stage.WindowEvent;
 
+/**
+ * /**
+ * The ServiceRepresentativeAccountScreenController class is responsible for handling all interactions
+ * within the service representative account screen. 
+ * This class allows manage functionalities specific to their role. 
+ * It extends AbstractScreen and implements the Stateful interface for managing screen states and
+ * navigation within the application.
+ * 
+ * This controller manages user data through the GoNatureUsersController, enabling operations such as
+ * authentication, registration, and user session management.
+ */
 public class ServiceRepresentativeAccountScreenController extends AbstractScreen implements Stateful{
 
 	private GoNatureUsersController userControl;
@@ -37,6 +43,14 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
     	userControl = GoNatureUsersController.getInstance();
 	}
     
+    public Representative getRepresentative() {
+		return representative;
+	}
+
+	public void setRepresentative(Representative representative) {
+		this.representative = representative;
+	}
+	
     /**
      * @param event
      * When the 'Guide Registration' button is pressed, 
@@ -44,11 +58,9 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
      */
     @FXML
     void GoToGuideRegistrationScreen(ActionEvent event) {
-    	//
     	try {
 			ScreenManager.getInstance().showScreen("GroupGuideRegistrationScreenController",
-					"/clientSide/fxml/GroupGuideRegistrationScreen.fxml", true, true,
-					StageSettings.defaultSettings("GoNature System - Client Connection"),representative );
+					"/clientSide/fxml/GroupGuideRegistrationScreen.fxml", true, true,representative );
 		} catch (StatefulException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -64,20 +76,43 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
      */
     @FXML
     void logOut(ActionEvent event) {
-    	if (userControl.checkLogOut("representative","representativeId",representative.getIdNumber()))
+    	if (userControl.logoutUser()) {
     		representative.setLoggedIn(false);
+    		System.out.println("Service Representative logged out");
+    		try {
+        		ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml", true,
+        				false, null);
+        	} catch (ScreenException | StatefulException e) {
+        				e.printStackTrace();
+    		}
+    	}
         else 
-        	showErrorAlert(ScreenManager.getInstance().getStage(), "Failed to log out");
-    	try {
-    		ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml", true,
-    				false, StageSettings.defaultSettings("GoNature System - Reservations"), null);
-		} catch (ScreenException | StatefulException e) {
-			e.printStackTrace();
-		}
+        	showErrorAlert("Failed to log out"); 	
     }
+	
+	@Override
+	public String getScreenTitle() {
+		return "Service Representative";
+	}
 
 	@Override
+	public void saveState() {
+		userControl.saveUser(representative);
+	}
+	
+	/**
+	 * This method is automatically called after the FXML file has been loaded.
+	 * It initializes UI components and sets the image for the GoNature logo. It also styles various UI elements
+	 * such as buttons and labels to maintain consistency with the application's design.
+	 */
+	@Override
 	public void initialize() {
+		/*
+		this.representative = (Representative) userControl.restoreUser();
+		userControl.saveUser(representative);
+		this.privateName.setText("Hello " + representative.getFirstName() + " " + representative.getLastName());
+	    this.privateName.underlineProperty();
+		 */
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
 		privateName.setStyle("-fx-alignment: center-right;"); //label component
 		Title.setStyle("-fx-alignment: center-right;"); //label component
@@ -86,61 +121,29 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
 	}		
 
 	/**
-	 * The method receives data from the previous screen it came from. 
-	 * Retrieving the data is done to populate relevant class instance- representative.
-	 * It updates JavaFX label component for their display on the screen.
+	 * Receives and loads data from the previous screen. This method updates the representative instance
+	 * and UI components with the information of the currently logged-in service representative.
+	 * 
+	 * @param information The data passed from the previous screen, expected to be a Representative instance.
 	 */
 	@Override
 	public void loadBefore(Object information) {
 		Representative R = (Representative)information;
-		setRepresentative(R);		
-		this.privateName.setText("Hello " + representative.getFirstName() + " " + representative.getLastName());
-	    this.privateName.underlineProperty();
-	}
-
-	public Representative getRepresentative() {
-		return representative;
-	}
-
-	public void setRepresentative(Representative representative) {
-		this.representative = representative;
-	}
-
-	@Override
-	public String getScreenTitle() {
-		return "Service Representative";
-	}
-
-	@Override
-	public void saveState() {
-		userControl.saveRepresentative(representative);
-	}
-
-	@Override
-	public void restoreState() {
-		representative = (Representative) userControl.restoreRepresentative();
+		this.representative = R;	
+		userControl.saveUser(representative);
 		this.privateName.setText("Hello " + representative.getFirstName() + " " + representative.getLastName());
 	    this.privateName.underlineProperty();
 	}
 	
 	/**
-	 * Activated after the X is clicked on the window.
-	 *  The default isto show a Confirmation Alert with "Yes" and "No" options for the user tochoose. 
-	 * "Yes" will check if the client is connected to the server, disconnectit if from the server and the system.
+	 * Restores the state of the representative and the screen. This method is called to repopulate
+	 * the screen with data that was previously saved, ensuring continuity in the user's session.
 	 */
 	@Override
-	public void handleCloseRequest(WindowEvent event) {
-		int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(), "Are you sure you want to leave?",
-				Arrays.asList("Yes", "No"));
-		if (decision == 2) // if the user clicked on "No"
-			event.consume();
-		else { // if the user clicked on "Yes" and he is connected to server
-			logOut(null); //log out from go nature system
-    		System.out.println("User logged out");
-			userControl.disconnectClientFromServer(); 
-			//    	if (userControl.checkLogOut() {
-
-		}
+	public void restoreState() {
+		representative = (Representative) userControl.restoreUser();
+		this.privateName.setText("Hello " + representative.getFirstName() + " " + representative.getLastName());
+	    this.privateName.underlineProperty();
 	}
 
 }

@@ -7,19 +7,19 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkEntryManagementScreenController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkEntryManagementScreenController">
    <children>
-      <Label fx:id="nameLbl" layoutX="36.0" layoutY="231.0" prefHeight="25.0" prefWidth="572.0" text="For update entry or exit park time, please insert booking ID:" textAlignment="RIGHT">
+      <Label fx:id="nameLbl" layoutX="36.0" layoutY="262.0" prefHeight="25.0" prefWidth="572.0" text="For update entry or exit park time:" textAlignment="RIGHT">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <TextField fx:id="bookingIDTxt" layoutX="475.0" layoutY="226.0" prefHeight="35.0" prefWidth="136.0" promptText="Booking ID">
+      <TextField fx:id="bookingIDTxt" layoutX="254.0" layoutY="197.0" prefHeight="35.0" prefWidth="136.0" promptText="Booking ID">
          <font>
             <Font size="16.0" />
          </font>
       </TextField>
-      <Label fx:id="visitorsLbl" layoutX="33.0" layoutY="345.0" prefHeight="25.0" prefWidth="254.0" text="For generating invoices for visitors:" textAlignment="RIGHT">
+      <Label fx:id="visitorsLbl" layoutX="33.0" layoutY="376.0" prefHeight="25.0" prefWidth="254.0" text="For generating invoices for visitors:" textAlignment="RIGHT">
          <font>
             <Font size="16.0" />
          </font>
@@ -30,25 +30,30 @@
          </font>
       </Button>
       <ImageView fx:id="goNatureLogo" fitHeight="91.0" fitWidth="436.0" layoutX="121.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />      
-      <Label fx:id="titleLbl" layoutX="88.0" layoutY="122.0" prefHeight="38.0" prefWidth="522.0">
+      <Label fx:id="titleLbl" layoutX="88.0" layoutY="134.0" prefHeight="38.0" prefWidth="522.0">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <Button fx:id="entryTimeBTN" layoutX="165.0" layoutY="277.0" mnemonicParsing="false" onAction="#UpdateEntryTime" text="Update Entry Time">
+      <Button fx:id="entryTimeBTN" layoutX="165.0" layoutY="308.0" mnemonicParsing="false" onAction="#UpdateEntryTime" text="Update Entry Time">
          <font>
             <Font size="16.0" />
          </font>
       </Button>
-      <Button fx:id="exitTimeBTN" layoutX="351.0" layoutY="277.0" mnemonicParsing="false" onAction="#UpdateExitTime" text="Update Exit Time">
+      <Button fx:id="exitTimeBTN" layoutX="351.0" layoutY="308.0" mnemonicParsing="false" onAction="#UpdateExitTime" text="Update Exit Time">
          <font>
             <Font size="16.0" />
          </font>
       </Button>
-      <Button fx:id="invoiceButton" layoutX="227.0" layoutY="377.0" mnemonicParsing="false" onAction="#InvoiceScreen" text="Park Invoice Generation">
+      <Button fx:id="invoiceButton" layoutX="227.0" layoutY="408.0" mnemonicParsing="false" onAction="#InvoiceScreen" text="Park Invoice Generation">
          <font>
             <Font size="16.0" />
          </font>
       </Button>
+      <Label fx:id="bookingIDLbl" layoutX="35.0" layoutY="172.0" prefHeight="25.0" prefWidth="572.0" text="Please insert booking ID:" textAlignment="RIGHT">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
    </children>
 </Pane>
