@@ -83,7 +83,7 @@ public abstract class AbstractScreen {
 			if (decision == 2) // if the user clicked on "No"
 				event.consume();
 			else { // if the user clicked on "Yes"
-				GoNatureUsersController.getInstance().checkLogOut(null, null, null);
+				GoNatureUsersController.getInstance().logoutUser();
 				// creating a communication request for disconnecting from the server port
 				Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
 				message.setClientMessageType(ClientMessageType.DISCONNECT);

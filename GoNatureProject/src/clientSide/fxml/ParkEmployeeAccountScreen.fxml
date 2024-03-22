@@ -29,7 +29,7 @@
             <Font name="Calibri" size="14.0" />
          </font>
       </Button>
-      <Button fx:id="parkEntryCasualBTN" layoutX="285.0" layoutY="394.0" mnemonicParsing="false" onAction="#GoToParkEntryCasualScreen" prefHeight="38.0" prefWidth="130.0" text="Visitor Reservation">
+      <Button fx:id="parkEntryCasualBTN" layoutX="285.0" layoutY="394.0" mnemonicParsing="false" onAction="#GoToParkEntryResevationScreen" prefHeight="38.0" prefWidth="130.0" text="Visitor Reservation">
          <font>
             <Font name="Calibri" size="14.0" />
          </font>

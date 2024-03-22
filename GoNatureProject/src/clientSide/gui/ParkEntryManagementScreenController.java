@@ -2,14 +2,15 @@ package clientSide.gui;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 
+import clientSide.control.BookingController;
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.StageSettings;
 import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.ParkEmployee;
@@ -27,12 +28,21 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.util.Pair;
 
-public class ParkEntryManagementScreenController extends AbstractScreen implements Stateful{
+/**
+ * Controls the functionality related to managing park entries and exits from the perspective of a park employee.
+ * It provides mechanisms for park employees to update entry and exit times of bookings, based on the visitors'
+ * actual arrival and departure, and to issue invoices for park services.
+ *
+ * This controller leverages `ParkController` for interactions with the park-related data and `GoNatureUsersController`
+ * for session management. It supports validating booking IDs against current park bookings, updating the park's
+ * current capacity, and navigating to invoice generation or payment processing screens as needed.
+ * 
+ */
+public class ParkEntryManagementScreenController extends AbstractScreen{
 
 	private ParkController parkControl;
 	private GoNatureUsersController userControl;
 	private ParkEmployee parkEmployee;
-	private Park park;
 	
     public ParkEmployee getParkEmployee() {
 		return parkEmployee;
@@ -52,7 +62,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen implemen
     private ImageView goNatureLogo;
 
     @FXML
-    private Label nameLbl, titleLbl, visitorsLbl;
+    private Label nameLbl, titleLbl, visitorsLbl, bookingIDLbl;
 
     @FXML
     private Pane pane;
@@ -66,25 +76,59 @@ public class ParkEntryManagementScreenController extends AbstractScreen implemen
 		userControl = GoNatureUsersController.getInstance();
 	}
 	
-    /**
-     * @param event
-     * When the 'Invoiceproduction' button is pressed, 
-     * the park employee will be redirected to the 'ParkEntryCasualScreen'
-     * @throws ScreenException 
-     * @throws StatefulException 
-     */
+	/**
+	 * Handles the event triggered by pressing the 'Invoice production' button. It attempts to retrieve
+	 * a booking from the database using the provided booking ID. If successful, navigates the park employee
+	 * to the Payment System Screen for processing the payment or generating an invoice for the booking. 
+	 * Displays an error alert if the booking ID does not correspond to an existing reservation in the park.
+	 *
+	 * @param event The ActionEvent triggered by pressing the 'Invoice production' button.
+	 * @throws ScreenException If there's an issue loading the Payment System Screen.
+	 * @throws StatefulException If there's an issue with the application's state during navigation.
+	 */
     @FXML
     void InvoiceScreen(ActionEvent event) throws StatefulException, ScreenException {
-    	
-    	ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-				"/clientSide/fxml/ConfirmationScreen.fxml", false, true,
-				StageSettings.defaultSettings("GoNature System - Client Connection"), parkEmployee );
+        Booking booking = findBookingAcrossTables(bookingIDTxt.getText());
+        if (booking == null) {
+            showErrorAlert("No existing reservation found for the provided booking ID.");
+            return;
+        }
+        ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+				"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
     }
+    
+    /*
+    	Booking booking = null;
+		String parkActiveTable = parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_active_booking";
+		String parkDoneTable = parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_done_booking";
+
+		try {
+			booking = parkControl.checkIfBookingExists(parkActiveTable, bookingIDTxt.getText());
+			if (booking == null) 
+				booking = parkControl.checkIfBookingExists(parkDoneTable, bookingIDTxt.getText()); 
+		} catch (NullPointerException e) {
+			//booking ID is not exists in the database
+			showErrorAlert("No reservation exists for the given bookingID in this park.");
+			return;
+		}
+    	try {
+			ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+					"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
+		} catch (StatefulException | ScreenException e1) {
+				e1.printStackTrace();
+		}
+
+					
+    } */
 
     /**
-     * @param event
-     * In case of a valid booking ID, a search will be performed in the database to find the corresponding order,
-     *  the entry time to the park and current capacity will be updated accordingly.
+     * Updates the entry time for a visitor based on a valid booking ID. It first validates the booking ID,
+     * then checks for the booking's existence and its eligibility for entry at the current time.  
+     * If all conditions are met, the entry time is updated in the database, and the park's
+     * current capacity is adjusted accordingly. 
+     * This method also handles payment verification.
+     *
+     * @param event The ActionEvent triggered by the employee's interaction with the UI to update a booking's entry time.
      */
     @FXML
     void UpdateEntryTime(ActionEvent event) {
@@ -93,73 +137,78 @@ public class ParkEntryManagementScreenController extends AbstractScreen implemen
 		String bookingId = bookingIDTxt.getText();
 		String parkTable = parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_active_booking";
 		Booking booking = null;
-		try {
-			booking = parkControl.checkIfBookingExists(parkTable, bookingId);
-		} catch (NullPointerException e) {
-			//booking ID is not exists in the database
-			showErrorAlert(ScreenManager.getInstance().getStage(), 
-					"No reservation exists for the given bookingID in this park.");
+		
+		booking = parkControl.checkIfBookingExists(parkTable,"bookingId",bookingId);
+		if (booking == null) {
+			//booking ID does not exist in the database
+			showErrorAlert("No reservation exists for the given bookingID in this park.");
 			return;
 		}
     	
 		if (booking.getEntryParkTime() != null) {
 			//entry park time for selected bookingId is not empty
-			showErrorAlert(ScreenManager.getInstance().getStage(), "Entry time already exist.");
+			showErrorAlert("Entry time already exist.");
 			return;
 		}	
 			
 		if (!booking.getDayOfVisit().equals(LocalDate.now())) {
-			showErrorAlert(ScreenManager.getInstance().getStage(), 
-					"No reservation exists today for the given bookingID in this park.");
-			return;
-		}
-	
-		if (booking.getTimeOfVisit().plusHours(park.getTimeLimit()).isAfter(LocalTime.now())) {
-			//Checking if the visitor did not arrive after his time limit has expired
-			showErrorAlert(ScreenManager.getInstance().getStage(), "The visitor missed his time reservation.");
+			showErrorAlert("No reservation exists today for the given bookingID in this park.");
 			return;
 		}
 		
 		if (LocalTime.now().isBefore(booking.getTimeOfVisit())) {
 			//Checking if the visitor did not arrive earlier than his reservation
-			showErrorAlert(ScreenManager.getInstance().getStage(), "The visitor arrived too early.");
+			showErrorAlert("The visitor arrived too early.");
 			return;
 		}
+
+		if (booking.getTimeOfVisit().plusHours(parkEmployee.getWorkingIn().getTimeLimit()).isBefore(LocalTime.now())) {
+			//Checking if the visitor did not arrive after his time limit has expired
+			showErrorAlert("The visitor missed his time reservation.");
+			return;
+		}	
 		
+		updateParkCapacity();
 		parkControl.updateTimeInPark(parkTable, "entryParkTime", bookingId); //updates entry time
-		int updateCapacity = park.getCurrentCapacity() + booking.getNumberOfVisitors();
-		if(parkControl.updateCurrentCapacity(parkTable,updateCapacity))//updates park current capacity
+		int updateCapacity = parkEmployee.getWorkingIn().getCurrentCapacity() + booking.getNumberOfVisitors();
+		parkEmployee.getWorkingIn().setCurrentCapacity(updateCapacity);
+		if(parkControl.updateCurrentCapacity(parkEmployee.getWorkingIn().getParkName(),updateCapacity))//updates park current capacity
 			System.out.println("Park capacity updated");
 		if (!booking.isPaid()) {//needs to update DB: "paid" ?
-			int decision = showConfirmationAlert(ScreenManager.getInstance().getStage(),
-					"Please charge the customer: " + booking.getFinalPrice(),
+			int decision = showConfirmationAlert("Please charge the customer: " + booking.getFinalPrice(),
 					Arrays.asList("Cash", "CreditCard"));
 			if (decision == 2) {// if the user clicked on "Credit Card" he will redirect to pay screen and then to confirmation screen
 				event.consume();
 				try {
-					ScreenManager.getInstance().showScreen("PaymentSystemScreenController", "/clientSide/fxml/PaymentSystemScreen.fxml",
-							true, false, StageSettings.defaultSettings("Payment"), new Pair<Booking, ParkEmployee>(booking, parkEmployee));
+					ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
+							"/clientSide/fxml/PaymentSystemScreen.fxml",true, false, booking);
 				} catch (StatefulException | ScreenException e) {
 					e.printStackTrace();
 				} 
-			}// else // user clicked on "Cash", showing the confirmation screen
-			//	try {
-			//		ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-			//				"/clientSide/fxml/ConfirmationScreen.fxml", true, true,
-			//				StageSettings.defaultSettings("Confirmation"), new Pair<Booking, ParkEmployee>(booking, parkEmployee));
-			//	} catch (StatefulException | ScreenException e) {
-			//		e.printStackTrace();
-			//	}		
+			} else { // user clicked on "Cash", showing the confirmation screen
+				try {
+					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+							"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
+				} catch (StatefulException | ScreenException e1) {
+					e1.printStackTrace();
+				}
+			} 
 			if(parkControl.payForBooking(parkTable)) //
 				System.out.println("Payment successful.");
-			
 		}
     } 
 
     /**
-     * @param event
-     * In case of a valid booking ID, a search will be performed in the database to find the corresponding order,
-     *  the exit time to the park and current capacity will be updated accordingly.
+     * Updates the exit time for a visitor based on a valid booking ID.
+     * This method validates the booking ID and confirms the booking's existence. 
+     * It ensures that an entry time has been set for the booking, indicating that the visitor did enter the park. 
+     * If the booking is for the current day and an entry time exists without a corresponding exit time,
+     * the exit time is updated in the database. 
+     * The park's current capacity is then adjusted to reflect the visitor's departure. 
+     * Additionally, the booking is moved from the active bookings table to the done bookings table, 
+     * finalizing the visitor's park attendance record.
+     *
+     * @param event The ActionEvent triggered by the employee's interaction with the UI to update a booking's exit time.
      */
     @FXML
     void UpdateExitTime(ActionEvent event) {
@@ -172,39 +221,64 @@ public class ParkEntryManagementScreenController extends AbstractScreen implemen
 		Booking booking = null;
 		
 		try {
-			booking = parkControl.checkIfBookingExists(parkTable, bookingId);
+			booking = parkControl.checkIfBookingExists(parkTable,"bookingId",bookingId);
 		} catch (NullPointerException e) {
 			//booking ID is not exists in the database
-			showErrorAlert(ScreenManager.getInstance().getStage(), 
-					"No reservation exists for the given bookingID in this park.");
+			showErrorAlert("No reservation exists for the given bookingID in this park.");
 			return;
 		}
     	
 		if (booking.getEntryParkTime() == null) {
 			//entry park time for selected bookingId is empty
-			showErrorAlert(ScreenManager.getInstance().getStage(), "Entry time does not exist; cannot update exit time.");
+			showErrorAlert("Entry time does not exist; cannot update exit time.");
 			return;
 		}
 		
 		if (booking.getExitParkTime() != null){
 			//exit park time for selected bookingId is not empty
-			showErrorAlert(ScreenManager.getInstance().getStage(), "Exit time already exist.");
+			showErrorAlert("Exit time already exist.");
 			return;
 		}
 		
 		if (!booking.getDayOfVisit().equals(LocalDate.now())){
-			showErrorAlert(ScreenManager.getInstance().getStage(), 
-					"No reservation exists today for the given bookingID in this park.");
+			showErrorAlert("No reservation exists today for the given bookingID in this park.");
 			return;
 		}
-		
+		updateParkCapacity();
 		parkControl.updateTimeInPark(parkTable, "exitParkTime", bookingId); //updates exit time
-		int updateCapacity = park.getCurrentCapacity() - booking.getNumberOfVisitors();
-		parkControl.updateCurrentCapacity(parkTable,updateCapacity);//updates park current capacity
+		int updateCapacity = parkEmployee.getWorkingIn().getCurrentCapacity() - booking.getNumberOfVisitors();
+		System.out.println(updateCapacity);
+		System.out.println(parkEmployee.getWorkingIn().getCurrentCapacity());
+		System.out.println(booking.getNumberOfVisitors());
+
+		parkControl.updateCurrentCapacity(parkEmployee.getWorkingIn().getParkName(),updateCapacity);//updates park current capacity
 		//remove the booking from active park table
 		parkControl.removeBookingFromActiveBookings(parkTable,booking.getBookingId()); 
 		//insert the booking to done park table
-		parkControl.insertBookingToTable(booking, null, "_park_done_booking", "done");
+		parkControl.insertBookingToTable(booking, "_park_done_booking", "done");
+    }
+    
+    /**
+     * Attempts to find a booking across active, done, and cancelled bookings tables.
+     * 
+     * @param bookingID The booking ID to search for.
+     * @return The found Booking object, or null if no booking is found.
+     */
+    private Booking findBookingAcrossTables(String bookingID) {
+    	ArrayList<Park> parks = parkControl.fetchParks(); 
+    	String bookingId = bookingIDTxt.getText();
+        for (Park park : parks) {
+        	String[] tables = {
+                    parkControl.nameOfTable(park) + "_park_active_booking",
+                    parkControl.nameOfTable(park) + "_park_done_booking",
+                };
+            Booking booking = parkControl.checkIfBookingExists(tables[0],"bookingId",bookingId);
+            if (booking == null) 
+            	booking = parkControl.checkIfBookingExists(tables[1],"bookingId",bookingId);
+            if (booking != null)
+            	return booking;
+        }
+        return null;
     }
 
     @FXML
@@ -234,20 +308,39 @@ public class ParkEntryManagementScreenController extends AbstractScreen implemen
 		if (insertedID.length() != 10 || !insertedID.matches("\\d+")) {
 			error = "You must enter a valid booking ID number with exactly 10 digits";
 			valid = false;
-			showErrorAlert(ScreenManager.getInstance().getStage(), error);
+			showErrorAlert(error);
 		}
 		return valid;
 	}
+	
+	private void updateParkCapacity() {
+		String[] returnsVal = new String[4]; 
+		returnsVal = parkControl.checkCurrentCapacity(parkEmployee.getWorkingIn().getParkName());
+		if (returnsVal != null) {
+			//sets the parameters
+			parkEmployee.getWorkingIn().setMaximumVisitors(Integer.parseInt(returnsVal[0]));
+			parkEmployee.getWorkingIn().setMaximumOrders(Integer.parseInt(returnsVal[1]));
+			parkEmployee.getWorkingIn().setTimeLimit(Integer.parseInt(returnsVal[2])); 
+			parkEmployee.getWorkingIn().setCurrentCapacity(Integer.parseInt(returnsVal[3])); 
+		}
+	}
 
+	/**
+	 * Initializes the screen with default settings, styles buttons, and loads the GoNature logo.
+	 * Sets up the back button with an image and ensures labels and buttons are properly aligned.
+	 */
 	@Override
 	public void initialize() {
+		this.parkEmployee = (ParkEmployee) userControl.restoreUser();
+		this.titleLbl.setText(parkEmployee.getWorkingIn().getParkName());
+	    this.titleLbl.underlineProperty();
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		exitTimeBTN.setStyle("-fx-alignment: center-right;");
 		entryTimeBTN.setStyle("-fx-alignment: center-right;");
 		titleLbl.setStyle("-fx-alignment: center-right;");
 		visitorsLbl.setStyle("-fx-alignment: center-right;");
 		invoiceButton.setStyle("-fx-alignment: center-right;");
-		
+		bookingIDLbl.setStyle("-fx-alignment: center-right;");
 		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
 		backImage.setFitHeight(30);
 		backImage.setFitWidth(30);
@@ -256,42 +349,18 @@ public class ParkEntryManagementScreenController extends AbstractScreen implemen
 		backButton.setPadding(new Insets(1, 1, 1, 1));	
 	}
 
+	/**
+	 * Prepares the screen with park employee-specific data. Displays the park name managed by the employee
+	 * and ensures the screen is ready for interaction upon navigation.
+	 *
+	 * @param information ParkEmployee instance containing the employee's information and the park they manage.
+	 */
 	@Override
 	public void loadBefore(Object information) {
-		ParkEmployee PE = (ParkEmployee)information;
-		setParkEmployee(PE);	
-		setPark(PE.getWorkingIn());
-		this.titleLbl.setText(park.getParkName());
-	    this.titleLbl.underlineProperty();
-		}
-
-	public Park getPark() {
-		return park;
-	}
-
-	public void setPark(Park park) {
-		this.park = park;
 	}
 
 	@Override
 	public String getScreenTitle() {
-		//		return parkEmployee.getWorkingIn().getParkName() + " Entry Park Management";
-
-		return " Entry Park Management";
+		return parkEmployee.getWorkingIn().getParkName() + " Entry Park Management";
 	}
-
-	@Override
-	public void saveState() {
-		userControl.saveUser(parkEmployee);
-		parkControl.savePark(park);
-	}
-
-	@Override
-	public void restoreState() {
-		this.parkEmployee = (ParkEmployee) userControl.restoreUser();
-		this.park = parkControl.restorePark();
-		this.titleLbl.setText(park.getParkName());
-	    this.titleLbl.underlineProperty();
-	}
-
 }
