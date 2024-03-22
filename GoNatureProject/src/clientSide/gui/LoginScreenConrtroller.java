@@ -1,6 +1,8 @@
 package clientSide.gui;
 
+import clientSide.control.GoNatureUsersController;
 import clientSide.control.LoginController;
+import clientSide.control.ParametersController;
 import clientSide.control.ParkController;
 import common.controllers.*;
 
@@ -18,6 +20,7 @@ import entities.ParkEmployee;
 import entities.ParkManager;
 import entities.ParkVisitor;
 import entities.ParkVisitor.VisitorType;
+import entities.Representative;
 import entities.SystemUser;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -29,6 +32,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 public class LoginScreenConrtroller extends AbstractScreen {
+	
+	private LoginController loginController; // controller
+	private GoNatureUsersController goNatureUsersController;
+	
+	public LoginScreenConrtroller() {
+		loginController = new LoginController();
+		goNatureUsersController = GoNatureUsersController.getInstance();
+
+	}
 
     @FXML
     private TextField userNameID;
@@ -65,13 +77,13 @@ public class LoginScreenConrtroller extends AbstractScreen {
     	// validating the userName :
     	if(userName.isEmpty())
     	{
-    		showErrorAlert(ScreenManager.getInstance().getStage(),"Please enter userName");
+    		showErrorAlert("Please enter userName");
     		userNameID.setStyle(setFieldToError());
     	}
     	// validating the password 
     	if(password.isEmpty())
     	{
-       		showErrorAlert(ScreenManager.getInstance().getStage(),"Please enter password");
+       		showErrorAlert("Please enter password");
        		passwordID.setStyle(setFieldToError());
     	}
     	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,44 +95,32 @@ public class LoginScreenConrtroller extends AbstractScreen {
     	else
     	{
     		//Create a query to check if this visitorUser exists:
-    		ParkVisitor visitorUser=LoginController.checkVisitorCredential(userName, password); //returned ParkVisitor if the visitorUser exist,null if not
-    		//check if user with this userName&password exist as Traveler/GroupGuide(ParkVisitor)
+    		ParkVisitor visitorUser=loginController.checkVisitorCredential(userName, password); //returned ParkVisitor if the visitorUser exist,null if not
+    		//check if user with this userName&password exist as GroupGuide(ParkVisitor)
     		if(visitorUser!=null) 
         	{
         		//check if this user is already loggedIn:
-        		if(!LoginController.checkAlreadyLoggedIn(visitorUser))  //the user is not already loggedIn
+        		if(!loginController.checkAlreadyLoggedIn(visitorUser))  //the user is not already loggedIn
         		{
-        			//case that the exist parkVisitorUser is traveler:
-        			if(visitorUser.getVisitorType()==VisitorType.TRAVELLER) 
-        			{
-        				if(LoginController.updateUserIsLoggedIn("traveller","travellerId",visitorUser.getIdNumber()))  //update that the visitorUser is logged in, in the DB
-        				{
-        					//update that the visitorUser is logged in, in the instance field
-        					visitorUser.setLoggedIn(true);
-        					/////////////////////////////////////////
-        					showInformationAlert(ScreenManager.getInstance().getStage(),"the user:"+visitorUser.getUsername()+" successfully login");
-        					//////////////////////////////////
-        					//open the traveler account screen:
-        					ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController", "/clientSide/fxml/ParkVisitorAccountScreen.fxml", false,
-        							false, StageSettings.defaultSettings("GoNature System - Booking Managing"), visitorUser);
-        				}
-        			}
         			//case that the exist parkVisitorUser is groupGuide
-            		if(!LoginController.checkAlreadyLoggedIn(visitorUser)) 
+        			if(!loginController.checkAlreadyLoggedIn(visitorUser)) 
             		{
             			if(visitorUser.getVisitorType()==VisitorType.GROUPGUIDE) 
             			{
-            				if(LoginController.updateUserIsLoggedIn("group_guide","groupGuideId",visitorUser.getIdNumber()))//update that the visitorUser is logged in, in the DB
+            				if(loginController.updateUserIsLoggedIn("group_guide","groupGuideId",visitorUser.getIdNumber()))//update that the visitorUser is logged in, in the DB
             				{
             					//update that the visitorUser is logged in, in the instance field
             					visitorUser.setLoggedIn(true);
             					//////////////////////////////
-            					showInformationAlert(ScreenManager.getInstance().getStage(),"the user:"+visitorUser.getUsername()+" successfully login");
+            					//Temporary:
+            					showInformationAlert("the user:"+visitorUser.getUsername()+" successfully login");
             					/////////////////////////////
+            					
+            					goNatureUsersController.saveUser(visitorUser); //save the object in the goNatureUsersController
             					
             					//open the groupGuide account screen:
             					ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController", "/clientSide/fxml/ParkVisitorAccountScreen.fxml", false,
-            							false, StageSettings.defaultSettings("GoNature System - Booking Managing"), visitorUser);
+            							false,null);
             				}
             			}
             		}      			
@@ -128,55 +128,75 @@ public class LoginScreenConrtroller extends AbstractScreen {
         		//the user is already loggedIn =>show error alert
         		else
         		{
-        			showErrorAlert(ScreenManager.getInstance().getStage(),"This user is already logged in.Please make sure you are disconnected from all devices and try again.");
+        			showErrorAlert("This user is already logged in.Please make sure you are disconnected from all devices and try again.");
         		}
         	}
-    		
-    		
+    
     		
         	////the user is not found as a visitorUser or stuffUser
     		//check if user with this userName&password exist as ParkManager/DepartmentManager/ParkEmployee(stuffVisitor)
         	else
         	{
            		////returned SystemUser if the stuffUser exist,null if not
-        		SystemUser stuffUser=LoginController.checkEmployeeCredential(userName,password);    		
+        		SystemUser stuffUser=loginController.checkEmployeeCredential(userName,password);    		
             	if(stuffUser!=null)
             	{
             		//check if this user is already loggedIn:
-            		if(!LoginController.checkAlreadyLoggedIn(stuffUser))//the user is not already loggedIn
+            		if(!loginController.checkAlreadyLoggedIn(stuffUser))//the user is not already loggedIn
             		{
             			
             			//case that the exist stuffUser is ParkManager:
             			if(stuffUser instanceof ParkManager ) 
             			{
-            				if(LoginController.updateUserIsLoggedIn("park_manager","parkManagerId",stuffUser.getIdNumber()))  //update in the DB that the stuffUser is logged in
+            				if(loginController.updateUserIsLoggedIn("park_manager","parkManagerId",stuffUser.getIdNumber()))  //update in the DB that the stuffUser is logged in
             				{
             					//update that the stuffUser is logged in, in the instance field
             		    		System.out.println("ParkManager is logged in");
 
             					stuffUser.setLoggedIn(true);
-            					showInformationAlert(ScreenManager.getInstance().getStage(),"the user:"+stuffUser.getUsername()+" successfully login");
+            					showInformationAlert("the user:"+stuffUser.getUsername()+" successfully login");
+            					
+            					goNatureUsersController.saveUser(stuffUser); //save the object in the goNatureUsersController
+
             					//open the ParkManager account screen:
             					ScreenManager.getInstance().showScreen("ParkManagerAccountScreenController",
-            									"/clientSide/fxml/ParkManagerAccountScreen.fxml", false, false,
-            									StageSettings.defaultSettings("GoNature System - Client Connection"), stuffUser);
+            									"/clientSide/fxml/ParkManagerAccountScreen.fxml", false, false,null);
             				}
             			}
             			
             			//case that the exist stuffUser is DepartmentManager:
             			else if(stuffUser instanceof DepartmentManager ) 
             			{
-            				if(LoginController.updateUserIsLoggedIn("department_manager","departmentManagerId",stuffUser.getIdNumber()))  //update in the DB that the stuffUser is logged in
+            				if(loginController.updateUserIsLoggedIn("department_manager","departmentManagerId",stuffUser.getIdNumber()))  //update in the DB that the stuffUser is logged in
             				{
             					//update that the stuffUser is logged in, in the instance field
             					stuffUser.setLoggedIn(true);
             					//////////////////////////////////////////////////////////////
-            					showInformationAlert(ScreenManager.getInstance().getStage(),"the user:"+stuffUser.getUsername()+" successfully login");
+            					//teporary:
+            					showInformationAlert("the user:"+stuffUser.getUsername()+" successfully login");
             					/////////////////////////////////////////////////////////////
+            					
+            					goNatureUsersController.saveUser(stuffUser); //save the object in the goNatureUsersController
+
             					//open the ParkManager account screen:
             					ScreenManager.getInstance().showScreen("DepartmentManagerAccountScreenController",
-            							"/clientSide/fxml/DepartmentManagerAccountScreen.fxml", false, false,
-            							StageSettings.defaultSettings("GoNature System - Client Connection"), stuffUser);
+            							"/clientSide/fxml/DepartmentManagerAccountScreen.fxml", false, false,null);
+            				}
+            			}
+            			//case that the exist stuffUser is Representative:
+            			else if(stuffUser instanceof Representative ) 
+            			{
+            				if(loginController.updateUserIsLoggedIn("representative","representativeId",stuffUser.getIdNumber()))  //update in the DB that the stuffUser is logged in
+            				{
+            					//update that the stuffUser is logged in, in the instance field
+            					stuffUser.setLoggedIn(true);
+            					showInformationAlert("the user:"+stuffUser.getUsername()+" successfully login");
+            					
+            					goNatureUsersController.saveUser(stuffUser); //save the object in the goNatureUsersController
+
+            					//open the ParkManager account screen:
+            					ScreenManager.getInstance().showScreen("RepresentativeManagerAccountScreenController",
+            							"/clientSide/fxml/RepresentativeManagerAccountScreen.fxml", false, false,null);
             				}
             			}
             			
@@ -192,30 +212,32 @@ public class LoginScreenConrtroller extends AbstractScreen {
             				nameOfTable=nameOfTable+"_park_employees";
             							
             				//update in the DB that the stuffUser is logged in:		
-            				if(LoginController.updateUserIsLoggedIn(nameOfTable,"employeeId",stuffUser.getIdNumber()))  
+            				if(loginController.updateUserIsLoggedIn(nameOfTable,"employeeId",stuffUser.getIdNumber()))  
             				{
             					//update that the stuffUser is logged in, in the instance field
             					stuffUser.setLoggedIn(true);
             					///////////////////////////////////////////////////
-            					showInformationAlert(ScreenManager.getInstance().getStage(),"the user:"+stuffUser.getUsername()+" successfully login");
+            					//temporary:
+            					showInformationAlert("the user:"+stuffUser.getUsername()+" successfully login");
             					//////////////////////////////////////////////////////////
+            					goNatureUsersController.saveUser(stuffUser); //save the object in the goNatureUsersController
+
             					//open the ParkManager account screen:
             					ScreenManager.getInstance().showScreen("ParkEmployeeAccountScreenController",
-            									"/clientSide/fxml/ParkEmployeeAccountScreen.fxml", false, false,
-            									StageSettings.defaultSettings("GoNature System - Client Connection"), stuffUser);
+            									"/clientSide/fxml/ParkEmployeeAccountScreen.fxml", false, false,null);
             				}
             			}
             		}            		
             		//the user is already loggedIn =>show error alert:
             		else
             		{
-            			showErrorAlert(ScreenManager.getInstance().getStage(),"This user is already logged in.Please make sure you are disconnected from all devices and try again.");	
+            			showErrorAlert("This user is already logged in.Please make sure you are disconnected from all devices and try again.");	
             		}
             	}
  
             	
             	//the user is not found as a visitorUser and as stuffUser  => show error alert
-        		else showErrorAlert(ScreenManager.getInstance().getStage(),"No system user was found with this username and password.Please make sure you enter the correct details.");
+        		else showErrorAlert("No system user was found with this username and password.Please make sure you enter the correct details.");
         	}
     	}
     }
@@ -225,12 +247,12 @@ public class LoginScreenConrtroller extends AbstractScreen {
 
     /** 
      *This method is called when the return button is pressed. It opens the main screen
+     * @throws ScreenException 
      * @throws StatefulException,ScreenException
      */
     @FXML
-    void returnToPreviousScreen(ActionEvent event) {
-    	//ScreenManager.getInstance().showScreen("MainScreenController","/clientSide/fxml/MainScreen.fxml",
-		//false, false,StageSettings.defaultSettings("GoNature System - Reservations"), null);
+    void returnToPreviousScreen(ActionEvent event) throws ScreenException, StatefulException {
+    	ScreenManager.getInstance().goToPreviousScreen(false, false);
     }
 
 	@Override
@@ -251,9 +273,7 @@ public class LoginScreenConrtroller extends AbstractScreen {
 	
 	///TO DO:
 	@Override
-	public void loadBefore(Object information) {
-		// TODO Auto-generated method stub
-		
+	public void loadBefore(Object information) {		
 	}
 
 

@@ -289,7 +289,11 @@ public class ParametersController {
 																			// the we build to observableArrayList
 	}
 
-	public boolean updateParkMaximumVisitorsCapacity(PendingAdjustment pendingAdjustment,
+	
+	
+	
+	
+	public boolean updateParkParameter(PendingAdjustment pendingAdjustment,
 			DepartmentManager departmentManager, boolean isApproved) {
 		// Creating the values we will use:
 
@@ -302,14 +306,20 @@ public class ParametersController {
 		String adjustedBy = pendingAdjustment.getAdjustedBy();
 		int parameterBefore = pendingAdjustment.getParameterBefore();
 		int parameterAfter = pendingAdjustment.getParameterAfter();
-		String parameterType = pendingAdjustment.getParameterType();
+		String parameterType = (String)pendingAdjustment.getParameterType();
 
 		String reviewdBy = departmentManager.getFirstName() + " " + departmentManager.getLastName();
 
 		LocalDate dateOfReview = LocalDate.now();
 		LocalTime timeOfReview = LocalTime.now();
+		Integer ans=0;
+		if(isApproved)
+		{
+			ans=1;
+		}
+	
 
-		// Creating an insert query in order to add updateParkMaximumOrderesCapacity to
+		// Creating an insert query in order to add the requests that have been viewed 
 		// the viewed_adjustment table
 		Communication RequestForUpdateParkparameter = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
@@ -320,10 +330,9 @@ public class ParametersController {
 		RequestForUpdateParkparameter.setTables(Arrays.asList("viewed_adjustment"));
 		RequestForUpdateParkparameter.setColumnsAndValues(
 				Arrays.asList("adjusmentId", "parkId", "parkName", "department", "dayOfAdjusting", "timeOfAdjusting",
-						"adjustedBy", "parameterBefore", "parameterAfter", "parameterType", "reviewdBy", "isApproved",
-						"dateOfReview", "timeOfReview"),
+						"adjustedBy", "parameterBefore", "parameterAfter", "parameterType", "reviewdBy","isApproved","dateOfReview", "timeOfReview"),
 				Arrays.asList(adjusmentId, parkId, parkName, department, dayOfAdjusting, timeOfAdjusting, adjustedBy,
-						parameterBefore, parameterAfter, parameterType, reviewdBy, isApproved, dateOfReview,
+						parameterBefore, parameterAfter, parameterType, reviewdBy, ans, dateOfReview,
 						timeOfReview));
 
 		GoNatureClientUI.client.accept(RequestForUpdateParkparameter); // sending the query to the server that will
@@ -357,8 +366,7 @@ public class ParametersController {
 			return false;
 		}
 
-		// if the departmentManager approved the adjustment=> update the parks
-		// parameters
+		// if the departmentManager approved the adjustment=> update the parks parameters
 		if (isApproved) {
 			// Creating a update query in order to update the new parameter of this park in
 			// the parks table
