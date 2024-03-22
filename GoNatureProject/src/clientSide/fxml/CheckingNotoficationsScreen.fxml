@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.text.Font?>
+
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onKeyPressed="#paneTabPressed" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.CheckingNotoficationsScreenController">
+   <children>
+      <Button fx:id="backButton" layoutX="14.0" layoutY="15.0" mnemonicParsing="false" onAction="#returnToPreviousScreen" prefHeight="38.0" prefWidth="38.0">
+         <font>
+            <Font name="Calibri" size="14.0" />
+         </font>
+      </Button>
+      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="191.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />
+      <Label fx:id="titleLbl" layoutX="191.0" layoutY="65.0" prefHeight="38.0" prefWidth="300.0" text="Arrival Confirmation">
+         <font>
+            <Font name="Cambria" size="30.0" />
+         </font>
+      </Label>
+      <Label fx:id="futureLabel" layoutX="26.0" layoutY="127.0" prefHeight="22.0" prefWidth="322.0" text="Your Upcoming Bookings:">
+         <font>
+            <Font name="Calibri" size="18.0" />
+         </font>
+      </Label>
+      <Separator fx:id="seperator1" layoutX="26.0" layoutY="149.0" prefHeight="7.0" prefWidth="647.0" />
+      <Label fx:id="doubleClickLabel" layoutX="365.0" layoutY="127.0" prefHeight="22.0" prefWidth="308.0" text="Double click on a booking to select it" textAlignment="RIGHT">
+         <font>
+            <Font name="Calibri" size="18.0" />
+         </font>
+      </Label>
+      <TableView fx:id="notificationsTable" layoutX="27.0" layoutY="169.0" prefHeight="163.0" prefWidth="647.0">
+         <columns>
+            <TableColumn fx:id="bookingIdColumn" editable="false" prefWidth="75.0" sortable="false" text="Booking ID" />
+            <TableColumn fx:id="parkColumn" editable="false" prefWidth="136.80004119873047" sortable="false" text="Park" />
+            <TableColumn fx:id="dateColumn" editable="false" prefWidth="75.199951171875" text="Date" />
+            <TableColumn fx:id="timeColumn" editable="false" prefWidth="51.0" sortable="false" text="Time" />
+            <TableColumn fx:id="sizeColumn" editable="false" prefWidth="71.0" sortable="false" text="Group Size" />
+            <TableColumn fx:id="priceColumn" editable="false" prefWidth="66.0" sortable="false" text="Final Price" />
+            <TableColumn fx:id="paidColumn" editable="false" prefWidth="46.0" sortable="false" text="Paid" />
+            <TableColumn fx:id="statusColumn" editable="false" prefWidth="102.0" sortable="false" text="Status" />
+         </columns>
+      </TableView>
+      <ProgressIndicator fx:id="progressIndicator" layoutX="334.0" layoutY="209.0" prefHeight="100.0" prefWidth="100.0" progress="0.0" />
+   </children>
+</Pane>

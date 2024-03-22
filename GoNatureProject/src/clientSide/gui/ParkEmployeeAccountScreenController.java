@@ -6,7 +6,6 @@ import common.communication.CommunicationException;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.ParkEmployee;
 import javafx.event.ActionEvent;
@@ -20,13 +19,12 @@ import javafx.scene.image.ImageView;
  * Controller for the Park Employee Account Screen within the GoNature application. 
  * This controller manages
  * the interaction of park employees with their account interface.
- * It extends AbstractScreen and implements the Stateful interface to handle the screen state 
- * and navigation within the application effectively.
+ * It extends AbstractScreen to navigation within the application effectively.
  * 
  * The class integrates with the GoNatureUsersController and ParkController to perform its operations, managing
  * user session states and park-related data.
  */
-public class ParkEmployeeAccountScreenController extends AbstractScreen implements Stateful {
+public class ParkEmployeeAccountScreenController extends AbstractScreen{
 
 	private GoNatureUsersController userControl;
 	private ParkController parkControl;
@@ -68,7 +66,7 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
     @FXML
     void GoToParkEntryResevationScreen(ActionEvent event) throws StatefulException, ScreenException {
 		ScreenManager.getInstance().showScreen("ParkEntryReservationScreenController",
-				"/clientSide/fxml/ParkEntryReservationScreen.fxml", true, true, null);
+				"/clientSide/fxml/ParkEntryReservationScreen.fxml", true, false, null);
     }
     
     /**
@@ -81,7 +79,7 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
     @FXML
     void GoToParkEntryManagementScreen(ActionEvent event) throws StatefulException, ScreenException {
 		ScreenManager.getInstance().showScreen("ParkEntryManagementScreenController",
-				"/clientSide/fxml/ParkEntryManagementScreen.fxml", false, true,null);
+				"/clientSide/fxml/ParkEntryManagementScreen.fxml", false, false,null);
     }
 
     /**
@@ -106,72 +104,46 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen implemen
         	showErrorAlert("Failed to log out"); 	
     }
 
-	/**
-	 * This method is called after the FXML is invoked
-	 */
-	@Override
-	public void initialize() {
-		/*
-		 * 
-		parkEmployee = (ParkEmployee) userControl.restoreUser();
-		this.privateName.setText("Hello " + parkEmployee.getFirstName() + " " + parkEmployee.getLastName());
-	    this.privateName.underlineProperty();
-		this.Title.setText(parkEmployee.getWorkingIn().getParkName());
-	    this.Title.underlineProperty();
-		 */
-		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
-		privateName.setStyle("-fx-alignment: center-right;"); //label component
-		parkEntryManagementBTN.setStyle("-fx-alignment: center-right;");
-		parkEntryCasualBTN.setStyle("-fx-alignment: center-right;");
-		logOutBTN.setStyle("-fx-alignment: center-right;");	
-	}
+    /**
+     * Initializes the controller class. This method is automatically called after the FXML file has been loaded.
+     * It prepares the screen for display by setting up user details, park information, and UI components.
+     */
+    @Override
+    public void initialize() {
+        // Restore the ParkEmployee user from the session state.
+        parkEmployee = (ParkEmployee) userControl.restoreUser();
+        
+        // Save the park associated with the employee for session state.
+        parkControl.savePark(parkEmployee.getWorkingIn());
+        
+        // Update the greeting label with the employee's name.
+        this.privateName.setText("Hello " + parkEmployee.getFirstName() + " " + parkEmployee.getLastName());
+        this.privateName.underlineProperty(); // Underline the name for emphasis.
+        
+        // Set the park name in the title label to indicate the current park context.
+        this.Title.setText(parkEmployee.getWorkingIn().getParkName());
+        this.Title.underlineProperty(); // Underline the title for emphasis.
+
+        // Load and set the logo for GoNature in the ImageView.
+        goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
+        
+        // Set the style for the labels and buttons for consistent UI presentation.
+        privateName.setStyle("-fx-alignment: center-right;");
+        parkEntryManagementBTN.setStyle("-fx-alignment: center-right;");
+        parkEntryCasualBTN.setStyle("-fx-alignment: center-right;");
+        logOutBTN.setStyle("-fx-alignment: center-right;");
+    }
 
 	/**
-	 * Prepares the screen before it is displayed by setting up the necessary data based on
-	 * information passed from the previous screen. This includes initializing the park employee,
-	 * setting the park they are associated with and updating the UI components to reflect their
-	 * information. It also fetches and displays current park capacity.
-	 * 
 	 * @param information Information passed from the previous screen, expected to be a ParkEmployee instance.
 	 */
 	@Override
 	public void loadBefore(Object information) {
-		ParkEmployee PE = (ParkEmployee)information;
-		
-		setParkEmployee(PE);
-		userControl.saveUser(parkEmployee);
-		parkControl.savePark(parkEmployee.getWorkingIn());
-		this.privateName.setText("Hello " + parkEmployee.getFirstName() + " " + parkEmployee.getLastName());
-	    this.privateName.underlineProperty();
-		this.Title.setText(parkEmployee.getWorkingIn().getParkName());
-	    this.Title.underlineProperty();
 	}
 	
 	@Override
 	public String getScreenTitle() {
 		//return parkEmployee.getWorkingIn().getParkName();
 		return null;
-	}
-
-	/**
-	 *	This method saves the current user state and the park state.
-	 */
-	@Override
-	public void saveState() {
-		userControl.saveUser(parkEmployee);
-	}
-
-	/**
-	 * Restores the screen's state, including the park employee and park details, based on
-	 * the saved state. This method ensures continuity in the application's user experience by
-	 * repopulating UI components with previously saved data.
-	 */
-	@Override
-	public void restoreState() {
-		parkEmployee = (ParkEmployee) userControl.restoreUser();
-		this.privateName.setText("Hello " + parkEmployee.getFirstName() + " " + parkEmployee.getLastName());
-	    this.privateName.underlineProperty();
-		this.Title.setText(parkEmployee.getWorkingIn().getParkName());
-	    this.Title.underlineProperty();
 	}
 }

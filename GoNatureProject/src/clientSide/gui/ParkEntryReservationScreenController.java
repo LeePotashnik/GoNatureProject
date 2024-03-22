@@ -2,12 +2,12 @@ package clientSide.gui;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import clientSide.control.BookingController;
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import clientSide.control.PaymentController;
@@ -17,7 +17,6 @@ import common.controllers.ScreenManager;
 import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.Booking;
-import entities.Park;
 import entities.ParkEmployee;
 import entities.ParkVisitor;
 import entities.Booking.VisitType;
@@ -31,7 +30,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.stage.WindowEvent;
 
 /**
  * The ParkEntryReservationScreenController class is responsible for managing the park entry reservation process
@@ -130,13 +128,18 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
     		parkVisitor = (ParkVisitor) parkControl.checkIfVisitorExists("group_guide", "groupGuideId", visitorIDTxt.getText());
     		if (parkVisitor != null) //indicates the visitor is exist in database as a 'groupGuide'
     			flag = 1; 	
-    		amount = Integer.parseInt(visitorsAmountTxt.getText()); 		
-
+    		amount = Integer.parseInt(visitorsAmountTxt.getText()); 	
+    		
+    		// Define a formatter that formats the time as hour and minute
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+            // Format the current time using the formatter
+            String formattedTime = LocalTime.now().format(formatter);
+            LocalTime now = LocalTime.parse(formattedTime);
     		String bookingId = ((Integer) (1000000000 + new Random().nextInt(900000000))).toString();
-			newBooking = new Booking(bookingId, LocalDate.now(), LocalTime.now(), LocalDate.now(), 
+			newBooking = new Booking(bookingId, LocalDate.now(), now, LocalDate.now(), 
 				flag == 1 ? VisitType.GROUP : VisitType.INDIVIDUAL, amount , visitorIDTxt.getText(),
 				nameTxt.getText(), lastNameTxt.getText(), emailTxt.getText(), phoneTxt.getText(), 0, true, true,
-				LocalTime.now(), null, true, LocalTime.now(), parkEmployee.getWorkingIn());
+				now, null, true, now, parkEmployee.getWorkingIn());
 			
 			if (flag ==1) 
 				finalPrice = PaymentController.getInstance().calculateRegularPriceGuidedGroup(newBooking);
@@ -247,7 +250,7 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
     @FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(true, true);
+			ScreenManager.getInstance().goToPreviousScreen(true, false);
 		} catch (ScreenException | StatefulException e) {
 			e.printStackTrace();
 		}
@@ -260,27 +263,34 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
      */
 	@Override
 	public void initialize() {
-		parkEmployee = (ParkEmployee) GoNatureUsersController.getInstance().restoreUser();
-		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
-		bookingLbl.setStyle("-fx-alignment: center-right;"); //label component
-		dateLbl.setStyle("-fx-alignment: center-right;"); //label component
-		emailLbl.setStyle("-fx-alignment: center-right;");
-		phoneLbl.setStyle("-fx-alignment: center-right;");
-		titleLbl.setStyle("-fx-alignment: center-right;");
-		visitorsLbl.setStyle("-fx-alignment: center-right;");
-		makeReservationBtn.setStyle("-fx-alignment: center-right;");
-		this.bookingLbl.setText(parkEmployee.getWorkingIn().getParkName());
-	    this.bookingLbl.underlineProperty();
-	    
-		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
-		backImage.setFitHeight(30);
-		backImage.setFitWidth(30);
-		backImage.setPreserveRatio(true);
-		backButton.setGraphic(backImage);
-		backButton.setPadding(new Insets(1, 1, 1, 1));
-		backButton.setStyle("-fx-alignment: center-right;");
+	    // Restoring the park employee's session details for use in initializing the screen.
+	    parkEmployee = (ParkEmployee) GoNatureUsersController.getInstance().restoreUser();
 
-	}
+	    // Setting the GoNature logo at the top of the screen.
+	    goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+
+	    // Applying consistent styling across various labels for a unified appearance.
+	    bookingLbl.setStyle("-fx-alignment: center-right;"); // Label for booking information
+	    dateLbl.setStyle("-fx-alignment: center-right;"); // Label for displaying the date
+	    emailLbl.setStyle("-fx-alignment: center-right;"); // Label for email information
+	    phoneLbl.setStyle("-fx-alignment: center-right;"); // Label for phone information
+	    titleLbl.setStyle("-fx-alignment: center-right;"); // Label for the screen title
+	    visitorsLbl.setStyle("-fx-alignment: center-right;"); // Label for number of visitors
+	    makeReservationBtn.setStyle("-fx-alignment: center-right;"); // Style for the reservation button
+
+	    // Setting the park name in the booking label and making it underline to highlight.
+	    this.bookingLbl.setText(parkEmployee.getWorkingIn().getParkName());
+	    this.bookingLbl.underlineProperty();
+
+	    // Configuring the back button with an icon for visual consistency and usability.
+	    ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
+	    backImage.setFitHeight(30);
+	    backImage.setFitWidth(30);
+	    backImage.setPreserveRatio(true);
+	    backButton.setGraphic(backImage);
+	    backButton.setPadding(new Insets(1, 1, 1, 1));
+	    backButton.setStyle("-fx-alignment: center-right;");
+	} 
 
 	/**
 	 * Prepares the screen with necessary data before it is displayed. This method receives a ParkEmployee instance

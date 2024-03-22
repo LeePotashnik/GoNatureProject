@@ -4,7 +4,6 @@ import clientSide.control.GoNatureUsersController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.Representative;
 import javafx.event.ActionEvent;
@@ -19,13 +18,12 @@ import javafx.scene.image.ImageView;
  * The ServiceRepresentativeAccountScreenController class is responsible for handling all interactions
  * within the service representative account screen. 
  * This class allows manage functionalities specific to their role. 
- * It extends AbstractScreen and implements the Stateful interface for managing screen states and
- * navigation within the application.
+ * It extends AbstractScreen.
  * 
  * This controller manages user data through the GoNatureUsersController, enabling operations such as
  * authentication, registration, and user session management.
  */
-public class ServiceRepresentativeAccountScreenController extends AbstractScreen implements Stateful{
+public class ServiceRepresentativeAccountScreenController extends AbstractScreen{
 
 	private GoNatureUsersController userControl;
 
@@ -60,14 +58,10 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
     void GoToGuideRegistrationScreen(ActionEvent event) {
     	try {
 			ScreenManager.getInstance().showScreen("GroupGuideRegistrationScreenController",
-					"/clientSide/fxml/GroupGuideRegistrationScreen.fxml", true, true,representative );
-		} catch (StatefulException e) {
-			// TODO Auto-generated catch block
+					"/clientSide/fxml/GroupGuideRegistrationScreen.fxml", true, false,null );
+		} catch (StatefulException | ScreenException e) {
 			e.printStackTrace();
-		} catch (ScreenException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
     }
 
     /**
@@ -94,56 +88,39 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
 	public String getScreenTitle() {
 		return "Service Representative";
 	}
-
-	@Override
-	public void saveState() {
-		userControl.saveUser(representative);
-	}
 	
 	/**
-	 * This method is automatically called after the FXML file has been loaded.
-	 * It initializes UI components and sets the image for the GoNature logo. It also styles various UI elements
-	 * such as buttons and labels to maintain consistency with the application's design.
+	 * Initializes the controller class. This method is automatically called
+	 * after the FXML file has been loaded, setting the initial state of the UI components.
 	 */
 	@Override
 	public void initialize() {
-		/*
-		this.representative = (Representative) userControl.restoreUser();
-		userControl.saveUser(representative);
-		this.privateName.setText("Hello " + representative.getFirstName() + " " + representative.getLastName());
-	    this.privateName.underlineProperty();
-		 */
-		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
-		privateName.setStyle("-fx-alignment: center-right;"); //label component
-		Title.setStyle("-fx-alignment: center-right;"); //label component
-		GuideRegistrationBTN.setStyle("-fx-alignment: center-right;");
-		logOutBTN.setStyle("-fx-alignment: center-right;");	
-	}		
+	    // Restore the Representative user from the saved state.
+	    representative = (Representative) userControl.restoreUser();
+
+	    // Keep the representative's information updated in the session.
+	    userControl.saveUser(representative);
+
+	    // Set the greeting message with the representative's name and underline it for emphasis.
+	    this.privateName.setText("Hello " + representative.getFirstName() + " " + representative.getLastName());
+	    this.privateName.underlineProperty(); // Emphasize the name for better visibility.
+
+	    // Set the GoNature logo to enhance brand consistency.
+	    goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
+
+	    // Apply alignment styles to ensure that UI elements are consistently presented.
+	    privateName.setStyle("-fx-alignment: center-right;"); // Ensure the label is right-aligned.
+	    Title.setStyle("-fx-alignment: center-right;"); // Ensure the title label is right-aligned.
+	    GuideRegistrationBTN.setStyle("-fx-alignment: center-right;"); // Align button for consistency.
+	    logOutBTN.setStyle("-fx-alignment: center-right;"); // Align logout button to match other UI elements.
+	}
+		
 
 	/**
-	 * Receives and loads data from the previous screen. This method updates the representative instance
-	 * and UI components with the information of the currently logged-in service representative.
-	 * 
 	 * @param information The data passed from the previous screen, expected to be a Representative instance.
 	 */
 	@Override
 	public void loadBefore(Object information) {
-		Representative R = (Representative)information;
-		this.representative = R;	
-		userControl.saveUser(representative);
-		this.privateName.setText("Hello " + representative.getFirstName() + " " + representative.getLastName());
-	    this.privateName.underlineProperty();
-	}
-	
-	/**
-	 * Restores the state of the representative and the screen. This method is called to repopulate
-	 * the screen with data that was previously saved, ensuring continuity in the user's session.
-	 */
-	@Override
-	public void restoreState() {
-		representative = (Representative) userControl.restoreUser();
-		this.privateName.setText("Hello " + representative.getFirstName() + " " + representative.getLastName());
-	    this.privateName.underlineProperty();
 	}
 
 }

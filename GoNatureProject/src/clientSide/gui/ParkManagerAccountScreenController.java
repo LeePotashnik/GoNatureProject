@@ -1,16 +1,12 @@
 package clientSide.gui;
 
- import java.util.Arrays;
-
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import common.communication.CommunicationException;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.Stateful;
 import common.controllers.StatefulException;
-import entities.Park;
 import entities.ParkManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -18,19 +14,17 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.stage.WindowEvent;
 
 /**
  * The ParkManagerAccountScreenController class controls the park manager account screen.
  * It handles all the user interactions within the park manager account screen.
- * This class extends AbstractScreen and implements the Stateful interface to manage screen state
- * and navigation within the application.
+ * This class extends AbstractScreen.
  * 
  * The class manages park and user data through the use of ParkController and GoNatureUsersController instances,
  * enabling it to perform operations related to park management functionalities.
  */
 
-public class ParkManagerAccountScreenController extends AbstractScreen implements Stateful{
+public class ParkManagerAccountScreenController extends AbstractScreen{
 	
 	private GoNatureUsersController userControl;	
 	private ParkController parkControl;
@@ -66,7 +60,12 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
      */
     @FXML
     void GoToParametersAdjustingScreen(ActionEvent event) {
-   	
+    	try {
+			ScreenManager.getInstance().showScreen("ParametersAdjustingScreenConrtroller",
+					"/clientSide/fxml/ParametersAdjustingScreen.fxml", false, false, null);
+		} catch (StatefulException | ScreenException e) {
+			e.printStackTrace();
+		}
     }
 
     /**
@@ -78,7 +77,7 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
     void GetCurrentMaximumCapacity(ActionEvent event) {
     	//updates park parameters
 		String[] returnsVal = new String[4]; 
-		returnsVal = parkControl.checkCurrentCapacity(parkManager.getWorkingIn().getParkName());
+		returnsVal = parkControl.checkCurrentCapacity(parkManager.getParkObject().getParkName());
 		if (returnsVal != null) {
 			//sets the parameters
 			parkManager.getParkObject().setMaximumVisitors(Integer.parseInt(returnsVal[0]));
@@ -103,7 +102,7 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
     void GoToParkManagerReportsScreen(ActionEvent event) {
     	try {
 			ScreenManager.getInstance().showScreen("ParkManagerReportScreenController",
-					"/clientSide/fxml/ParkManagerReportScreen.fxml", false, true, parkManager);
+					"/clientSide/fxml/ParkManagerReportScreen.fxml", false, false, null);
 		} catch (StatefulException | ScreenException e) {
 			e.printStackTrace();
 		}
@@ -133,78 +132,49 @@ public class ParkManagerAccountScreenController extends AbstractScreen implement
 
     /**
      * Initializes the controller class. This method is automatically called
-     * after the FXML file has been loaded. It sets up the initial state of
-     * the UI elements, including styles and images.
+     * after the FXML file has been loaded. It performs several initial setup tasks.
      */
-	@Override
-	public void initialize() {
-		/*
-		parkManager = (ParkManager) userControl.restoreUser();
-		parkManager.setParkObject(parkControl.fetchManagerParksList("parkManagerId", parkManager.getIdNumber()).get(0)); 
-		parkControl.savePark(parkManager.getParkObject());
-		this.privateName.setText("Hello " + parkManager.getFirstName() + " " + parkManager.getLastName());
-	    this.privateName.underlineProperty();
-		this.Title.setText(parkManager.getParkObject().getParkName() + "'s " + getScreenTitle());
-	    this.Title.underlineProperty();
-		 */
-		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
-		privateName.setStyle("-fx-alignment: center-right;"); //label component
-		Title.setStyle("-fx-alignment: center-right;"); //label component
-		capacityBTN.setStyle("-fx-alignment: center-right;");
-		AdjustinDataBTN.setStyle("-fx-alignment: center-right;");
-		reportsBTN.setStyle("-fx-alignment: center-right;");
-		logOutBTN.setStyle("-fx-alignment: center-right;");	
-	}
+    @Override
+    public void initialize() {
+        // Restore the ParkManager user from the saved state to set up user context.
+        parkManager = (ParkManager) userControl.restoreUser();
+
+        // Fetch the park object associated with the manager and update the parkManager instance.
+        parkManager.setParkObject(parkControl.fetchManagerParksList("parkManagerId", parkManager.getIdNumber()).get(0));
+        System.out.println(parkManager.getParkObject() == null); // Debugging line to check if the park object is successfully retrieved.
+
+        // Save the updated parkManager and its park object for later use within the session.
+        userControl.saveUser(parkManager);
+        parkControl.savePark(parkManager.getParkObject());
+
+        // Update UI labels with personalized texts, such as greeting the manager by name.
+        this.privateName.setText("Hello " + parkManager.getFirstName() + " " + parkManager.getLastName());
+        this.privateName.underlineProperty(); // Emphasize the name by underlining.
+        this.Title.setText(parkManager.getParkObject().getParkName() + "'s " + getScreenTitle());
+        this.Title.underlineProperty(); // Emphasize the title by underlining.
+
+        // Set the GoNature logo.
+        goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
+
+        // Apply styling to ensure consistent alignment and appearance of UI elements.
+        privateName.setStyle("-fx-alignment: center-right;");
+        Title.setStyle("-fx-alignment: center-right;");
+        capacityBTN.setStyle("-fx-alignment: center-right;");
+        AdjustinDataBTN.setStyle("-fx-alignment: center-right;");
+        reportsBTN.setStyle("-fx-alignment: center-right;");
+        logOutBTN.setStyle("-fx-alignment: center-right;");
+    }
+
 
 	/**
-	 * Loads data before the screen is displayed. It sets the ParkManager
-	 * instance and updates UI labels to reflect the current manager's information.
-	 * This method is designed to be called when navigating from another screen.
-	 *
 	 * @param information The information passed from the previous screen, expected to be a ParkManager instance.
 	 */
 	@Override
 	public void loadBefore(Object information) {
-		ParkManager PM = (ParkManager)information;
-		setParkManager(PM);
-		userControl.saveUser(parkManager);
-		//set the relevant park to the parkManager from database
-		parkManager.setParkObject(parkControl.fetchManagerParksList("parkManagerId", parkManager.getIdNumber()).get(0)); 
-		parkControl.savePark(parkManager.getParkObject());
-		this.privateName.setText("Hello " + parkManager.getFirstName() + " " + parkManager.getLastName());
-	    this.privateName.underlineProperty();
-		this.Title.setText(parkManager.getParkObject().getParkName() + "'s " + getScreenTitle());
-	    this.Title.underlineProperty();
 	}
-	
-
 
 	@Override
 	public String getScreenTitle() {
 		return "Park Manager";
-	}
-
-	/**
-	 * Saves the current state of the park manager. This includes persisting
-	 * any changes made during the session that need to be retained when navigating
-	 * away from the screen.
-	 */
-	@Override
-	public void saveState() {
-		userControl.saveUser(parkManager);
-	}
-
-	/**
-	 * Restores the state of the park manager and the screen. This method is called
-	 * to repopulate the screen with data that was previously saved, ensuring
-	 * continuity in the user's session.
-	 */
-	@Override
-	public void restoreState() {
-		this.parkManager = (ParkManager) userControl.restoreUser();
-		this.privateName.setText("Hello " + parkManager.getFirstName() + " " + parkManager.getLastName());
-	    this.privateName.underlineProperty();
-		this.Title.setText(parkManager.getParkObject().getParkName() + "'s " + getScreenTitle());
-	    this.Title.underlineProperty();
 	}
 }

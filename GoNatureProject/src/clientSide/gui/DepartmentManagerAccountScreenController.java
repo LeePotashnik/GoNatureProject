@@ -8,7 +8,6 @@ import common.communication.CommunicationException;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.DepartmentManager;
 import entities.Park;
@@ -22,13 +21,12 @@ import javafx.scene.image.ImageView;
 /**
  * The DepartmentManagerAccountScreenController class manages the interactions within the department manager's
  * account screen in the GoNature application. It facilitates various operations. 
- * This class extends AbstractScreen for UI control and implements the Stateful interface to maintain and 
- * manage the state across different screens.
+ * This class extends AbstractScreen for UI control.
  *
  * It utilizes GoNatureUsersController for user management and ParkController for park-related operations, 
  * ensuring that department managers can effectively oversee and manage park data and reports.
  */
-public class DepartmentManagerAccountScreenController extends AbstractScreen implements Stateful{
+public class DepartmentManagerAccountScreenController extends AbstractScreen{
 
 	private static GoNatureUsersController userControl;
 	private ParkController parkControl;
@@ -53,6 +51,14 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
     	parkControl = ParkController.getInstance();
 	}
     
+    public DepartmentManager getParkManager() {
+		return departmentManager;
+	}
+
+	public void setDepartmentManager(DepartmentManager departmentManager) {
+		this.departmentManager = departmentManager;
+	}
+    
     /**
      * @param event
      * When the 'approvingData' button is pressed, 
@@ -60,6 +66,12 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
      */
     @FXML
     void GoToApprovingParksDataScreen(ActionEvent event){
+    	try {
+			ScreenManager.getInstance().showScreen("ParametersApprovingScreenConrtroller",
+					"/clientSide/fxml/ParametersApprovingScreen.fxml", false, false, null);
+		} catch (StatefulException | ScreenException e) {
+			e.printStackTrace();
+		}
     }
 
     /**
@@ -71,7 +83,7 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
     void GoToReportsScreen(ActionEvent event) {
     	try {
 			ScreenManager.getInstance().showScreen("DepartmentManagerReportsScreenController",
-					"/clientSide/fxml/DepartmentManagerReportsScreen.fxml", false, true, departmentManager);
+					"/clientSide/fxml/DepartmentManagerReportsScreen.fxml", false, false, null);
 		} catch (StatefulException | ScreenException e) {
 			e.printStackTrace();
 		}
@@ -129,100 +141,57 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen imp
         else 
         	showErrorAlert("Failed to log out"); 	
     }
-    
-	public DepartmentManager getParkManager() {
-		return departmentManager;
-	}
+    	
+    /**
+     * This method is automatically invoked after the FXML has been loaded, setting up the initial state of the UI components.
+     * It prepares the Department Manager's account screen by loading the user's data, setting greeting text, updating the title,
+     * fetching and displaying the parks managed by the department manager, and applying styles to UI elements.
+     */
+    @Override
+    public void initialize() {
+        // Restores the DepartmentManager object from the saved user session to maintain continuity.
+        departmentManager = (DepartmentManager) userControl.restoreUser();
+        // Saves the current state of the DepartmentManager for potential future reference within the session.
+        userControl.saveUser(departmentManager);
 
-	public void setDepartmentManager(DepartmentManager departmentManager) {
-		this.departmentManager = departmentManager;
-	}
-	
-	/**
-	 * Initializes the class. This method is automatically called after the FXML file has been loaded.
-	 * It sets up initial configurations for UI components such as labels and buttons and loads the GoNature logo.
-	 * Styles are applied to ensure consistent alignment and presentation according to the application's design standards.
-	 */
-	@Override
-	public void initialize() {
-		/*
-		departmentManager = (DepartmentManager) userControl.restoreUser();
-		this.screenTitle = departmentManager.getManagesDepartment()+"'s Department Manager";
-		this.privateName.setText("Hello " + departmentManager.getFirstName() + " " + departmentManager.getLastName());
-	    this.privateName.underlineProperty();
-		this.title.setText(screenTitle);
-	    this.title.underlineProperty();
-		//updating the list of parks managed by the department manager
-	    ArrayList<Park> parks = new ArrayList<>();
-		parks = parkControl.fetchManagerParksList("departmentManagerId", departmentManager.getIdNumber());
-    	try {
-    		departmentManager.setResponsible(parks);	
-    	}catch (NullPointerException e) {
-    		System.out.println("cannot fetch parks list");
-    	}
-		 */
-		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
-		privateName.setStyle("-fx-alignment: center-right;"); //label component
-		approvingDataBTN.setStyle("-fx-alignment: center-right;");
-		reportsBTN.setStyle("-fx-alignment: center-right;");
-		currentCapacitiesBTN.setStyle("-fx-alignment: center-right;");
-		logOutBTN.setStyle("-fx-alignment: center-right;");	
-	}
+        // Sets the greeting text with the department manager's name to personalize the UI.
+        this.privateName.setText("Hello " + departmentManager.getFirstName() + " " + departmentManager.getLastName());
+        this.privateName.underlineProperty(); // Adds an underline for visual emphasis.
+
+        // Dynamically sets the screen title based on the department manager's department.
+        this.title.setText(getScreenTitle());
+        this.title.underlineProperty(); // Underlines the title for emphasis.
+
+        // Attempts to fetch and set the list of parks managed by the department manager.
+        ArrayList<Park> parks = parkControl.fetchManagerParksList("departmentManagerId", departmentManager.getIdNumber());
+        try {
+            departmentManager.setResponsible(parks); // Sets the list of parks the department manager is responsible for.
+        } catch (NullPointerException e) {
+            System.out.println("cannot fetch parks list"); // Handles the case where no parks list could be fetched.
+        }
+
+        // Sets the GoNature logo on the screen.
+        goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
+
+        // Applies alignment and style configurations to UI components to ensure consistency with the application's design.
+        privateName.setStyle("-fx-alignment: center-right;");
+        approvingDataBTN.setStyle("-fx-alignment: center-right;");
+        reportsBTN.setStyle("-fx-alignment: center-right;");
+        currentCapacitiesBTN.setStyle("-fx-alignment: center-right;");
+        logOutBTN.setStyle("-fx-alignment: center-right;");
+    }
+
 
 	/**
-	 * Prepares the screen with necessary data before it is displayed. This method receives the DepartmentManager
-	 * instance from the previous screen, updates UI labels with the department manager's name and department, and
-	 * fetches a list of parks the department manager is responsible for. This setup ensures that the screen displays
-	 * personalized and relevant information to the department manager upon entry.
-	 *
 	 * @param information The DepartmentManager object passed from the logIn screen, containing the manager's details.
 	 */
 	@Override
 	public void loadBefore(Object information) {
-		DepartmentManager DM = (DepartmentManager)information;
-		setDepartmentManager(DM);
-		userControl.saveUser(departmentManager);
-		this.privateName.setText("Hello " + departmentManager.getFirstName() + " " + departmentManager.getLastName());
-	    this.privateName.underlineProperty();
-		this.title.setText(getScreenTitle());
-	    this.title.underlineProperty();
-		//updating the list of parks managed by the department manager
-	    ArrayList<Park> parks = new ArrayList<>();
-		parks = parkControl.fetchManagerParksList("departmentManagerId", departmentManager.getIdNumber());
-    	try {
-    		departmentManager.setResponsible(parks);	
-    	}catch (NullPointerException e) {
-    		System.out.println("cannot fetch parks list");
-    	}
 	}
 
 	@Override
 	public String getScreenTitle() { 
 		return departmentManager.getManagesDepartment()+"'s Department Manager";
-	}
-
-	/**
-	 * Saves the current state of the department manager's session. This includes persisting the department manager's
-	 * details and the current screen title to maintain session continuity. 
-	 */
-	@Override
-	public void saveState() {
-		userControl.saveUser(departmentManager);
-	}
-
-	/**
-	 * Restores the previously saved state of the department manager's session. This method is called to repopulate
-	 * the department manager's details and the screen title, ensuring that the user experience remains consistent
-	 * when navigating back to this screen. It retrieves the saved DepartmentManager instance and the screen title,
-	 * updating the UI components to reflect the restored state.
-	 */
-	@Override
-	public void restoreState() {
-		departmentManager = (DepartmentManager) userControl.restoreUser();
-		this.privateName.setText("Hello " + departmentManager.getFirstName() + " " + departmentManager.getLastName());
-	    this.privateName.underlineProperty();
-		this.title.setText(getScreenTitle());
-	    this.title.underlineProperty();
 	}
 		
 }
