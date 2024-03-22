@@ -96,30 +96,6 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
         ScreenManager.getInstance().showScreen("ConfirmationScreenController",
 				"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
     }
-    
-    /*
-    	Booking booking = null;
-		String parkActiveTable = parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_active_booking";
-		String parkDoneTable = parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_done_booking";
-
-		try {
-			booking = parkControl.checkIfBookingExists(parkActiveTable, bookingIDTxt.getText());
-			if (booking == null) 
-				booking = parkControl.checkIfBookingExists(parkDoneTable, bookingIDTxt.getText()); 
-		} catch (NullPointerException e) {
-			//booking ID is not exists in the database
-			showErrorAlert("No reservation exists for the given bookingID in this park.");
-			return;
-		}
-    	try {
-			ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-					"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
-		} catch (StatefulException | ScreenException e1) {
-				e1.printStackTrace();
-		}
-
-					
-    } */
 
     /**
      * Updates the entry time for a visitor based on a valid booking ID. It first validates the booking ID,
@@ -259,22 +235,20 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
     }
     
     /**
-     * Attempts to find a booking across active, done, and cancelled bookings tables.
+     * Attempts to locate a booking within the active and completed bookings tables of the park, 
+     * specific to the park employee.
      * 
      * @param bookingID The booking ID to search for.
      * @return The found Booking object, or null if no booking is found.
      */
     private Booking findBookingAcrossTables(String bookingID) {
-    	ArrayList<Park> parks = parkControl.fetchParks(); 
     	String bookingId = bookingIDTxt.getText();
-        for (Park park : parks) {
-        	String[] tables = {
-                    parkControl.nameOfTable(park) + "_park_active_booking",
-                    parkControl.nameOfTable(park) + "_park_done_booking",
-                };
-            Booking booking = parkControl.checkIfBookingExists(tables[0],"bookingId",bookingId);
-            if (booking == null) 
-            	booking = parkControl.checkIfBookingExists(tables[1],"bookingId",bookingId);
+        String[] tables = {
+        	parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_active_booking",
+        	parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_done_booking",
+        };
+        for (String table : tables) {
+            Booking booking = parkControl.checkIfBookingExists(table,"bookingId",bookingId);
             if (booking != null)
             	return booking;
         }

@@ -37,7 +37,7 @@ public class ParkVisitorAccountScreenController extends AbstractScreen implement
 
 	private GoNatureUsersController userControl;
 	private ParkVisitor parkVisitor;
-	ArrayList<Booking> bookingsList = null;
+	private ArrayList<Booking> bookingsList = null;
 	
     @FXML
     private ImageView goNatureLogo;
@@ -155,6 +155,7 @@ public class ParkVisitorAccountScreenController extends AbstractScreen implement
 	public void initialize() {
 		/*
 		 * parkVisitor = (ParkVisitor) userControl.restoreUser();
+		 * userControl.saveUser(parkVisitor);
 		if (parkVisitor.getVisitorType() == VisitorType.GROUPGUIDE) {
 			this.NameLable.setText("Hello " + parkVisitor.getFirstName() + " " + parkVisitor.getLastName());
 			this.NameLable.underlineProperty();

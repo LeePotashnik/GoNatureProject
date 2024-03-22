@@ -99,7 +99,6 @@ public class GoNatureUsersController {
 	 */
 	public boolean logoutUser() {
 	    if (user != null) {
-	        
 	        if (user instanceof ParkManager) {
 	            // Perform logout logic specific to ParkManager
 	            return checkLogOut("park_manager", "parkManagerId");
@@ -121,7 +120,7 @@ public class GoNatureUsersController {
 	            	return checkLogOut("group_guide", "groupGuideId");
 	        } else {
 	            // Default logout logic if none of the above matches
-	            return checkLogOut("traveller", "userId");
+	            return checkLogOut("traveller", "travellerId");
 	        }
 	    }
 	    return false; // Return false if user is null or logout fails
