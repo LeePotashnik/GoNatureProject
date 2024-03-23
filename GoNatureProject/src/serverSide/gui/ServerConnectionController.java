@@ -350,7 +350,7 @@ public class ServerConnectionController extends AbstractScreen {
 		clientExitColumn.setCellValueFactory(cellData -> {
 			ConnectedClient client = cellData.getValue();
 			LocalTime exitTime = client.getExitTime();
-			String timeString = exitTime == null ? "-----"
+			String timeString = exitTime == null ? ""
 					: (exitTime.getHour() < 10 ? "0" + exitTime.getHour() : exitTime.getHour()) + ":"
 							+ (exitTime.getMinute() < 10 ? "0" + exitTime.getMinute() : exitTime.getMinute()) + ":"
 							+ (exitTime.getSecond() < 10 ? "0" + exitTime.getSecond() : exitTime.getSecond());
@@ -409,6 +409,7 @@ public class ServerConnectionController extends AbstractScreen {
 		if (!disconnectionResult)
 			event.consume();
 		else {
+			showInformationAlert("Server is disconnected");
 		}
 	}
 

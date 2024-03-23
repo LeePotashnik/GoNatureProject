@@ -211,7 +211,6 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
 							"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
-//					return;
 				} catch (StatefulException | ScreenException e1) {
 					e1.printStackTrace();
 				}
@@ -704,7 +703,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		textField.textProperty().addListener(new ChangeListener<String>() {
 			@Override
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				if (!newValue.matches(digitsOnly)) {
+				if (newValue != null && !newValue.matches(digitsOnly)) {
 					textField.setText(newValue.replaceAll("[^\\d]", ""));
 				}
 			}
@@ -720,7 +719,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		textField.textProperty().addListener(new ChangeListener<String>() {
 			@Override
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				if (!newValue.matches(lettersInput)) {
+				if (newValue != null && !newValue.matches(lettersInput)) {
 					textField.setText(newValue.replaceAll("[^a-zA-Z ]", ""));
 				}
 			}
