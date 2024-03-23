@@ -80,7 +80,6 @@ public class BackgroundManager {
 			delay = 0;
 		}
 
-		delay = 0;
 		// executing the scheduler
 		scheduler.scheduleAtFixedRate(() -> {
 			// executing the waiting lists background updates
@@ -94,9 +93,7 @@ public class BackgroundManager {
 
 			// executing the reminders checking background process
 			remindersCheckingBackground();
-			
-			checkWaitingListsAfterParametersChanged(1);
-			
+
 		}, delay, minutesGapOfBookingTimes == 0 ? 60 : 60 / minutesGapOfBookingTimes, TimeUnit.MINUTES);
 	}
 
@@ -694,21 +691,20 @@ public class BackgroundManager {
 	 */
 	public void checkWaitingListsAfterParametersChanged(int parkId) {
 		fetchParks();
-//		for (LocalDate start = LocalDate.now(); start
-//				.compareTo(LocalDate.now().plusMonths(futureBookingsRange)) <= 0; start = start.plusDays(1)) {
-//			// running closeHour - openHours times (hours)
-//			for (int hour = openHour; hour <= closeHour; hour++) {
-//				// if the hour has minutes intervals
-//				if (minutesGapOfBookingTimes == 0) {
-//					checkWaitingList(parkId, start, LocalTime.of(hour, 0));
-//				} else {
-//					for (int minute = 0; minute < 60; minute += minutesGapOfBookingTimes) {
-//						checkWaitingList(parkId, start, LocalTime.of(hour, minute));
-//					}
-//				}
-//			}
-//		}
-		checkWaitingList(13, LocalDate.of(2024, 3, 23), LocalTime.of(16, 0));
+		for (LocalDate start = LocalDate.now(); start
+				.compareTo(LocalDate.now().plusMonths(futureBookingsRange)) <= 0; start = start.plusDays(1)) {
+			// running closeHour - openHours times (hours)
+			for (int hour = openHour; hour <= closeHour; hour++) {
+				// if the hour has minutes intervals
+				if (minutesGapOfBookingTimes == 0) {
+					checkWaitingList(parkId, start, LocalTime.of(hour, 0));
+				} else {
+					for (int minute = 0; minute < 60; minute += minutesGapOfBookingTimes) {
+						checkWaitingList(parkId, start, LocalTime.of(hour, minute));
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -850,7 +846,7 @@ public class BackgroundManager {
 				transfer.setReminderArrivalTime(LocalTime.now());
 				transfer.setRecievedReminder(true);
 			}
-			
+
 			insert.setColumnsAndValues(
 					Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType",
 							"numberOfVisitors", "idNumber", "firstName", "lastName", "emailAddress", "phoneNumber",
