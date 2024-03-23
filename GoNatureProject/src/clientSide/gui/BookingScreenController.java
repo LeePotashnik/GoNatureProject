@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import clientSide.control.BookingController;
+import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import common.communication.Communication;
 import common.controllers.AbstractScreen;
@@ -279,32 +280,24 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 * 
 	 * @param event
 	 */
-	void returnToPreviousScreen(ActionEvent event) {
-		///// TEMPORARY /////
-		try {
-			ScreenManager.getInstance().goToPreviousScreen(false, false);
-		} catch (ScreenException | StatefulException e) {
-			e.printStackTrace();
+	void returnToPreviousScreen(ActionEvent event) {		
+		// if the user is an individual (not a group guide) and entered from the main screen
+		if (ScreenManager.getInstance().whoIsBefore().equals("MainScreenController")) {
+			// logging him out
+			GoNatureUsersController.getInstance().logoutUser();
+			try {
+				ScreenManager.getInstance().goToPreviousScreen(false, false);
+			} catch (ScreenException | StatefulException e) {
+				e.printStackTrace();
+			}
 		}
-
-		///// BELOW IS THE FINAL IMPLEMENTATION /////
-
-		// returning to account screen >>> restoring state
-//		if (userId == null) {
-//			try {
-//				ScreenManager.getInstance().goToPreviousScreen(false, true);
-//			} catch (ScreenException | StatefulException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//		// returning to main screen >>> not restoring state
-//		else {
-//			try {
-//				ScreenManager.getInstance().goToPreviousScreen(false, false);
-//			} catch (ScreenException | StatefulException e) {
-//				e.printStackTrace();
-//			}
-//		}
+		else { // return to account screen
+			try {
+				ScreenManager.getInstance().goToPreviousScreen(false, false);
+			} catch (ScreenException | StatefulException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/////////////////////////////////////////////////////

@@ -143,7 +143,7 @@ public class LoginController {
 			String emailAddress = (String) parkManagerResult.get(0)[3];
 			String phoneNumber = (String) parkManagerResult.get(0)[4];
 			String managesPark = (String) parkManagerResult.get(0)[5];
-			boolean isLoggedIn = ((Integer) parkManagerResult.get(0)[7]) == 0 ? false : true;
+			boolean isLoggedIn = ((Integer) parkManagerResult.get(0)[8]) == 0 ? false : true;
 
 			// creating an instance of the ParkManager and returning it
 			ParkManager parkManagerUser = new ParkManager(idNumber, firstName, lastName, emailAddress, phoneNumber,
@@ -190,7 +190,7 @@ public class LoginController {
 			String emailAddress = (String) deptManagerResult.get(0)[3];
 			String phoneNumber = (String) deptManagerResult.get(0)[4];
 			String managesDept = (String) deptManagerResult.get(0)[5];
-			boolean isLoggedIn = ((Integer) deptManagerResult.get(0)[7]) == 0 ? false : true;
+			boolean isLoggedIn = ((Integer) deptManagerResult.get(0)[8]) == 0 ? false : true;
 
 			// creating an instance of the DepartmentManager and returning it
 			DepartmentManager deptManagerUser = new DepartmentManager(idNumber, firstName, lastName, emailAddress,
@@ -334,7 +334,7 @@ public class LoginController {
 		} else if (user instanceof DepartmentManager) {
 			// it is a department manager
 			request.setTables(Arrays.asList(Communication.departmentManager));
-			request.setWhereConditions(Arrays.asList("departmentManagerId"), Arrays.asList("="), Arrays.asList());
+			request.setWhereConditions(Arrays.asList("departmentManagerId"), Arrays.asList("="), Arrays.asList(id));
 		} else if (user instanceof Representative) {
 			// it is a representative
 			request.setTables(Arrays.asList(Communication.representative));

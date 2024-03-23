@@ -11,23 +11,17 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 public class ScreenManager {
 	private static ScreenManager instance;
-	private boolean isActive = false;
 	private final Stage stage;
-	private Stage conquerprStage;
 	private final Map<String, AbstractScreen> screensMap = new HashMap<>();
 	private final Deque<String> screensStack = new ArrayDeque<>();
 
@@ -78,9 +72,6 @@ public class ScreenManager {
 	 */
 	public void showScreen(String screenName, String fxmlResource, boolean showOnce, boolean saveState,
 			Object information) throws StatefulException, ScreenException {
-		if (!isActive) {
-			isActive = true;
-		}
 		System.out.println("screensStack: " + screensStack);
 		System.out.println("screensMap: " + screensMap);
 		// checking if the saveState flag is true. In this case, calling the saveState()
@@ -217,39 +208,20 @@ public class ScreenManager {
 		screensStack.removeAll(screensStack);
 	}
 
-	public void conquerFocus(String message) {
-		// run later on the JavaFX thread
-		Platform.runLater(() -> {
-			Label textlabel = new Label();
-			textlabel.setText(message);
-			textlabel.setStyle("-fx-font-size: 18px; -fx-font-family: 'Calibri';");
-			textlabel.setWrapText(true);
-
-			StackPane layout = new StackPane(textlabel);
-			layout.setStyle(
-					"-fx-padding: 20; -fx-background-color: white; -fx-border-color: black; -fx-border-width: 2;");
-			Scene scene = new Scene(layout, 400, 200);
-
-			conquerprStage = new Stage();
-			conquerprStage.initModality(Modality.APPLICATION_MODAL);
-			conquerprStage.initStyle(StageStyle.UNDECORATED);
-			conquerprStage.setScene(scene);
-			conquerprStage.show();
-		});
-	}
-
-	public void unconquer() {
-		Platform.runLater(() -> {
-			if (conquerprStage != null) {
-				conquerprStage.close();
-			}
-		});
-	}
-
 	/**
-	 * @return if there's a stage active right now
+	 * This method returns the name of the screen's controller that is befoe the current screen in the stack
+	 * 
+	 * @return returns the name of the controller of the screen that is before the top
+	 *         of the stack
 	 */
-	public boolean isActive() {
-		return isActive;
+	public String whoIsBefore() {
+		if (screensStack.size() <= 1) {
+			return null;
+		}
+		String now = screensStack.peek();
+		screensStack.pop();
+		String before = screensStack.peek();
+		screensStack.push(now);
+		return before;
 	}
 }
