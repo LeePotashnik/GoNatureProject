@@ -141,7 +141,6 @@ public class ParkManagerAccountScreenController extends AbstractScreen{
 
         // Fetch the park object associated with the manager and update the parkManager instance.
         parkManager.setParkObject(parkControl.fetchManagerParksList("parkManagerId", parkManager.getIdNumber()).get(0));
-        System.out.println(parkManager.getParkObject() == null); // Debugging line to check if the park object is successfully retrieved.
 
         // Save the updated parkManager and its park object for later use within the session.
         userControl.saveUser(parkManager);
