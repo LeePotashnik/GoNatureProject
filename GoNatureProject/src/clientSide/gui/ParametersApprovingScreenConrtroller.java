@@ -6,7 +6,9 @@ import java.util.Arrays;
 
 import clientSide.control.ParametersController;
 import common.controllers.AbstractScreen;
+import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
+import common.controllers.StatefulException;
 import entities.Booking;
 import entities.DepartmentManager;
 import entities.ParamenterAdjustment;
@@ -45,7 +47,7 @@ public class ParametersApprovingScreenConrtroller extends AbstractScreen {
 	private ImageView goNatureLogo;
 
 	@FXML
-	private Label titleLbl;
+	private Label titleLbl,infoLbl;
 
 	@FXML
 	private TableView<PendingAdjustment> pendingAdjustmentTable;
@@ -80,30 +82,26 @@ public class ParametersApprovingScreenConrtroller extends AbstractScreen {
 		event.consume();
 	}
 
-	@FXML
-
-	void returnToAccount(ActionEvent event) {
-
-	}
 
 	@FXML
-	void returnToPreviousScreen(ActionEvent event) {
-
+	void returnToPreviousScreen(ActionEvent event) throws ScreenException, StatefulException {
+    	ScreenManager.getInstance().goToPreviousScreen(false, false);
 	}
 	
 
 	private void parameterClicked(PendingAdjustment chosenParameter) {
-		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), "Please choose", Arrays.asList("Disapprove", "Approve"));
+		int choise = showConfirmationAlert("Please choose", Arrays.asList("Disapprove", "Approve"));
 		
 		switch (choise) {
 		case 1: // disapprove
 			pendingAdjustmentList.remove(chosenParameter);
-			// control.update...
+			control.updateParkParameter(chosenParameter,departmentManager,false);
+
 			break;
 		
 		case 2: // approve
 			pendingAdjustmentList.remove(chosenParameter);
-			// control.update...
+			control.updateParkParameter(chosenParameter,departmentManager,true);
 			break;
 		}
 		pane.requestFocus();
@@ -112,6 +110,11 @@ public class ParametersApprovingScreenConrtroller extends AbstractScreen {
 
 	@Override
 	public void initialize() {
+		////////////////////////////////////////////////////////////////////////////
+		//realTime:
+		//inserting an instance of ParkManager received from a previous screen, into the field
+		//departmentManager = (DepartmentManager)GoNatureUsersController.getInstance().restoreUser();
+		////////////////////////////////////////////////////////////////////////////
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		// setting the back button image:
 		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
@@ -147,12 +150,17 @@ public class ParametersApprovingScreenConrtroller extends AbstractScreen {
 
 	@Override
 	public void loadBefore(Object information) {
+		
+		
 		if (information instanceof DepartmentManager) {
+			////////////////////////////////////////////////////////////////////////////////////////
+			//temporary:
 			departmentManager = (DepartmentManager) information;
+			////////////////////////////////////////////////////////////////////////////////////
 			// getting the pending adjustment list of the departmentManager department
 			pendingAdjustmentList = control.getParameterAdjustmentListForDepartment(departmentManager);
 
-			//infoLabel.setText("...");
+			infoLbl.setText("hello "+departmentManager.getFirstName()+" these are the approval pending adjustments for "+departmentManager.getManagesDepartment()+" department"+":");
 			
 			// now adding the pendingAdjustment list to the table view
 			setTable();
@@ -179,8 +187,7 @@ public class ParametersApprovingScreenConrtroller extends AbstractScreen {
 
 	@Override
 	public String getScreenTitle() {
-		// TODO Auto-generated method stub
-		return null;
+		return "Parameters Approving";
 	}
 
 }

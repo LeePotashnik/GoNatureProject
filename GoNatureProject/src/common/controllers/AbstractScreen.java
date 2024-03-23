@@ -70,7 +70,8 @@ public abstract class AbstractScreen {
 	 * @param event the event of clicking on the X of the window
 	 */
 	public void handleCloseRequest(WindowEvent event) {
-		if (GoNatureClientUI.client == null) { // if the client is not connected ( = null)
+		// if the client is not connected or the user did not log in yet
+		if (GoNatureClientUI.client == null || GoNatureUsersController.getInstance().restoreUser() == null) {
 			int decision = showConfirmationAlert("Are you sure you want to leave?", Arrays.asList("Yes", "No"));
 			if (decision == 2) // if the user clicked on "No"
 				event.consume();

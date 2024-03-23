@@ -37,10 +37,9 @@ public class PaymentSystemScreenController extends AbstractScreen {
 	private static final String digitsOnly = "\\d*";
 
 	// properties for the images animation
-	private final static int IMAGE_VIEW_COUNT = 3; // Display 3 images at a time
-	private final ArrayList<String> imagePaths = new ArrayList<>(); // List to hold all your image paths
-	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT]; // Array for ImageViews
-	private int currentIndex = 0; // Index to track current image set
+	private final static int IMAGE_VIEW_COUNT = 3;
+	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT];
+	private int currentIndex = 0;
 
 	//////////////////////////////////
 	/// JAVAFX ANF FXML COMPONENTS ///
@@ -261,31 +260,6 @@ public class PaymentSystemScreenController extends AbstractScreen {
 	}
 
 	/**
-	 * This method is used in order to add all parks images paths to the array list
-	 */
-	private void setParksPaths() {
-		if (imagePaths == null || imagePaths.isEmpty()) {
-			imagePaths.add("/acadia.jpg");
-			imagePaths.add("/big_bend.jpg");
-			imagePaths.add("/congaree.jpg");
-			imagePaths.add("/everglades.jpg");
-			imagePaths.add("/gateway_arch.jpg");
-			imagePaths.add("/glacier.jpg");
-			imagePaths.add("/grand_canyon.jpg");
-			imagePaths.add("/great_smoky_mountains.jpg");
-			imagePaths.add("/hawaii_volcanoes.jpg");
-			imagePaths.add("/hot_springs.jpg");
-			imagePaths.add("/mammoth_cave.jpg");
-			imagePaths.add("/olympic.jpg");
-			imagePaths.add("/shenandoah.jpg");
-			imagePaths.add("/theodore_roosevelt.jpg");
-			imagePaths.add("/voyageurs.jpg");
-			imagePaths.add("/yellowstone.jpg");
-			imagePaths.add("/yosemite.jpg");
-		}
-	}
-
-	/**
 	 * Validates that a card number field contains exactly 4 digits.
 	 *
 	 * @param cardField The text field containing the card number to be validated.
@@ -415,9 +389,6 @@ public class PaymentSystemScreenController extends AbstractScreen {
 		imageViews[0] = image1;
 		imageViews[1] = image2;
 		imageViews[2] = image3;
-
-		// setting the park images paths
-		setParksPaths();
 
 		// setting 3 first images
 		imageViews[0].setImage(new Image(imagePaths.get(0)));

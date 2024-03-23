@@ -266,9 +266,6 @@ public class ClientConnectionController extends AbstractScreen {
 		imageViews[1] = image2;
 		imageViews[2] = image3;
 
-		// setting the park images paths
-//		setParksPaths();
-
 		// setting 3 first images
 		imageViews[0].setImage(new Image(imagePaths.get(0)));
 		imageViews[1].setImage(new Image(imagePaths.get(1)));
