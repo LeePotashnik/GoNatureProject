@@ -17,6 +17,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
@@ -35,7 +36,13 @@ public class CancellationReportController extends AbstractScreen {
     @FXML
     private Button backButton;
     @FXML
+    private Button LineChartBtn;
+//    @FXML
+//    private Button BarChartBtn;
+    @FXML
     private BarChart<String, Number> cancellationBarChart;
+    @FXML
+    private LineChart<String, Number> cancellationLineChart;
     @FXML
     private CategoryAxis daysAxis;
     @FXML
@@ -46,7 +53,10 @@ public class CancellationReportController extends AbstractScreen {
     private Label medianLabelNoShow;
     @FXML
     private Label titleLabel;
-    
+
+
+   
+    private Map<String, List<XYChart.Data<String, Number>>> currentChartData;
     
     /**
    	 * This method is called after an event is created with clicking on the Back
@@ -69,8 +79,8 @@ public class CancellationReportController extends AbstractScreen {
     @FXML
     public void initialize() {
     	goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
-        List<String> categories = Arrays.asList("Sunday","Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
-        daysAxis.setCategories(FXCollections.observableArrayList(categories));
+        List<String> daysOrder = Arrays.asList("Sunday","Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
+        daysAxis.setCategories(FXCollections.observableArrayList(daysOrder));
         
         // setting the back button image
      	 ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
@@ -79,6 +89,17 @@ public class CancellationReportController extends AbstractScreen {
      	 backImage.setPreserveRatio(true);
      	 backButton.setGraphic(backImage);
      	 backButton.setPadding(new Insets(1, 1, 1, 1));
+     	 
+     	 // Initially hide the line chart
+         cancellationLineChart.setVisible(false);
+         // Configure Y-axis (NumberAxis) range from 0 to 100
+         amountAxis.setAutoRanging(false); 
+         amountAxis.setLowerBound(0); // Set the lower bound to 0
+         amountAxis.setUpperBound(100); // Set the upper bound to 100
+         amountAxis.setTickUnit(10); 
+         cancellationBarChart.setVisible(true); // Ensure the bar chart is initially visible
+         cancellationLineChart.setVisible(false); // Ensure the line chart is initially hidden
+         LineChartBtn.setText("Line Chart"); // Set the initial button text
     }
 
     /**
@@ -103,6 +124,15 @@ public class CancellationReportController extends AbstractScreen {
 	 // Prepare to calculate medians
 	    List<Number> cancelledOrdersValues = new ArrayList<>();
 	    List<Number> noShowVisitorsValues = new ArrayList<>();
+	    
+	    List<String> daysOrder = Arrays.asList("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
+	    daysOrder.forEach(day -> {
+	        Number countCancelled = aggregatedData.getOrDefault("Cancelled Orders", new HashMap<>()).getOrDefault(day, 0);
+	        seriesCancelledOrders.getData().add(new XYChart.Data<>(day, countCancelled));
+	        
+	        Number countNoShow = aggregatedData.getOrDefault("No-Show Visitors", new HashMap<>()).getOrDefault(day, 0);
+	        seriesNoShowVisitors.getData().add(new XYChart.Data<>(day, countNoShow));
+	    });
 	    aggregatedData.forEach((seriesName, dayCounts) -> {
         if ("User Cancelled".equals(seriesName) || "Did not confirm".equals(seriesName)) {
             dayCounts.forEach((day, count) -> {
@@ -149,11 +179,9 @@ public class CancellationReportController extends AbstractScreen {
 	                                       .filter(value -> value > 0)
 	                                       .sorted()
 	                                       .collect(Collectors.toList());
-
 	    if (nonZeroValues.isEmpty()) {
 	        return 0; // Return 0 if there are no relevant data points
 	    }
-
 	    int middle = nonZeroValues.size() / 2;
 	    if (nonZeroValues.size() % 2 == 1) {
 	        return nonZeroValues.get(middle);
@@ -190,14 +218,87 @@ public class CancellationReportController extends AbstractScreen {
 	@Override
 	public void loadBefore(Object information) {
 	    if (information instanceof Map) {
-	    	Map<String, List<XYChart.Data<String, Number>>> cancellationData = (Map<String, List<XYChart.Data<String, Number>>>) information;
-	        populateChart(cancellationData);
+	    	currentChartData = (Map<String, List<XYChart.Data<String, Number>>>) information;
+	        populateChart(currentChartData); // Populate your initial chart as needed
+      
 	    }
 	 else {
         showErrorAlert("An error occurred. Cancellation data is not available.");
 	 }
 	}
+	/**
+	 * Handles the action of toggling between the bar chart and the line chart.
+	 * This method updates the visibility of the charts and the text of the toggle button
+	 * based on the current state.
+	 * @param event The event that triggered this action.
+	 */
+    @FXML
+    void toggleChartView(ActionEvent event) {
+    	  if (cancellationBarChart.isVisible()) {
+    	        // If the bar chart is visible, hide it and show the line chart
+    	        cancellationBarChart.setVisible(false);
+    	        cancellationLineChart.setVisible(true);
+    	        populateLineChart(currentChartData); // Ensure the line chart is populated
+    	        LineChartBtn.setText("Bar Chart"); // Update the button text
+    	    } else {
+    	        // If the line chart is visible, hide it and show the bar chart
+    	        cancellationLineChart.setVisible(false);
+    	        cancellationBarChart.setVisible(true);
+    	        populateChart(currentChartData); // Ensure the bar chart is populated
+    	        LineChartBtn.setText("Line Chart"); // Update the button text
+    	    }
+    }
+    /**
+     * Populates the line chart with data. This method creates series for each
+     * cancellation reason and adds them to the line chart.
+     * @param chartData The data to be displayed in the line chart.
+     */
+    private void populateLineChart(Map<String, List<XYChart.Data<String, Number>>> chartData) {
+    	cancellationLineChart.getData().clear(); // Clear previous data
+		Map<String, Map<String, Number>> aggregatedData = aggregateDataByDay(chartData);
+		// Initializes two series for the chart, one for each cancellation reason
+		XYChart.Series<String, Number> seriesCancelledOrders = new XYChart.Series<>();
+	    seriesCancelledOrders.setName("Cancelled Orders");
 
+	    XYChart.Series<String, Number> seriesNoShowVisitors = new XYChart.Series<>();
+	    seriesNoShowVisitors.setName("No-Show Visitors");
+
+	    // Prepare to calculate medians
+	    List<Number> cancelledOrdersValues = new ArrayList<>();
+	    List<Number> noShowVisitorsValues = new ArrayList<>();
+	    aggregatedData.forEach((seriesName, dayCounts) -> {
+        if ("User Cancelled".equals(seriesName) || "Did not confirm".equals(seriesName)) {
+            dayCounts.forEach((day, count) -> {
+                seriesCancelledOrders.getData().add(new XYChart.Data<>(day, count));
+            });
+        } else if ("Did not arrive".equals(seriesName)) {
+            dayCounts.forEach((day, count) -> {
+                seriesNoShowVisitors.getData().add(new XYChart.Data<>(day, count));
+               
+            });
+        }
+    });
+	 // Aggregate data for the median calculation
+	    chartData.forEach((reason, dataList) -> {
+	        dataList.forEach(data -> {
+	            // Assuming data.getYValue() returns the cancellation amount
+	            Number amount = data.getYValue();
+	            if ("User Cancelled".equals(reason) || "Did not confirm".equals(reason)) {
+	                cancelledOrdersValues.add(amount);
+	            } else if ("Did not arrive".equals(reason)) {
+	                noShowVisitorsValues.add(amount);
+	            }
+	        });
+	    });
+	 // Calculate and update medians for Cancelled Orders and No-Show Visitors
+	    double medianCancelled = calculateMedian(cancelledOrdersValues);
+	    double medianNoShow = calculateMedian(noShowVisitorsValues);
+	    medianLabelCancelled.setText(String.format("The median for cancelled booking: %.0f", medianCancelled));
+	    medianLabelNoShow.setText(String.format("The median for No-Show visitors: %.0f", medianNoShow));
+
+	    // Add the series to the bar chart
+	    cancellationLineChart.getData().addAll(seriesCancelledOrders, seriesNoShowVisitors);
+    }
 	 /**
 	  * This method returns the screen's name
 	  */

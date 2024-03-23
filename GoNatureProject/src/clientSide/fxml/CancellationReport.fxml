@@ -2,6 +2,7 @@
 
 <?import javafx.scene.chart.BarChart?>
 <?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
@@ -45,5 +46,14 @@
             <Font name="Cambria" size="18.0" />
          </font>
       </Label>
+      <Button fx:id="LineChartBtn" layoutX="56.0" layoutY="85.0" mnemonicParsing="false" onAction="#toggleChartView" text="Line Chart" />
+      <LineChart fx:id="cancellationLineChart" layoutX="43.0" layoutY="119.0" prefHeight="332.0" prefWidth="602.0">
+        <xAxis>
+          <CategoryAxis fx:id="daysAxis" label="Day of the week" side="BOTTOM" />
+        </xAxis>
+        <yAxis>
+          <NumberAxis fx:id="amountAxis" label="Average Amount" side="LEFT" />
+        </yAxis>
+      </LineChart>
    </children>
 </Pane>
