@@ -33,7 +33,6 @@ public class ParkVisitorAccountScreenController extends AbstractScreen{
 
 	private GoNatureUsersController userControl;
 	private ParkVisitor parkVisitor;
-	private ArrayList<Booking> bookingsList = null;
 	
     @FXML
     private ImageView goNatureLogo;
@@ -99,7 +98,7 @@ public class ParkVisitorAccountScreenController extends AbstractScreen{
     		//the park visitor will be redirected to the 'CheckingNotoficationsScreenScreen'
     		try {
         		ScreenManager.getInstance().showScreen("CheckingNotoficationsScreenConrtroller",
-        				"/clientSide/fxml/CheckingNotoficationsScreen.fxml", true, false, bookingsList);
+        				"/clientSide/fxml/CheckingNotoficationsScreen.fxml", true, false, null);
         		} catch (ScreenException | StatefulException e) {
         				e.printStackTrace();
     		}
@@ -147,22 +146,22 @@ public class ParkVisitorAccountScreenController extends AbstractScreen{
     	// Iterates through each park to check for active bookings associated with the visitor
     	for (Park park : parks) {
     		String parkTable = parkControl.nameOfTable(park) + "_park_active_booking";
-    		System.out.println(parkTable);
         	ArrayList<Booking> tempBookings = parkControl.checkIfBookingExists(parkTable,"idNumber",parkVisitor.getIdNumber());
         	// Adds bookings with received reminders to the aggregate list
         	if (tempBookings!=null) {
 				for (Booking booking : tempBookings) {
-					if (booking.isRecievedReminder() && booking.getReminderArrivalTime() != null) 
+					if (!booking.isConfirmed() && booking.isRecievedReminder()) {
+						booking.setParkBooked(park);
 		    			bookings.add(booking);
-					} 
-			}
+		    		} 
+				}
+        	}
     	}
         // Determines the visibility of the confirmation button based on the presence of qualifying bookings
     	if (bookings.size() == 0)
     		return false;
-    	System.out.println(bookings.size());
     	// Updates the global list of bookings for further processing
-    	bookingsList = bookings;
+    	userControl.setBookingsList(bookings);		
     	return true;
     }
 

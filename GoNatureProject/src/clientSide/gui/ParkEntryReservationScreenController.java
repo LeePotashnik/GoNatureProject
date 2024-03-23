@@ -177,7 +177,8 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 				        	break;
 				    }
 				    if (paid) {
-					    parkControl.insertBookingToTable(newBooking, "_park_active_booking", "active");
+				    	String parkTable = parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_active_booking";
+					    parkControl.insertBookingToTable(newBooking, parkTable, "active");
 					    //updating park capacity
 					    int update = amount + parkEmployee.getWorkingIn().getCurrentCapacity();
 					    parkControl.updateCurrentCapacity(newBooking.getParkBooked().getParkName(), update);

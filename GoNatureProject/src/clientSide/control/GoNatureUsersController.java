@@ -1,5 +1,6 @@
 package clientSide.control;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import clientSide.gui.GoNatureClientUI;
@@ -8,6 +9,7 @@ import common.communication.CommunicationException;
 import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
+import entities.Booking;
 import entities.DepartmentManager;
 import entities.ParkEmployee;
 import entities.ParkManager;
@@ -28,9 +30,9 @@ import entities.SystemUser;
 public class GoNatureUsersController {
 
 	private SystemUser user;
-	private String title;
-	private Representative representative;
 	private static GoNatureUsersController instance;
+	private ArrayList<Booking> bookingsList = null;
+
 	/**
 	 * An empty and private controller, for the singleton design pattern
 	 */
@@ -57,6 +59,14 @@ public class GoNatureUsersController {
 	public void saveUser(SystemUser user) {
     	this.user = user;
 	}	
+	
+	public ArrayList<Booking> getBookingsList() {
+		return bookingsList;
+	}
+
+	public void setBookingsList(ArrayList<Booking> bookingsList) {
+		this.bookingsList = bookingsList;
+	}
 	
 	/**
 	 * An 'UPDATE' SQL query is generated to access the relevant table in the database and modify the 'isLoggedIn' field,

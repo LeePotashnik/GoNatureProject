@@ -16,7 +16,6 @@ import common.communication.Communication.QueryType;
 import entities.Park;
 import entities.ParkVisitor;
 import entities.ParkVisitor.VisitorType;
-import javafx.scene.control.TextField;
 import entities.Booking.VisitType;
 import entities.Booking;
 
@@ -225,7 +224,6 @@ public class ParkController {
 	            	LocalTime entryParkTime = (row[14] != null) ? LocalTime.parse(row[14].toString()) : null;
 	            	LocalTime exitParkTime = (row[15] != null) ? LocalTime.parse(row[15].toString()) : null;
 	            	LocalTime reminderArrivalTime = (row[17] != null) ? LocalTime.parse(row[17].toString()) : null;
-	        		
 		            Booking booking = new Booking(
 		                    row[0].toString(), // bookingId
 		                    LocalDate.parse(row[1].toString()), // dayOfVisit
@@ -273,8 +271,8 @@ public class ParkController {
 	                    );
 	        		bookings.add(booking);
 	        	}
-	        	return bookings;
       		}
+        	return bookings;
         }
 		return null; //If the booking does not exist, null will be returned
     }
@@ -561,8 +559,7 @@ public class ParkController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		String parkTableName = ParkController.getInstance().nameOfTable(newBooking.getParkBooked())+relevantTable;
-		insertRequest.setTables(Arrays.asList(parkTableName));		
+		insertRequest.setTables(Arrays.asList(relevantTable));		
 		switch (type){
 			case "done":
 				insertRequest.setColumnsAndValues(Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking",
@@ -583,7 +580,7 @@ public class ParkController {
 							newBooking.getDayOfBooking(), newBooking.getVisitType() == VisitType.GROUP ? "group" : "individual",
 							newBooking.getNumberOfVisitors(), newBooking.getIdNumber(), newBooking.getFirstName(), 
 							newBooking.getLastName(), newBooking.getEmailAddress(), newBooking.getPhoneNumber(), 
-							"client has canceled"));
+							"User Cancelled"));
 			    break;
 			default: //active
 			    insertRequest.setColumnsAndValues(Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType", "numberOfVisitors",
