@@ -54,6 +54,10 @@ public class BookingController {
 	 * maximum visitors in reservation
 	 */
 	public int maximumVisitorsInGroupReservation = 15;
+	/**
+	 * reminder sending time before arrival
+	 */
+	public int reminderSendingTime = 24; // hours
 
 	// for saving and restoring purposes of the screens
 	private Booking booking;
@@ -294,16 +298,18 @@ public class BookingController {
 						newBooking.isConfirmed() == false ? 0 : 1, newBooking.getEntryParkTime(),
 						newBooking.getExitParkTime(), newBooking.isRecievedReminder() == false ? 0 : 1,
 						newBooking.getReminderArrivalTime()));
-		
+
 		// sending the request to the server side
 		GoNatureClientUI.client.accept(insertRequest);
 
 		// getting the result from the database
 		return insertRequest.getQueryResult();
 	}
-	
+
 	/**
-	 * This method is called in order to send a confirmation or cancellation to the booker
+	 * This method is called in order to send a confirmation or cancellation to the
+	 * booker
+	 * 
 	 * @param notify
 	 */
 	public void sendNotification(Booking notify, boolean isCancel) {
@@ -313,7 +319,8 @@ public class BookingController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		notifyBooking.setSecondaryRequest(isCancel ? SecondaryRequest.SEND_CANCELLATION : SecondaryRequest.SEND_CONFIRMATION);
+		notifyBooking.setSecondaryRequest(
+				isCancel ? SecondaryRequest.SEND_CANCELLATION : SecondaryRequest.SEND_CONFIRMATION);
 		notifyBooking.setFullName(notify.getFirstName() + " " + notify.getLastName());
 		notifyBooking.setEmail(notify.getEmailAddress());
 		notifyBooking.setPhone(notify.getPhoneNumber());
@@ -323,8 +330,37 @@ public class BookingController {
 		notifyBooking.setDate(notify.getDayOfVisit());
 		notifyBooking.setTime(notify.getTimeOfVisit());
 		notifyBooking.setParkName(notify.getParkBooked().getParkName() + " Park");
-		notifyBooking.setParkLocation(notify.getParkBooked().getParkCity() + ", " + notify.getParkBooked().getParkState());
-		
+		notifyBooking
+				.setParkLocation(notify.getParkBooked().getParkCity() + ", " + notify.getParkBooked().getParkState());
+
+		GoNatureClientUI.client.accept(notifyBooking);
+	}
+
+	/**
+	 * This method is called in order to send a reminder to the booker
+	 * 
+	 * @param notify
+	 */
+	public void sendReminder(Booking notify, boolean isCancel) {
+		Communication notifyBooking = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			notifyBooking.setQueryType(QueryType.NONE);
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		notifyBooking.setSecondaryRequest(SecondaryRequest.SEND_REMINDER);
+		notifyBooking.setFullName(notify.getFirstName() + " " + notify.getLastName());
+		notifyBooking.setEmail(notify.getEmailAddress());
+		notifyBooking.setPhone(notify.getPhoneNumber());
+		notifyBooking.setPrice(notify.getFinalPrice());
+		notifyBooking.setPaid(notify.isPaid());
+		notifyBooking.setVisitors(notify.getNumberOfVisitors());
+		notifyBooking.setDate(notify.getDayOfVisit());
+		notifyBooking.setTime(notify.getTimeOfVisit());
+		notifyBooking.setParkName(notify.getParkBooked().getParkName() + " Park");
+		notifyBooking
+				.setParkLocation(notify.getParkBooked().getParkCity() + ", " + notify.getParkBooked().getParkState());
+
 		GoNatureClientUI.client.accept(notifyBooking);
 	}
 
@@ -438,7 +474,7 @@ public class BookingController {
 								((Time) row[2]).toLocalTime(), ((Date) row[3]).toLocalDate(),
 								((String) row[5]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL,
 								(Integer) row[6], (String) row[7], (String) row[8], (String) row[9], (String) row[10],
-								(String) row[11], -1, false, false, null, null, false, null, park);
+								(String) row[11], (Integer) row[12], false, false, null, null, false, null, park);
 						addBooking.setWaitingListPriority((Integer) row[4]);
 						addBooking.setStatus("Waiting List");
 					}
@@ -778,12 +814,14 @@ public class BookingController {
 		insertRequest.setTables(Arrays.asList(parkTableName));
 		insertRequest.setColumnsAndValues(
 				Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "waitingListOrder", "visitType",
-						"numberOfVisitors", "idNumber", "firstName", "lastName", "emailAddress", "phoneNumber"),
+						"numberOfVisitors", "idNumber", "firstName", "lastName", "emailAddress", "phoneNumber",
+						"finalPrice"),
 				Arrays.asList(newBooking.getBookingId(), newBooking.getDayOfVisit(), newBooking.getTimeOfVisit(),
 						newBooking.getDayOfBooking(), bookingPriority + 1,
 						newBooking.getVisitType() == VisitType.GROUP ? "group" : "individual",
 						newBooking.getNumberOfVisitors(), newBooking.getIdNumber(), newBooking.getFirstName(),
-						newBooking.getLastName(), newBooking.getEmailAddress(), newBooking.getPhoneNumber()));
+						newBooking.getLastName(), newBooking.getEmailAddress(), newBooking.getPhoneNumber(),
+						newBooking.getFinalPrice()));
 
 		// sending the request to the server side
 		GoNatureClientUI.client.accept(insertRequest);
@@ -870,11 +908,10 @@ public class BookingController {
 	}
 
 	/**
-	 * This method gets a booking and the booker details and deletes the booking
-	 * from the park waiting list table
+	 * This method gets booking details and deletes the booking from the park
+	 * waiting list table
 	 * 
 	 * @param newBooking the booking to insert
-	 * @param booker     the booker of the booking
 	 * @return true if the insert query succeed, false if not
 	 */
 	@SuppressWarnings("static-access")

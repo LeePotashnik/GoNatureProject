@@ -251,20 +251,30 @@ public class GoNatureServer extends AbstractServer {
 				// if the original request is an active booking cancellation
 				// there's a need to check the park's waiting list and possibly release some
 				// bookings and transfer them to the active booking table
-				if (secondaryRequest == SecondaryRequest.UPDATE_WAITING_LIST) {
+				switch (secondaryRequest) {
+				case UPDATE_WAITING_LIST:
 					backgroundManager.checkWaitingListReleasePossibility(request.getParkId(), request.getDate(),
 							request.getTime());
-				} else if (secondaryRequest == SecondaryRequest.SEND_CONFIRMATION) {
+					break;
+				case SEND_CONFIRMATION:
 					notifications.sendConfirmationEmailNotification(Arrays.asList(request.getEmail(),
 							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
 							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
 							request.isPaid()));
-				} else if (secondaryRequest == SecondaryRequest.SEND_CANCELLATION) {
+					break;
+				case SEND_CANCELLATION:
 					notifications.sendCancellationEmailNotification(Arrays.asList(request.getEmail(),
 							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
 							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
 							request.isPaid()), "Visitor chose to cancel.");
+					break;
+				case SEND_REMINDER:
+					notifications.sendReminderEmailNotification(Arrays.asList(request.getEmail(),
+							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
+							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
+							request.isPaid()));
 				}
+				
 			}
 
 			try {

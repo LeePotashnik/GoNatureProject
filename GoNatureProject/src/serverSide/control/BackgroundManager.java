@@ -14,7 +14,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import clientSide.control.ParkController;
-import clientSide.control.PaymentController;
 import common.communication.Communication;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
@@ -35,10 +34,22 @@ public class BackgroundManager {
 	private NotificationsController notifications = NotificationsController.getInstance();
 	private DatabaseController database;
 	private ParkController parkControl = ParkController.getInstance();
-	private PaymentController paymentControl = PaymentController.getInstance();
 	private ArrayList<Park> parks = new ArrayList<>();
 	private static int reminderCancellationTime = 2; // can be updated for future development
 	private static int minutesGapOfBookingTimes = 0; // can be updated for future development
+	private static int reminderSendBeforeTime = 24; // can be updated for future development
+	/**
+	 * What is the future booking range, in months. Default: 4 months
+	 */
+	public int futureBookingsRange = 4;
+	/**
+	 * opening hour for the parks. Default: 8AM
+	 */
+	public int openHour = 8;
+	/**
+	 * closing hour for the parks. Default: 18PM + Park's time limit
+	 */
+	public int closeHour = 18;
 
 	/**
 	 * Constructor
@@ -69,26 +80,29 @@ public class BackgroundManager {
 			delay = 0;
 		}
 
+		delay = 0;
 		// executing the scheduler
 		scheduler.scheduleAtFixedRate(() -> {
 			// executing the waiting lists background updates
-			waitingListsBackgroundUpdates();
+			waitingListsBackgroundRemovalUpdates();
 
 			// executing the active tables background updates
-			activeTablesBackgroundUpdates();
+			activeTablesBackgroundRemovalUpdates();
 
 			// executing the reminders sendings background process
 			remindersSendingBackground();
 
 			// executing the reminders checking background process
 			remindersCheckingBackground();
-
+			
+			checkWaitingListsAfterParametersChanged(1);
+			
 		}, delay, minutesGapOfBookingTimes == 0 ? 60 : 60 / minutesGapOfBookingTimes, TimeUnit.MINUTES);
 	}
 
-	////////////////////////////////////////
-	/// WAITING LISTS BACKGROUND UPDATES ///
-	////////////////////////////////////////
+	////////////////////////////////////////////////
+	/// WAITING LISTS BACKGROUND REMOVAL UPDATES ///
+	////////////////////////////////////////////////
 
 	/**
 	 * This method is a background method executed repeatedly by a background thread
@@ -102,7 +116,7 @@ public class BackgroundManager {
 	 * @throws DatabaseException if there is a problem with the transaction
 	 */
 	@SuppressWarnings("static-access")
-	public void waitingListsBackgroundUpdates() {
+	private void waitingListsBackgroundRemovalUpdates() {
 		System.out.println(
 				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
 						+ ": Starting waiting list updates background operations");
@@ -226,7 +240,7 @@ public class BackgroundManager {
 	 * @throws DatabaseException
 	 */
 	@SuppressWarnings("static-access")
-	public void activeTablesBackgroundUpdates() {
+	private void activeTablesBackgroundRemovalUpdates() {
 		System.out.println(
 				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
 						+ ": Starting active tables updates background operations");
@@ -263,16 +277,17 @@ public class BackgroundManager {
 			ArrayList<Object[]> results = database.executeSelectQuery(checkBookings);
 			ArrayList<String> idNumbers = new ArrayList<>();
 			ArrayList<Booking> cancelledBookings = new ArrayList<>();
-			LocalDate today = LocalDate.now();
-			LocalTime now = LocalTime.now();
 
 			for (Object[] row : results) {
-				LocalDate visitDate = ((Date) row[1]).toLocalDate();
-				LocalTime visitTime = ((Time) row[2]).toLocalTime();
-				boolean isTimeBeforeNow = visitTime.compareTo(now) <= 0;
+				// for each booking, checking if its visit ending time has passed
+				LocalDateTime now = LocalDateTime.now();
+				LocalDateTime visitTime = LocalDateTime.of(((Date) row[1]).toLocalDate(),
+						(((Time) row[2]).toLocalTime()));
+				visitTime = visitTime.plusHours(park.getTimeLimit()); // adding the time limit
+				boolean isAfter = now.isAfter(visitTime);
 				boolean areTimesNull = (Time) row[14] == null && (Time) row[15] == null;
 
-				if ((visitDate.isEqual(today) && isTimeBeforeNow && areTimesNull) || visitDate.isBefore(today)) {
+				if (isAfter && areTimesNull) { // adding the booking to the cancellations list
 					String idNumber = (String) row[0];
 					idNumbers.add(idNumber);
 					Booking toBeDeleted = new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
@@ -289,7 +304,7 @@ public class BackgroundManager {
 
 					// sending cancellation notification
 					notifications.sendCancellationEmailNotification(Arrays.asList(toBeDeleted.getEmailAddress(),
-							toBeDeleted.getPhoneNumber(), toBeDeleted.getParkBooked().getParkCity() + " Park",
+							toBeDeleted.getPhoneNumber(), toBeDeleted.getParkBooked().getParkName() + " Park",
 							toBeDeleted.getDayOfVisit(), toBeDeleted.getTimeOfVisit(),
 							toBeDeleted.getFirstName() + " " + toBeDeleted.getLastName(),
 							toBeDeleted.getParkBooked().getParkCity() + ", "
@@ -431,14 +446,9 @@ public class BackgroundManager {
 			checkPark.setTables(Arrays.asList(parkTableName));
 			checkPark.setSelectColumns(Arrays.asList("*"));
 
-			LocalDate checkDate = LocalDate.now().plusDays(1);
-			LocalTime checkTimeFrom = LocalTime.of(LocalTime.now().getHour(), 0);
-			LocalTime checkTimeTo = LocalTime.of(LocalTime.now().getHour(), 59);
-
-			checkPark.setWhereConditions(
-					Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit", "isRecievedReminder"),
-					Arrays.asList("=", "AND", ">=", "AND", "<=", "AND", "="),
-					Arrays.asList(checkDate, checkTimeFrom, checkTimeTo, 0));
+			checkPark.setWhereConditions(Arrays.asList("dayOfVisit", "dayOfVisit", "isRecievedReminder"),
+					Arrays.asList(">=", "AND", "<=", "AND", "="),
+					Arrays.asList(LocalDate.now(), LocalDate.now().plusDays(1), 0));
 
 			// executing the request
 			ArrayList<Object[]> results = database.executeSelectQuery(checkPark);
@@ -454,7 +464,14 @@ public class BackgroundManager {
 						((Time) row[15]) == null ? null : ((Time) row[15]).toLocalTime(),
 						(Integer) row[16] == 0 ? false : true,
 						((Time) row[17]) == null ? null : ((Time) row[17]).toLocalTime(), park);
-				toBeReminded.add(addBooking);
+
+				// checking if the booking is going to occur in 24 hours (or less) from now
+				LocalDateTime bookingDate = LocalDateTime.of(addBooking.getDayOfVisit(), addBooking.getTimeOfVisit());
+				LocalDateTime now = LocalDateTime.now();
+
+				if (Math.abs(Duration.between(bookingDate, now).toHours()) <= reminderSendBeforeTime) {
+					toBeReminded.add(addBooking);
+				}
 			}
 
 			parksBookings.add(toBeReminded);
@@ -468,7 +485,7 @@ public class BackgroundManager {
 			for (Booking toRemind : remindingBookings) {
 				notifications.sendReminderEmailNotification(
 						Arrays.asList(toRemind.getEmailAddress(), toRemind.getPhoneNumber(),
-								toRemind.getParkBooked().getParkCity() + " Park", toRemind.getDayOfVisit(),
+								toRemind.getParkBooked().getParkName() + " Park", toRemind.getDayOfVisit(),
 								toRemind.getTimeOfVisit(), toRemind.getFirstName() + " " + toRemind.getLastName(),
 								toRemind.getParkBooked().getParkCity() + ", " + toRemind.getParkBooked().getParkState(),
 								toRemind.getNumberOfVisitors(), toRemind.getFinalPrice(), toRemind.isPaid()));
@@ -591,7 +608,7 @@ public class BackgroundManager {
 			for (Booking transfer : toBeTransferred) {
 				notifications.sendCancellationEmailNotification(
 						Arrays.asList(transfer.getEmailAddress(), transfer.getPhoneNumber(),
-								transfer.getParkBooked().getParkCity() + " Park", transfer.getDayOfVisit(),
+								transfer.getParkBooked().getParkName() + " Park", transfer.getDayOfVisit(),
 								transfer.getTimeOfVisit(), transfer.getFirstName() + " " + transfer.getLastName(),
 								transfer.getParkBooked().getParkCity() + ", " + transfer.getParkBooked().getParkState(),
 								transfer.getNumberOfVisitors(), transfer.getFinalPrice(), transfer.isPaid()),
@@ -669,6 +686,32 @@ public class BackgroundManager {
 	///////////////////////
 
 	/**
+	 * This method is called from the server side, after a parameter of the park is
+	 * changed. Checking the possibility to release bookings from the waiting list
+	 * of this park
+	 * 
+	 * @param parkId
+	 */
+	public void checkWaitingListsAfterParametersChanged(int parkId) {
+		fetchParks();
+//		for (LocalDate start = LocalDate.now(); start
+//				.compareTo(LocalDate.now().plusMonths(futureBookingsRange)) <= 0; start = start.plusDays(1)) {
+//			// running closeHour - openHours times (hours)
+//			for (int hour = openHour; hour <= closeHour; hour++) {
+//				// if the hour has minutes intervals
+//				if (minutesGapOfBookingTimes == 0) {
+//					checkWaitingList(parkId, start, LocalTime.of(hour, 0));
+//				} else {
+//					for (int minute = 0; minute < 60; minute += minutesGapOfBookingTimes) {
+//						checkWaitingList(parkId, start, LocalTime.of(hour, minute));
+//					}
+//				}
+//			}
+//		}
+		checkWaitingList(13, LocalDate.of(2024, 3, 23), LocalTime.of(16, 0));
+	}
+
+	/**
 	 * This method is called from the server side (to itself) if a visitor cancelled
 	 * his booking in a specific park. In this case, checking the waiting list in
 	 * order to release booking/s from it, since there is a capacity update cause
@@ -679,7 +722,19 @@ public class BackgroundManager {
 	 * @param time
 	 */
 	public void checkWaitingListReleasePossibility(int parkId, LocalDate date, LocalTime time) {
+		fetchParks();
+		checkWaitingList(parkId, date, time);
+	}
 
+	/**
+	 * This method is called by checkWaitingListReleasePossibility and by
+	 * checkWaitingListsAfterParametersChanged
+	 * 
+	 * @param parkId
+	 * @param date
+	 * @param time
+	 */
+	private void checkWaitingList(int parkId, LocalDate date, LocalTime time) {
 		//////////////////
 		/// FIRST PART ///
 		//////////////////
@@ -687,11 +742,9 @@ public class BackgroundManager {
 		// getting all waiting list bookings that can enter the park (in terms of group
 		// size) in the given time frame
 
-		// get updated parks
-		fetchParks();
+		// sorting the parks with their id numbers
 		parks.sort(Park.parkComparator);
 		Park park = parks.get(parkId - 1);
-
 		int timeLimit = park.getTimeLimit();
 		int currentCapacity = getCurrentParkCapacities(park, date, time, timeLimit);
 		int moreCanEnter = park.getMaximumOrders() - currentCapacity;
@@ -707,10 +760,9 @@ public class BackgroundManager {
 		String parkTableName = parkControl.nameOfTable(park) + Communication.waitingList;
 		checkWaitingList.setTables(Arrays.asList(parkTableName));
 		checkWaitingList.setSelectColumns(Arrays.asList("*"));
-		checkWaitingList.setWhereConditions(
-				Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit", "numberOfVisitors"),
-				Arrays.asList("=", "AND", ">", "AND", "<", "AND", "<="),
-				Arrays.asList(date, time.minusHours(timeLimit), time.plusHours(timeLimit), moreCanEnter));
+		checkWaitingList.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit"),
+				Arrays.asList("=", "AND", ">", "AND", "<"),
+				Arrays.asList(date, time.minusHours(timeLimit), time.plusHours(timeLimit)));
 
 		ArrayList<Object[]> selectResult = database.executeSelectQuery(checkWaitingList);
 		ArrayList<Booking> waitingResults = new ArrayList<>();
@@ -721,12 +773,9 @@ public class BackgroundManager {
 			Booking add = new Booking((String) row[0], ((Date) row[1]).toLocalDate(), ((Time) row[2]).toLocalTime(),
 					((Date) row[3]).toLocalDate(),
 					((String) row[5]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL, (Integer) row[6],
-					(String) row[7], (String) row[8], (String) row[9], (String) row[10], (String) row[11], -1, false,
-					false, null, null, false, null, park);
+					(String) row[7], (String) row[8], (String) row[9], (String) row[10], (String) row[11],
+					(Integer) row[12], false, false, null, null, false, null, park);
 			add.setWaitingListPriority((Integer) row[4]);
-			// HERE: need to add:
-			// add.setFinalPrice(PaymentController:
-			// .calculateFinalDiscountPrice(booking,isGroupReservation, false));
 			waitingResults.add(add);
 		}
 
@@ -792,13 +841,16 @@ public class BackgroundManager {
 				e.printStackTrace();
 			}
 			insert.setTables(Arrays.asList(parkControl.nameOfTable(park) + Communication.activeBookings));
-			// updating final price
-			new Thread(() -> {
-				transfer.setFinalPrice(transfer.getVisitType() == VisitType.GROUP
-						? paymentControl.calculateDiscountPriceGuidedGroup(transfer, false)
-						: paymentControl.calculateDiscountPriceTravelersGroup(transfer));
-			}).start();
 
+			// checking if the booking is going to occur in 24 hours (or less) from now
+			LocalDateTime bookingDate = LocalDateTime.of(transfer.getDayOfVisit(), transfer.getTimeOfVisit());
+			LocalDateTime now = LocalDateTime.now();
+
+			if (Math.abs(Duration.between(bookingDate, now).toHours()) <= reminderSendBeforeTime) {
+				transfer.setReminderArrivalTime(LocalTime.now());
+				transfer.setRecievedReminder(true);
+			}
+			
 			insert.setColumnsAndValues(
 					Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType",
 							"numberOfVisitors", "idNumber", "firstName", "lastName", "emailAddress", "phoneNumber",

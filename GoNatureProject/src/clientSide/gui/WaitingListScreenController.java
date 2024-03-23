@@ -81,6 +81,10 @@ public class WaitingListScreenController extends AbstractScreen {
 	 * @param event
 	 */
 	void enterWaitingList(ActionEvent event) {
+		int finalPrice = control.calculateFinalDiscountPrice(booking,
+				booking.getVisitType() == VisitType.GROUP ? true : false, false);
+		booking.setFinalPrice(finalPrice);
+
 		// inserting the user to the waiting list
 		if (control.insertBookingToWaitingList(booking)) {
 			// updating the waiting list table view on the GUI
