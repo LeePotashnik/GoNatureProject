@@ -111,9 +111,10 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
 		String parkTable = parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_active_booking";
 		Booking booking = null;
 		
-		booking = parkControl.checkIfBookingExists(parkTable,"bookingId",bookingId).get(0);
-		if (booking == null) {
-			//booking ID does not exist in the database
+		try {
+			booking = parkControl.checkIfBookingExists(parkTable ,"bookingId",bookingId).get(0);
+		} catch (NullPointerException e) {
+			//booking ID is not exists in the database
 			showErrorAlert("No reservation exists for the given bookingID in this park.");
 			return;
 		}
@@ -221,9 +222,6 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
 		updateParkCapacity();
 		parkControl.updateTimeInPark(parkTable, "exitParkTime", bookingId); //updates exit time
 		int updateCapacity = parkEmployee.getWorkingIn().getCurrentCapacity() - booking.getNumberOfVisitors();
-		System.out.println(updateCapacity);
-		System.out.println(parkEmployee.getWorkingIn().getCurrentCapacity());
-		System.out.println(booking.getNumberOfVisitors());
 
 		parkControl.updateCurrentCapacity(parkEmployee.getWorkingIn().getParkName(),updateCapacity);//updates park current capacity
 		//remove the booking from active park table

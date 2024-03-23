@@ -55,16 +55,14 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 		String id = idTxt.getText().trim();
 		if (id.isEmpty() || !(id.matches(DIGITS_ONLY_REGEX) && id.length() == 9)) { // check if not empty and 9 digits
 			idTxt.setStyle(setFieldToError());
-			showErrorAlert(ScreenManager.getInstance().getStage(), "- ID number is not valid.");
+			showErrorAlert("- ID number is not valid.");
 		} else {
 			ArrayList<Object[]> userDetails = registerController.getUserDetails(id);
 			if (userDetails.isEmpty()) {
 				idTxt.setStyle(setFieldToError());
-				showErrorAlert(ScreenManager.getInstance().getStage(),
-						"This user's id doent not exists in our System.");
+				showErrorAlert("This user's id doent not exists in our System.");
 			} else {
-				showInformationAlert(ScreenManager.getInstance().getStage(),
-						"ID exists for a user. Details loaded for conversion.");
+				showInformationAlert("ID exists for a user. Details loaded for conversion.");
 				idTxt.setStyle(setFieldToRegular());
 				idTxt.setDisable(true);
 				showAllFieldsAndRegisterButton();
@@ -105,20 +103,20 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 																				// from the 'system_user' table and
 																				// insert him to the 'group_guide' table
 			if (!deleteSuccess) { // delete from 'system_users'
-				showErrorAlert(ScreenManager.getInstance().getStage(), "Failed to delete user from 'system_users'.");
+				showErrorAlert("Failed to delete user from 'system_users'.");
 				return;
 			}
 			boolean insertSuccess = registerController.groupGuideInsertToDB(id, firstName, lastName, email, phone,
 					username, password);
 			if (insertSuccess) { // insert to 'group_guide'
-				showInformationAlert(ScreenManager.getInstance().getStage(), "Registration successful.");
+				showInformationAlert("Registration successful.");
 				try {
 					returnToPreviousScreen(null);
 				} catch (ScreenException | StatefulException e) {
 					e.printStackTrace();
 				}
 			} else {
-				showErrorAlert(ScreenManager.getInstance().getStage(), "Failed to register the group guide.");
+				showErrorAlert("Failed to register the group guide.");
 			}
 		}
 	}
@@ -275,7 +273,7 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	 */
 	@Override
 	public String getScreenTitle() {
-		return "Group guide Registration";
+		return "Group Guide Registration";
 	}
 
 }

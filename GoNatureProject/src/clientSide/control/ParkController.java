@@ -193,7 +193,7 @@ public class ParkController {
 		return null; //If the visitor does not exist, null will be returned
     }
 	 
-	/**
+		/**
 	 * A 'SELECT' SQL query is generated to access the relevant table.
      * This indicates if there is a corresponding booking in the database.
 	 * @param table 	The table to query for a booking.
