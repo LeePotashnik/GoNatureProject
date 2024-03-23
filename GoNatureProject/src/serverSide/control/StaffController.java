@@ -3,7 +3,6 @@ package serverSide.control;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import clientSide.control.ParkController;
 import common.communication.Communication;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
@@ -39,6 +38,11 @@ public class StaffController {
 			return false;
 		}
 		return true;
+	}
+
+	private String nameOfTable(String park) {
+
+		return park.toLowerCase().replaceAll(" ", "_");
 	}
 
 	////////////////////////////////////
@@ -87,7 +91,7 @@ public class StaffController {
 			}
 			if (type.matches("Department Manager")) {
 				for (Object[] row : results) {
-					parkManagerInsertToParkManagerTable((String) row[0], (String) row[1], (String) row[2],
+					DepartmentManagerInsertToDepartmentManagerTable((String) row[0], (String) row[1], (String) row[2],
 							(String) row[3], (String) row[4], (String) row[6], (String) row[7], (String) row[8]);
 					userDeleteFromUserTable((String) row[0]);
 				}
@@ -123,8 +127,8 @@ public class StaffController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		boolean insertResult = database.executeInsertQuery(request);
-		if (!insertResult) {
+		boolean deleteResult = database.executeDeleteQuery(request);
+		if (!deleteResult) {
 			throw new DatabaseException("Problem with Users DELETE query");
 		}
 		return true;
@@ -153,7 +157,7 @@ public class StaffController {
 		try {
 			request.setQueryType(QueryType.INSERT);
 			request.setTables(
-					Arrays.asList(ParkController.getInstance().nameOfPark(park) + Communication.parkEmployees));
+					Arrays.asList(nameOfTable(park) + Communication.parkEmployees));
 			request.setColumnsAndValues(
 					Arrays.asList("employeeId", "firstName", "lastName", "emailAddress", "phoneNumber", "userName",
 							"password", "isLoggedIn"),
@@ -161,7 +165,6 @@ public class StaffController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-
 		boolean insertResult = database.executeInsertQuery(request);
 		if (!insertResult) {
 			throw new DatabaseException("Problem with Emplyee INSERT query");
@@ -189,12 +192,11 @@ public class StaffController {
 			request.setTables(Arrays.asList(Communication.parkManager));
 			request.setColumnsAndValues(
 					Arrays.asList("parkManagerId", "firstName", "lastName", "emailAddress", "phoneNumber",
-							"managerPark", "userName", "password", "isLoggedIn"),
+							"managesPark", "userName", "password", "isLoggedIn"),
 					Arrays.asList(id, firstName, lastName, email, phone, park, userName, password, 0));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-
 		boolean insertResult = database.executeInsertQuery(request);
 		if (!insertResult) {
 			throw new DatabaseException("Problem with Park Manager INSERT query");
@@ -253,7 +255,7 @@ public class StaffController {
 			request.setQueryType(QueryType.INSERT);
 			request.setTables(Arrays.asList(Communication.representative));
 			request.setColumnsAndValues(
-					Arrays.asList("departmentManagerId", "firstName", "lastName", "emailAddress", "phoneNumber",
+					Arrays.asList("representativeId", "firstName", "lastName", "emailAddress", "phoneNumber",
 							"userName", "password", "isLoggedIn"),
 					Arrays.asList(id, firstName, lastName, email, phone, userName, password, 0));
 		} catch (CommunicationException e) {
