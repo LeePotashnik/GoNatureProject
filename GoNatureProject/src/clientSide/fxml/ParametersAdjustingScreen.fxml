@@ -2,29 +2,159 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParametersAdjustingScreenConrtroller">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParametersAdjustingScreenConrtroller">
    <children>
       <Button fx:id="backButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onAction="#returnToPreviousScreen" prefHeight="38.0" prefWidth="38.0">
          <font>
             <Font name="Calibri" size="14.0" />
          </font>
       </Button>
-      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
-      <Label layoutX="215.0" layoutY="64.0" prefHeight="38.0" prefWidth="300.0" text=" Parameters Adjusting">
+      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="203.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
+      <Label fx:id="titleLbl" layoutX="203.0" layoutY="64.0" prefHeight="38.0" prefWidth="300.0" text=" Parameters Adjusting">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <TextField fx:id="maximumVisitorsCapacityTextField" layoutX="132.0" layoutY="156.0" prefHeight="31.0" prefWidth="86.0" />
-      <TextField fx:id="maximumOrderAmountTextField" layoutX="135.0" layoutY="210.0" prefHeight="31.0" prefWidth="80.0" />
-      <Button fx:id="AdjustMaximumVisitorsCapacityButton" layoutX="249.0" layoutY="149.0" mnemonicParsing="false" onAction="#adjustMaximumVisitorsCapacity" prefHeight="38.0" prefWidth="258.0" text="Adjust Maximum Visitors Capacity" />
-      <Button fx:id="AdjustMaximumOrderAmountButton" layoutX="249.0" layoutY="206.0" mnemonicParsing="false" onAction="#adjustMaximumOrderAmount" prefHeight="38.0" prefWidth="236.0" text="Adjust Maximum Order Amount" />
-      <TextField fx:id="maximumTimeLimitTextField" layoutX="132.0" layoutY="272.0" prefHeight="31.0" prefWidth="86.0" />
-      <Button fx:id="AdjustMaximumTimeLimitsButton" layoutX="249.0" layoutY="269.0" mnemonicParsing="false" onAction="#adjustMaximumTimeLimits" prefHeight="38.0" prefWidth="222.0" text="Adjust Maximum Time Limits" />
+      <VBox fx:id="mainVbox" layoutX="26.0" layoutY="142.0" prefHeight="286.0" prefWidth="650.0">
+         <children>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="650.0" />
+            <Label text="Current Park's Parameters:" underline="true">
+               <font>
+                  <Font name="Calibri" size="18.0" />
+               </font>
+            </Label>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="650.0" />
+            <HBox fx:id="hboxCurrent" prefHeight="100.0" prefWidth="200.0">
+               <children>
+                  <VBox fx:id="vboxCurrent1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="68.0" prefWidth="216.0">
+                     <children>
+                        <Label fx:id="lbl1" text="Maximum Visitors:">
+                           <font>
+                              <Font name="Calibri" size="16.0" />
+                           </font>
+                        </Label>
+                        <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="216.0" />
+                        <Label fx:id="maximumVisitorsLbl" prefWidth="100.0" text="Label">
+                           <font>
+                              <Font name="Calibri Bold" size="25.0" />
+                           </font>
+                        </Label>
+                        <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="216.0" />
+                     </children>
+                  </VBox>
+                  <VBox fx:id="vboxCurrent2" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="68.0" prefWidth="216.0">
+                     <children>
+                        <Label fx:id="lbl2" text="Maximum Orders:">
+                           <font>
+                              <Font name="Calibri" size="16.0" />
+                           </font>
+                        </Label>
+                        <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="216.0" />
+                        <Label fx:id="maximumOrdersLbl" prefWidth="100.0" text="Label">
+                           <font>
+                              <Font name="Calibri Bold" size="25.0" />
+                           </font>
+                        </Label>
+                        <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="216.0" />
+                     </children>
+                  </VBox>
+                  <VBox fx:id="vboxCurrent3" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="68.0" prefWidth="216.0">
+                     <children>
+                        <Label fx:id="lbl3" text="Time Limitations:">
+                           <font>
+                              <Font name="Calibri" size="16.0" />
+                           </font>
+                        </Label>
+                        <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="216.0" />
+                        <Label fx:id="timeLimitLbl" prefWidth="100.0" text="Label">
+                           <font>
+                              <Font name="Calibri Bold" size="25.0" />
+                           </font>
+                        </Label>
+                        <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="216.0" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <Separator maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="20.0" prefWidth="650.0" />
+            <HBox fx:id="hboxUpdate1" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="50.0" prefWidth="200.0">
+               <children>
+                  <Label prefHeight="50.0" prefWidth="300.0" text="Maximum Visitors Capacity:">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="maximumVisitorsTxt" prefWidth="90.0" promptText="insert">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="50.0" stroke="TRANSPARENT" strokeType="INSIDE" width="25.0" />
+                  <Button fx:id="maximumVisitorsBtn" maxHeight="-Infinity" mnemonicParsing="false" onAction="#adjustMaximumVisitorsCapacity" text="Send to Approval">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Button>
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="650.0" />
+            <HBox fx:id="hboxUpdate2" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="50.0" prefWidth="200.0">
+               <children>
+                  <Label maxWidth="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="300.0" text="Maximum Orders Amount:">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="maximumOrderTxt" prefWidth="90.0" promptText="insert">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="50.0" stroke="TRANSPARENT" strokeType="INSIDE" width="25.0" />
+                  <Button fx:id="maximumOrderBtn" mnemonicParsing="false" onAction="#adjustMaximumOrderAmount" text="Send to Approval">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Button>
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="650.0" />
+            <HBox fx:id="hboxUpdate3" prefHeight="100.0" prefWidth="650.0">
+               <children>
+                  <Label prefWidth="300.0" text="Time Limits:">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="timeLimitTxt" prefWidth="90.0" promptText="insert">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="50.0" stroke="TRANSPARENT" strokeType="INSIDE" width="25.0" />
+                  <Button fx:id="timeLimitBtn" mnemonicParsing="false" onAction="#adjustMaximumTimeLimits" text="Send to Approval">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+      <Label fx:id="parkLbl" layoutX="4.0" layoutY="102.0" prefHeight="22.0" prefWidth="692.0" text="Of ParkName Park">
+         <font>
+            <Font name="Calibri" size="22.0" />
+         </font>
+      </Label>
+      <Separator layoutX="20.0" layoutY="132.0" prefHeight="14.0" prefWidth="660.0" />
    </children>
 </Pane>

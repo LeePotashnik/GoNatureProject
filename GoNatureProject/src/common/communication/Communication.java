@@ -118,6 +118,9 @@ public class Communication implements Serializable {
 
 	// a list of communications to execute as a transaction
 	private ArrayList<Communication> requestsList = null;
+	
+	// set to true if the query is done in a critical section
+	private boolean isCritical; // for critical sections park capacities updates
 
 	/////////////////////////////////////////////////////////
 	/// CLIENT-SERVER MESSAGES COMMUNICATION - PROPERTIES ///
@@ -310,6 +313,14 @@ public class Communication implements Serializable {
 	public String getParkLocation() {
 		return parkLocation;
 	}
+	
+	/**
+	 * This method returns if this query is in a critical section
+	 * @return the isCritical property
+	 */
+	public boolean isCritical() {
+		return isCritical;
+	}
 
 	///////////////
 	/// SETTERS ///
@@ -483,6 +494,15 @@ public class Communication implements Serializable {
 	 */
 	public void setParkLocation(String parkLocation) {
 		this.parkLocation = parkLocation;
+	}
+	
+	/**
+	 * This method sets the critical section boolean property
+	 * 
+	 * @param isCritical
+	 */
+	public void setCritical(boolean isCritical) {
+		this.isCritical = isCritical;
 	}
 
 	/////////////////////////////////

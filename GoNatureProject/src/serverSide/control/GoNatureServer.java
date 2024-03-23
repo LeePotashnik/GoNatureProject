@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.Semaphore;
 
 import common.communication.Communication;
 import common.communication.Communication.ClientMessageType;
@@ -24,6 +25,7 @@ public class GoNatureServer extends AbstractServer {
 	public static final ObservableList<ConnectedClient> connectedToGUI = FXCollections.observableArrayList();
 	private NotificationsController notifications = NotificationsController.getInstance();
 	private StaffController staffController;
+	private Semaphore semaphore = new Semaphore(1, true); // for park capacities critical section updates
 
 	/**
 	 * The constructor creates a new server on the given port, and also creates an
@@ -215,6 +217,14 @@ public class GoNatureServer extends AbstractServer {
 				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
 						+ ": Communication recieved from client " + client.toString());
 		Communication request = (Communication) msg;
+		
+		if (request.isCritical()) { // aquiring the critical section
+			try {
+				semaphore.acquire();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 
 		// if this is a regular, single query request
 		if (request.getCommunicationType() == CommunicationType.QUERY_REQUEST) {
@@ -269,12 +279,10 @@ public class GoNatureServer extends AbstractServer {
 							request.isPaid()), "Visitor chose to cancel.");
 					break;
 				case SEND_REMINDER:
-					notifications.sendReminderEmailNotification(Arrays.asList(request.getEmail(),
-							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
-							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
-							request.isPaid()));
+					notifications.sendReminderEmailNotification(Arrays.asList(request.getEmail(), request.getPhone(),
+							request.getParkName(), request.getDate(), request.getTime(), request.getFullName(),
+							request.getParkLocation(), request.getVisitors(), request.getPrice(), request.isPaid()));
 				}
-				
 			}
 
 			try {
@@ -292,8 +300,6 @@ public class GoNatureServer extends AbstractServer {
 			boolean transactionResult = database.executeTransaction(request);
 			response.setQueryResult(transactionResult);
 
-			//// HERE: SHOULD ADD SOMETHING ABOUT SCREEN CONQUER /////
-
 			try {
 				client.sendToClient(response);
 			} catch (IOException e) {
@@ -307,5 +313,8 @@ public class GoNatureServer extends AbstractServer {
 			}
 		}
 
+		if (request.isCritical()) { // releaseing the critical section
+			semaphore.release();
+		}
 	}
 }

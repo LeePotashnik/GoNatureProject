@@ -2,8 +2,8 @@ package clientSide.gui;
 
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
+import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
-import common.controllers.TemporaryRunner;
 import javafx.animation.FadeTransition;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -173,9 +173,10 @@ public class ClientConnectionController extends AbstractScreen {
 	 * successfully. Starts the client-side Main Screen.
 	 */
 	public void runClientSide() {
-		// DO NOT TOUCH PLEASE
+		// showing the main screen
 		try {
-			new TemporaryRunner().showScreen();
+			ScreenManager.getInstance().showScreen("MainScreenController", "/clientSide/fxml/MainScreen.fxml", false,
+					false, null);
 		} catch (StatefulException | ScreenException e) {
 			e.printStackTrace();
 		}
@@ -235,7 +236,7 @@ public class ClientConnectionController extends AbstractScreen {
 		timeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
 		timeline.play();
 	}
-	
+
 	/**
 	 * This method gets a text field and makes it recoginze digits only
 	 * 
@@ -284,7 +285,7 @@ public class ClientConnectionController extends AbstractScreen {
 		hostTxtField.setPromptText("Enter host address");
 		// initializing the image component
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
-		
+
 		setupTextFieldToDigitsOnly(portTxtField);
 	}
 

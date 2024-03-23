@@ -1,22 +1,20 @@
 package clientSide.control;
 
+import java.sql.Date;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.sql.Date;
-import java.sql.Time;
 import java.util.Random;
 
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
-import common.communication.CommunicationException;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
-import entities.Booking;
+import common.communication.CommunicationException;
 import entities.DepartmentManager;
 import entities.ParkManager;
-import entities.ParkVisitor;
 import entities.PendingAdjustment;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -24,13 +22,13 @@ import javafx.collections.ObservableList;
 public class ParametersController {
 
 	/**
-	 * This method gets parkManager and maximum visitor capacity parameters and add
+	 * This method gets parkManager and maximum visitor capacity parameters and adds
 	 * to the pending adjustment table a request to adjust the parks maximum visitor
-	 * capacity (if there is no an existing request)
+	 * capacity (if there is no existing request)
 	 * 
 	 * @return true if added the request, false otherwise
 	 */
-	public static boolean adjustMaximumVisitorsCapacity(ParkManager parkManager, int parameterAfter) {
+	public boolean adjustMaximumVisitorsCapacity(ParkManager parkManager, int parameterAfter) {
 		String parkName = parkManager.getManages();
 
 		// Creating a select query in order to make sure there is no an exist request to
@@ -42,7 +40,7 @@ public class ParametersController {
 			e.printStackTrace();
 		}
 
-		requestForPendingAdjustment.setTables(Arrays.asList("pending_adjustment"));
+		requestForPendingAdjustment.setTables(Arrays.asList(Communication.pendingAdjustment));
 		requestForPendingAdjustment.setSelectColumns(Arrays.asList("*"));
 		requestForPendingAdjustment.setWhereConditions(Arrays.asList("parkName", "parameterType"),
 				Arrays.asList("=", "AND", "="), Arrays.asList(parkName, "maximumVisitorsCapacity"));
@@ -50,7 +48,7 @@ public class ParametersController {
 		GoNatureClientUI.client.accept(requestForPendingAdjustment); // sending the query to the server that will
 																		// connect to the DB
 
-		// getResultList will return list if there is already an exist update request
+		// getResultList will return list if there is already an existing update request
 		// for this park & type of parameters
 		if (requestForPendingAdjustment.getResultList().isEmpty()) {
 			// there is no an exist update request for this park & type of parameters=>
@@ -74,7 +72,7 @@ public class ParametersController {
 			} catch (CommunicationException e) {
 				e.printStackTrace();
 			}
-			RequestForUpdateParkparameter.setTables(Arrays.asList("pending_adjustment"));
+			RequestForUpdateParkparameter.setTables(Arrays.asList(Communication.pendingAdjustment));
 			RequestForUpdateParkparameter.setColumnsAndValues(
 					Arrays.asList("adjusmentId", "parkId", "parkName", "department", "dayOfAdjusting",
 							"timeOfAdjusting", "adjustedBy", "parameterBefore", "parameterAfter", "parameterType"),
@@ -100,7 +98,7 @@ public class ParametersController {
 	 * 
 	 * @return true if added the request, false otherwise
 	 */
-	public static boolean adjustMaximumOrdersAmount(ParkManager parkManager, int parameterAfter) {
+	public boolean adjustMaximumOrdersAmount(ParkManager parkManager, int parameterAfter) {
 		String parkName = parkManager.getManages();
 
 		// Creating a select query in order to make sure there is no an exist request to
@@ -112,10 +110,10 @@ public class ParametersController {
 			e.printStackTrace();
 		}
 
-		requestForPendingAdjustment.setTables(Arrays.asList("pending_adjustment"));
+		requestForPendingAdjustment.setTables(Arrays.asList(Communication.pendingAdjustment));
 		requestForPendingAdjustment.setSelectColumns(Arrays.asList("*"));
 		requestForPendingAdjustment.setWhereConditions(Arrays.asList("parkName", "parameterType"),
-				Arrays.asList("=", "AND", "="), Arrays.asList(parkName, "maximumOrderesCapacity"));
+				Arrays.asList("=", "AND", "="), Arrays.asList(parkName, "maximumOrdersCapacity"));
 
 		GoNatureClientUI.client.accept(requestForPendingAdjustment); // sending the query to the server that will
 																		// connect to the DB
@@ -144,12 +142,12 @@ public class ParametersController {
 			} catch (CommunicationException e) {
 				e.printStackTrace();
 			}
-			RequestForUpdateParkparameter.setTables(Arrays.asList("pending_adjustment"));
+			RequestForUpdateParkparameter.setTables(Arrays.asList(Communication.pendingAdjustment));
 			RequestForUpdateParkparameter.setColumnsAndValues(
 					Arrays.asList("adjusmentId", "parkId", "parkName", "department", "dayOfAdjusting",
 							"timeOfAdjusting", "adjustedBy", "parameterBefore", "parameterAfter", "parameterType"),
 					Arrays.asList(adjusmentId, parkId, parkName, department, dayOfAdjusting, timeOfAdjusting,
-							adjustedBy, parameterBefore, parameterAfter, "maximumOrderesCapacity"));
+							adjustedBy, parameterBefore, parameterAfter, "maximumOrdersCapacity"));
 
 			GoNatureClientUI.client.accept(RequestForUpdateParkparameter); // sending the query to the server that will
 																			// connect to the DB
@@ -170,7 +168,7 @@ public class ParametersController {
 	 * 
 	 * @return true if added the request, false otherwise
 	 */
-	public static boolean adjustMaximumTimeLimit(ParkManager parkManager, int parameterAfter) {
+	public boolean adjustMaximumTimeLimit(ParkManager parkManager, int parameterAfter) {
 		String parkName = parkManager.getManages();
 
 		// Creating a select query in order to make sure there is no an exist request to
@@ -182,7 +180,7 @@ public class ParametersController {
 			e.printStackTrace();
 		}
 
-		requestForPendingAdjustment.setTables(Arrays.asList("pending_adjustment"));
+		requestForPendingAdjustment.setTables(Arrays.asList(Communication.pendingAdjustment));
 		requestForPendingAdjustment.setSelectColumns(Arrays.asList("*"));
 		requestForPendingAdjustment.setWhereConditions(Arrays.asList("parkName", "parameterType"),
 				Arrays.asList("=", "AND", "="), Arrays.asList(parkName, "maximumTimeLimit"));
@@ -213,7 +211,7 @@ public class ParametersController {
 			} catch (CommunicationException e) {
 				e.printStackTrace();
 			}
-			RequestForUpdateParkparameter.setTables(Arrays.asList("pending_adjustment"));
+			RequestForUpdateParkparameter.setTables(Arrays.asList(Communication.pendingAdjustment));
 			RequestForUpdateParkparameter.setColumnsAndValues(
 					Arrays.asList("adjusmentId", "parkId", "parkName", "department", "dayOfAdjusting",
 							"timeOfAdjusting", "adjustedBy", "parameterBefore", "parameterAfter", "parameterType"),
@@ -254,7 +252,7 @@ public class ParametersController {
 			e.printStackTrace();
 		}
 
-		requestForPendingAdjustment.setTables(Arrays.asList("pending_adjustment"));
+		requestForPendingAdjustment.setTables(Arrays.asList(Communication.pendingAdjustment));
 		requestForPendingAdjustment.setSelectColumns(Arrays.asList("*"));
 		requestForPendingAdjustment.setWhereConditions(Arrays.asList("department"), Arrays.asList("="),
 				Arrays.asList(managesDepartment));
@@ -289,12 +287,20 @@ public class ParametersController {
 																			// the we build to observableArrayList
 	}
 
-	
-	
-	
-	
-	public boolean updateParkParameter(PendingAdjustment pendingAdjustment,
-			DepartmentManager departmentManager, boolean isApproved) {
+	/**
+	 * This method gets a pending adjustment, a department manager and his decision
+	 * whether approving it or not. Updates accordingly the pending_adjustment
+	 * table: transfer the adjusment to the viewed adjustments table, and updates
+	 * the park's row in the parks table if the adjustment has been approved by the
+	 * department manager
+	 * 
+	 * @param pendingAdjustment
+	 * @param departmentManager
+	 * @param isApproved
+	 * @return true if the update succeed, false if not
+	 */
+	public boolean updateParkParameter(PendingAdjustment pendingAdjustment, DepartmentManager departmentManager,
+			boolean isApproved) {
 		// Creating the values we will use:
 
 		String adjusmentId = pendingAdjustment.getAdjusmentId();
@@ -306,20 +312,15 @@ public class ParametersController {
 		String adjustedBy = pendingAdjustment.getAdjustedBy();
 		int parameterBefore = pendingAdjustment.getParameterBefore();
 		int parameterAfter = pendingAdjustment.getParameterAfter();
-		String parameterType = (String)pendingAdjustment.getParameterType();
+		String parameterType = (String) pendingAdjustment.getParameterType();
 
 		String reviewdBy = departmentManager.getFirstName() + " " + departmentManager.getLastName();
 
 		LocalDate dateOfReview = LocalDate.now();
 		LocalTime timeOfReview = LocalTime.now();
-		Integer ans=0;
-		if(isApproved)
-		{
-			ans=1;
-		}
-	
 
-		// Creating an insert query in order to add the requests that have been viewed 
+		// Creating an insert query in order to add the requests that have been viewed
+		// to the
 		// the viewed_adjustment table
 		Communication RequestForUpdateParkparameter = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
@@ -327,12 +328,13 @@ public class ParametersController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		RequestForUpdateParkparameter.setTables(Arrays.asList("viewed_adjustment"));
+		RequestForUpdateParkparameter.setTables(Arrays.asList(Communication.viewedAdjustment));
 		RequestForUpdateParkparameter.setColumnsAndValues(
 				Arrays.asList("adjusmentId", "parkId", "parkName", "department", "dayOfAdjusting", "timeOfAdjusting",
-						"adjustedBy", "parameterBefore", "parameterAfter", "parameterType", "reviewdBy","isApproved","dateOfReview", "timeOfReview"),
+						"adjustedBy", "parameterBefore", "parameterAfter", "parameterType", "reviewdBy", "isApproved",
+						"dateOfReview", "timeOfReview"),
 				Arrays.asList(adjusmentId, parkId, parkName, department, dayOfAdjusting, timeOfAdjusting, adjustedBy,
-						parameterBefore, parameterAfter, parameterType, reviewdBy, ans, dateOfReview,
+						parameterBefore, parameterAfter, parameterType, reviewdBy, isApproved ? 1 : 0, dateOfReview,
 						timeOfReview));
 
 		GoNatureClientUI.client.accept(RequestForUpdateParkparameter); // sending the query to the server that will
@@ -353,7 +355,7 @@ public class ParametersController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		deletePendingAdjustmentRequest.setTables(Arrays.asList("pending_adjustment"));
+		deletePendingAdjustmentRequest.setTables(Arrays.asList(Communication.pendingAdjustment));
 		deletePendingAdjustmentRequest.setWhereConditions(Arrays.asList("adjusmentId"), Arrays.asList("="),
 				Arrays.asList(adjusmentId));
 
@@ -366,7 +368,8 @@ public class ParametersController {
 			return false;
 		}
 
-		// if the departmentManager approved the adjustment=> update the parks parameters
+		// if the departmentManager approved the adjustment=> update the parks
+		// parameters
 		if (isApproved) {
 			// Creating a update query in order to update the new parameter of this park in
 			// the parks table
@@ -375,7 +378,7 @@ public class ParametersController {
 			Communication requestForUpdateParksParameter = new Communication(CommunicationType.QUERY_REQUEST);
 			try {
 				requestForUpdateParksParameter.setQueryType(QueryType.UPDATE);
-				requestForUpdateParksParameter.setTables(Arrays.asList("park"));
+				requestForUpdateParksParameter.setTables(Arrays.asList(Communication.park));
 				// we will access to the park table column which it's name is equal to the type
 				// of the parameter that has been changed:
 				requestForUpdateParksParameter.setColumnsAndValues(Arrays.asList(parameterType),
@@ -392,5 +395,4 @@ public class ParametersController {
 		}
 		return true;
 	}
-
 }
