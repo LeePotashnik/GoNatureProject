@@ -77,8 +77,10 @@
       </Label>
       <TableView fx:id="connectedClientsTable" layoutX="348.0" layoutY="144.0" prefHeight="186.0" prefWidth="324.0">
         <columns>
-          <TableColumn fx:id="clientIpColumn" editable="false" prefWidth="147.99993896484375" text="Client IP" />
-          <TableColumn fx:id="clientStatusColumn" editable="false" prefWidth="155.20004272460938" text="Client Status" />
+          <TableColumn fx:id="clientIpColumn" editable="false" prefWidth="67.0" text="Client IP" />
+          <TableColumn fx:id="clientStatusColumn" editable="false" prefWidth="116.0" text="Status" />
+            <TableColumn fx:id="clientEnterColumn" editable="false" prefWidth="53.0" text="Enter" />
+            <TableColumn fx:id="clientExitColumn" editable="false" prefWidth="63.0" text="Exit" />
         </columns>
       </TableView>
       <Label layoutX="448.0" layoutY="121.0" prefHeight="18.0" prefWidth="154.0" text="Connected Clients:" textAlignment="CENTER">

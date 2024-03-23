@@ -52,7 +52,7 @@ public class UsageReportController extends AbstractScreen{
     @FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(true,true);
+			ScreenManager.getInstance().goToPreviousScreen(true,false);
     	  } catch (ScreenException | StatefulException e) {
     	        e.printStackTrace();
     	  }
@@ -115,7 +115,7 @@ public class UsageReportController extends AbstractScreen{
 	        List<Pair<LocalDate, Integer>> occupancyData = (List<Pair<LocalDate, Integer>>) information;
 	        populateChart(occupancyData);
 	    } else {
-	        showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred. Occupancy data is not available.");
+	        showErrorAlert("An error occurred. Occupancy data is not available.");
 	    }
 	}
 	

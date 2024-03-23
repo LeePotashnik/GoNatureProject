@@ -10,11 +10,9 @@ import common.communication.Communication;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.StageSettings;
 import common.controllers.StatefulException;
 import entities.Booking;
-import entities.ParkVisitor;
-import entities.ParkVisitor.VisitorType;
+import entities.Booking.VisitType;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -36,12 +34,10 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.util.Pair;
 
 public class RescheduleScreenController extends AbstractScreen {
 	private BookingController control;
 	private Booking booking;
-	private ParkVisitor visitor;
 	private boolean isGroupReservation;
 
 	public RescheduleScreenController() {
@@ -196,12 +192,11 @@ public class RescheduleScreenController extends AbstractScreen {
 	 */
 	public void slotClicked(AvailableSlot chosenSlot) {
 		if (chosenSlot == null) {
-			showErrorAlert(ScreenManager.getInstance().getStage(),
-					"Please choose a row from the table in order to proceed");
+			showErrorAlert("Please choose a row from the table in order to proceed");
 		} else {
 			LocalDate newDate = chosenSlot.getDate();
 			LocalTime newTime = chosenSlot.getTime();
-			int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+			int choise = showConfirmationAlert(
 					"You're about to change your reservation dates:\n" + "From: " + booking.getDayOfVisit() + ", "
 							+ booking.getTimeOfVisit() + ", To: " + newDate + ", " + newTime,
 					Arrays.asList("Cancel", "Confirm"));
@@ -235,7 +230,7 @@ public class RescheduleScreenController extends AbstractScreen {
 							+ "$";
 				}
 
-				int payChoise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
+				int payChoise = showConfirmationAlert(payMessage,
 						Arrays.asList("Pay Now", "Pay Upon Arrival", "Cancel Reservation"));
 
 				switch (payChoise) {
@@ -248,9 +243,7 @@ public class RescheduleScreenController extends AbstractScreen {
 					// showing the payment screen
 					try {
 						ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
-								"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
-								StageSettings.defaultSettings("Payment"),
-								new Pair<Booking, ParkVisitor>(booking, visitor));
+								"/clientSide/fxml/PaymentSystemScreen.fxml", true, false, booking);
 					} catch (StatefulException | ScreenException e) {
 						e.printStackTrace();
 					}
@@ -266,9 +259,7 @@ public class RescheduleScreenController extends AbstractScreen {
 					// showing the confirmation screen
 					try {
 						ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-								"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
-								StageSettings.defaultSettings("Confirmation"),
-								new Pair<Booking, ParkVisitor>(booking, visitor));
+								"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
 					} catch (StatefulException | ScreenException e) {
 						e.printStackTrace();
 					}
@@ -361,7 +352,7 @@ public class RescheduleScreenController extends AbstractScreen {
 		}
 
 		if (!valid)
-			showErrorAlert(ScreenManager.getInstance().getStage(), error);
+			showErrorAlert(error);
 
 		return valid;
 	}
@@ -449,17 +440,14 @@ public class RescheduleScreenController extends AbstractScreen {
 
 	@Override
 	/**
-	 * Before showing the screen, a pair of booking and visitor is transfered to
-	 * this controller in order to load their information into the GUI components
+	 * Before showing the screen, a bookings instance is transfered to this
+	 * controller in order to load its information into the GUI components
 	 */
 	public void loadBefore(Object information) {
-		if (information instanceof Pair) {
-			@SuppressWarnings("unchecked")
-			Pair<Booking, ParkVisitor> pair = (Pair<Booking, ParkVisitor>) information;
-			booking = pair.getKey();
-			visitor = pair.getValue();
+		if (information instanceof Booking) {
+			booking = (Booking) information;
 
-			isGroupReservation = visitor.getVisitorType() == VisitorType.GROUPGUIDE ? true : false;
+			isGroupReservation = booking.getVisitType() == VisitType.GROUP ? true : false;
 
 			// setting the reservation type
 			typeLbl.setText("Review available slots in " + booking.getParkBooked().getParkName() + " park");

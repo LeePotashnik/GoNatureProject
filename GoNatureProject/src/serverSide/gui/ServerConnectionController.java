@@ -2,10 +2,13 @@ package serverSide.gui;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.LocalTime;
 import java.util.Arrays;
 
 import common.controllers.AbstractScreen;
-import common.controllers.ScreenManager;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -16,6 +19,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -23,8 +27,15 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.WindowEvent;
+import serverSide.control.GoNatureServer;
+import serverSide.control.GoNatureServer.ConnectedClient;
 
 public class ServerConnectionController extends AbstractScreen {
+	private static final String digitsOnly = "\\d+";
+
+	//////////////////////////////////
+	/// JAVAFX AND FXML COMPONENTS ///
+	//////////////////////////////////
 
 	@FXML
 	private Button connectBtn, disconnectBtn, clearBtn, importBtn;
@@ -33,9 +44,10 @@ public class ServerConnectionController extends AbstractScreen {
 	@FXML
 	private TextField hostTxtField, portTxtField, databaseTxtField, rootTxtField;
 	@FXML
-	private TableColumn<String, String> clientIpColumn, clientStatusColumn;
+	private TableColumn<ConnectedClient, String> clientIpColumn, clientStatusColumn, clientEnterColumn,
+			clientExitColumn;
 	@FXML
-	private TableView<String> connectedClientsTable;
+	private TableView<ConnectedClient> connectedClientsTable;
 	@FXML
 	private Label hostLbl, portLbl, databaseLbl, rootLbl, passwordLbl, titleLbl, statusLabel;
 	@FXML
@@ -44,6 +56,10 @@ public class ServerConnectionController extends AbstractScreen {
 	private PasswordField passwordTxtField;
 	@FXML
 	private TextArea consoleArea;
+
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
 
 	@FXML
 	/**
@@ -57,10 +73,10 @@ public class ServerConnectionController extends AbstractScreen {
 			String result = GoNatureServerUI.runServer(Integer.parseInt(portTxtField.getText()),
 					databaseTxtField.getText(), rootTxtField.getText(), passwordTxtField.getText());
 			if (result.contains("Error")) {
-				showErrorAlert(ScreenManager.getInstance().getStage(), result);
+				showErrorAlert(result);
 				System.out.println(result);
 			} else {
-				showInformationAlert(ScreenManager.getInstance().getStage(), result);
+				showInformationAlert(result);
 				System.out.println(result);
 				hostTxtField.setDisable(true);
 				portTxtField.setDisable(true);
@@ -73,6 +89,8 @@ public class ServerConnectionController extends AbstractScreen {
 				connectBtn.setVisible(false);
 				disconnectBtn.setVisible(true);
 				importBtn.setDisable(false);
+
+				connectedClientsTable.setItems(GoNatureServer.connectedToGUI);
 			}
 		}
 	}
@@ -113,7 +131,7 @@ public class ServerConnectionController extends AbstractScreen {
 	 * @param event
 	 */
 	void importUsersFromExternalSystem(ActionEvent event) {
-		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+		int choise = showConfirmationAlert(
 				"You are about to import users data from the Users Management System into GoNature database",
 				Arrays.asList("Cancel", "Continue"));
 
@@ -124,13 +142,17 @@ public class ServerConnectionController extends AbstractScreen {
 
 		case 2:
 			if (GoNatureServerUI.server.importUsersFromExternalSystem()) {
-				showInformationAlert(ScreenManager.getInstance().getStage(), "The users data import succeed");
+				showInformationAlert("The users data import succeed");
 				importBtn.setDisable(true);
 			} else {
-				showInformationAlert(ScreenManager.getInstance().getStage(), "The users data import failed");
+				showInformationAlert("The users data import failed");
 			}
 		}
 	}
+
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
 
 	/**
 	 * This method is called when the server GUI gets a request to disconnect. Won't
@@ -142,11 +164,11 @@ public class ServerConnectionController extends AbstractScreen {
 		if (GoNatureServerUI.server == null)
 			return true;
 		if (!GoNatureServerUI.server.areAllClientsDisconnected()) {
-			showErrorAlert(ScreenManager.getInstance().getStage(), "Not all clients are disconnected!");
+			showErrorAlert("Not all clients are disconnected!");
 			return false;
 		} else {
 			GoNatureServerUI.disconnectServer();
-			showInformationAlert(ScreenManager.getInstance().getStage(), "Server is disconnected");
+			showInformationAlert("Server is disconnected");
 			return true;
 		}
 	}
@@ -188,11 +210,30 @@ public class ServerConnectionController extends AbstractScreen {
 			error += "Port number must be in range (1024-65535)";
 		}
 		if (!result)
-			showErrorAlert(ScreenManager.getInstance().getStage(), error);
+			showErrorAlert(error);
 		return result;
 	}
 
-	/// TEXT FIELDS TABS FLOW METHODS ///
+	/**
+	 * This method gets a text field and makes it recoginze digits only
+	 * 
+	 * @param textField
+	 */
+	protected void setupTextFieldToDigitsOnly(TextField textField) {
+		textField.textProperty().addListener(new ChangeListener<String>() {
+			@Override
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				if (!newValue.matches(digitsOnly)) {
+					textField.setText(newValue.replaceAll("[^\\d]", ""));
+				}
+			}
+		});
+	}
+
+	///////////////////////////////////
+	/// JAVAFX FLOW CONTROL METHODS ///
+	///////////////////////////////////
+
 	@FXML
 	/**
 	 * transfers the focus from hostTxtField to portTxtField
@@ -278,6 +319,10 @@ public class ServerConnectionController extends AbstractScreen {
 		event.consume();
 	}
 
+	///////////////////////////////
+	/// ABSTRACT SCREEN METHODS ///
+	///////////////////////////////
+
 	@FXML
 	/**
 	 * This method initializes the JavaFX components
@@ -287,6 +332,33 @@ public class ServerConnectionController extends AbstractScreen {
 		// initializing the image component
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+
+		clientIpColumn.setResizable(false);
+		clientStatusColumn.setResizable(false);
+		clientEnterColumn.setResizable(false);
+		clientExitColumn.setResizable(false);
+		clientIpColumn.setCellValueFactory(new PropertyValueFactory<>("ip"));
+		clientStatusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+		clientEnterColumn.setCellValueFactory(cellData -> {
+			ConnectedClient client = cellData.getValue();
+			LocalTime enterTime = client.getEnterTime();
+			String timeString = (enterTime.getHour() < 10 ? "0" + enterTime.getHour() : enterTime.getHour()) + ":"
+					+ (enterTime.getMinute() < 10 ? "0" + enterTime.getMinute() : enterTime.getMinute()) + ":"
+					+ (enterTime.getSecond() < 10 ? "0" + enterTime.getSecond() : enterTime.getSecond());
+			return new ReadOnlyStringWrapper(timeString);
+		});
+		clientExitColumn.setCellValueFactory(cellData -> {
+			ConnectedClient client = cellData.getValue();
+			LocalTime exitTime = client.getExitTime();
+			String timeString = exitTime == null ? "-----"
+					: (exitTime.getHour() < 10 ? "0" + exitTime.getHour() : exitTime.getHour()) + ":"
+							+ (exitTime.getMinute() < 10 ? "0" + exitTime.getMinute() : exitTime.getMinute()) + ":"
+							+ (exitTime.getSecond() < 10 ? "0" + exitTime.getSecond() : exitTime.getSecond());
+			return new ReadOnlyStringWrapper(timeString);
+		});
+
+		// setting the empty-table labels
+		connectedClientsTable.setPlaceholder(new Label("No connected clients"));
 
 		// centering the title label
 		titleLbl.setAlignment(Pos.CENTER);
@@ -301,6 +373,8 @@ public class ServerConnectionController extends AbstractScreen {
 
 		statusLabel.setText("Disconnected");
 		statusLabel.setStyle("-fx-background-color: #ffe6e6; -fx-text-alignment: center;");
+
+		setupTextFieldToDigitsOnly(portTxtField);
 
 		importBtn.setDisable(true);
 
@@ -339,12 +413,17 @@ public class ServerConnectionController extends AbstractScreen {
 	}
 
 	@Override
+	/**
+	 * Irrelevant here.
+	 */
 	public void loadBefore(Object information) {
 	}
 
 	@Override
+	/**
+	 * Returns the screen's name
+	 */
 	public String getScreenTitle() {
 		return "Server Connection";
 	}
-
 }

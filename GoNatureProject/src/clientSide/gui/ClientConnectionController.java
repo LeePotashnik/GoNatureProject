@@ -1,20 +1,12 @@
 package clientSide.gui;
 
-import java.util.ArrayList;
-
 import common.controllers.AbstractScreen;
-
 import common.controllers.ScreenException;
-
-import common.controllers.ScreenManager;
-
 import common.controllers.StatefulException;
 import common.controllers.TemporaryRunner;
 import javafx.animation.FadeTransition;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
-
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -36,15 +28,19 @@ import javafx.util.Duration;
  */
 public class ClientConnectionController extends AbstractScreen {
 	// properties for the image animation
-	private final static int IMAGE_VIEW_COUNT = 3; // Display 3 images at a time
-	private final ArrayList<String> imagePaths = new ArrayList<>(); // List to hold all your image paths
-	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT]; // Array for ImageViews
-	private int currentIndex = 0; // Index to track current image set
+	private final static int IMAGE_VIEW_COUNT = 3;
+	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT];
+	private int currentIndex = 0;
+
+	// validation constants
+	private static final String localHost = "localhost";
+	private static final String hostInput = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+	private static final String digitsOnly = "\\d+";
 
 	//////////////////////////
 	/// JAVA FX COMPONENTS ///
 	//////////////////////////
-	
+
 	@FXML
 	private Button connectBtn;
 	@FXML
@@ -81,15 +77,14 @@ public class ClientConnectionController extends AbstractScreen {
 		boolean valid = true;
 
 		// validating the host
-		if (host.trim().isEmpty() || (!host.equals("localhost") && !host
-				.matches("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))) {
+		if (host.trim().isEmpty() || (!host.equals(localHost) && !host.matches(hostInput))) {
 			valid = false;
 			hostTxtField.setStyle(setFieldToError());
 			showMessage += "\nThe host field must be 'localhost' or a valid IPV4";
 		}
 
 		// validating the port
-		if (port.trim().isEmpty() || !port.matches("\\d+")) {
+		if (port.trim().isEmpty() || !port.matches(digitsOnly)) {
 			valid = false;
 			portTxtField.setStyle(setFieldToError());
 			showMessage += "\nYou must enter a valid digits-only port number";
@@ -104,25 +99,22 @@ public class ClientConnectionController extends AbstractScreen {
 			GoNatureClientUI.createClient(host, portNumber); // creating an instance of the PrototypeClient
 			boolean result = GoNatureClientUI.client.connectClientToServer(host, portNumber);
 			if (!result) { // if the client connection failed
-				showErrorAlert(ScreenManager.getInstance().getStage(),
-						"Establishing connection to server (host: " + host + ", port: " + port + ") failed");
+				showErrorAlert("Establishing connection to server (host: " + host + ", port: " + port + ") failed");
 				GoNatureClientUI.client = null;
 			} else { // if the client connection succeed
-				showInformationAlert(ScreenManager.getInstance().getStage(),
-						"Establishing connection to server (host: " + host + ", port: " + port + ") succeed");
 				System.out
 						.println("Establishing connection to server (host: " + host + ", port: " + port + ") succeed");
 				runClientSide(); // running the client side
 			}
 		} else {
-			showErrorAlert(ScreenManager.getInstance().getStage(), "Errors:" + showMessage);
+			showErrorAlert("Errors:" + showMessage);
 		}
 	}
-	
+
 	///////////////////////////////////
 	/// JAVAFX FLOW CONTROL METHODS ///
 	///////////////////////////////////
-	
+
 	@FXML
 	/**
 	 * transfers the focus from hostTxtField to portTxtField
@@ -180,7 +172,6 @@ public class ClientConnectionController extends AbstractScreen {
 	 * This method is called after the client-server connection is established
 	 * successfully. Starts the client-side Main Screen.
 	 */
-
 	public void runClientSide() {
 		// DO NOT TOUCH PLEASE
 		try {
@@ -195,6 +186,21 @@ public class ClientConnectionController extends AbstractScreen {
 	 */
 	private void startSlideshow() {
 		// Create a runnable task for changing images
+		FadeTransition fade1 = new FadeTransition(Duration.millis(2000), image1);
+		fade1.setFromValue(0.0);
+		fade1.setToValue(1.0);
+		fade1.play();
+
+		FadeTransition fade2 = new FadeTransition(Duration.millis(2000), image2);
+		fade2.setFromValue(0.0);
+		fade2.setToValue(1.0);
+		fade2.play();
+
+		FadeTransition fade3 = new FadeTransition(Duration.millis(2000), image3);
+		fade3.setFromValue(0.0);
+		fade3.setToValue(1.0);
+		fade3.play();
+
 		Runnable changeImagesTask = () -> {
 			if (currentIndex >= imagePaths.size()) {
 				currentIndex = 0; // Reset index to loop
@@ -229,60 +235,31 @@ public class ClientConnectionController extends AbstractScreen {
 		timeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
 		timeline.play();
 	}
-
-	private void setRectangleStroke() {
-		rectangle.getStrokeDashArray().addAll(25d, 25d, 25d, 25d);
-
-		// Calculate the sum of the stroke dash array which is the length of the entire
-		// pattern
-		final double maxOffset = rectangle.getStrokeDashArray().stream().reduce(0d, Double::sum);
-
-		// Create a Timeline animation that updates the stroke dash offset property
-		Timeline timeline = new Timeline(
-				new KeyFrame(Duration.ZERO, new KeyValue(rectangle.strokeDashOffsetProperty(), 0)),
-				new KeyFrame(Duration.seconds(2), new KeyValue(rectangle.strokeDashOffsetProperty(), maxOffset)));
-		timeline.setCycleCount(Timeline.INDEFINITE);
-		timeline.play();
-	}
-
+	
 	/**
-	 * This method is used in order to add all parks images paths to the array list
+	 * This method gets a text field and makes it recoginze digits only
+	 * 
+	 * @param textField
 	 */
-	private void setParksPaths() {
-		if (imagePaths == null || imagePaths.isEmpty()) {
-			imagePaths.add("/acadia.jpg");
-			imagePaths.add("/big_bend.jpg");
-			imagePaths.add("/congaree.jpg");
-			imagePaths.add("/everglades.jpg");
-			imagePaths.add("/gateway_arch.jpg");
-			imagePaths.add("/glacier.jpg");
-			imagePaths.add("/grand_canyon.jpg");
-			imagePaths.add("/great_smoky_mountains.jpg");
-			imagePaths.add("/hawaii_volcanoes.jpg");
-			imagePaths.add("/hot_springs.jpg");
-			imagePaths.add("/mammoth_cave.jpg");
-			imagePaths.add("/olympic.jpg");
-			imagePaths.add("/shenandoah.jpg");
-			imagePaths.add("/theodore_roosevelt.jpg");
-			imagePaths.add("/voyageurs.jpg");
-			imagePaths.add("/yellowstone.jpg");
-			imagePaths.add("/yosemite.jpg");
-		}
-
+	protected void setupTextFieldToDigitsOnly(TextField textField) {
+		textField.textProperty().addListener(new ChangeListener<String>() {
+			@Override
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				if (!newValue.matches(digitsOnly)) {
+					textField.setText(newValue.replaceAll("[^\\d]", ""));
+				}
+			}
+		});
 	}
-
-	///// --- FXML / JAVA FX METHODS --- /////
 
 	///////////////////////////////
 	/// ABSTRACT SCREEN METHODS ///
 	///////////////////////////////
-	
 
 	@FXML
 	/**
 	 * This method initializes the JavaFX components
 	 */
-	
 	public void initialize() {
 		// setting the image view array
 		imageViews[0] = image1;
@@ -290,7 +267,7 @@ public class ClientConnectionController extends AbstractScreen {
 		imageViews[2] = image3;
 
 		// setting the park images paths
-		setParksPaths();
+//		setParksPaths();
 
 		// setting 3 first images
 		imageViews[0].setImage(new Image(imagePaths.get(0)));
@@ -299,7 +276,6 @@ public class ClientConnectionController extends AbstractScreen {
 		currentIndex = 3;
 
 		startSlideshow();
-		setRectangleStroke();
 
 		// centering the labels
 		titleLbl.setAlignment(Pos.CENTER);
@@ -311,9 +287,14 @@ public class ClientConnectionController extends AbstractScreen {
 		hostTxtField.setPromptText("Enter host address");
 		// initializing the image component
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+		
+		setupTextFieldToDigitsOnly(portTxtField);
 	}
 
 	@Override
+	/**
+	 * TEMPORARY - SHOULD BE REMOVED
+	 */
 	public void loadBefore(Object information) {
 		String[] info = ((String) information).split(" ");
 		hostTxtField.setText(info[0]);
@@ -322,6 +303,9 @@ public class ClientConnectionController extends AbstractScreen {
 	}
 
 	@Override
+	/**
+	 * Returns the screen's title
+	 */
 	public String getScreenTitle() {
 		return "Client Connection";
 	}

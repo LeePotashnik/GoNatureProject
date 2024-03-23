@@ -9,7 +9,6 @@ import common.communication.Communication;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.StageSettings;
 import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.Booking;
@@ -56,6 +55,10 @@ public class BookingViewScreenController extends AbstractScreen implements State
 	public BookingViewScreenController() {
 		control = BookingController.getInstance();
 	}
+
+	//////////////////////////////////
+	/// JAVAFX AND FXML COMPONENTS ///
+	//////////////////////////////////
 
 	// past bookings (done/cancelled) table view
 	@FXML
@@ -111,9 +114,9 @@ public class BookingViewScreenController extends AbstractScreen implements State
 	@FXML
 	private ProgressIndicator progressIndicator;
 
-	/////////////////////
-	/// EVENT METHODS ///
-	/////////////////////
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
 
 	@FXML
 	/**
@@ -157,33 +160,64 @@ public class BookingViewScreenController extends AbstractScreen implements State
 		// edited) or a waiting list booking (which can only be cancelled)
 		if (chosenBooking.getStatus().equals("Active")) { // IF ACTIVE
 			// creating a pop up message for the user to choose what to do next
-			int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+			int choise = showConfirmationAlert(
 					"Edit booking to " + chosenBooking.getParkBooked().getParkName() + " park for "
 							+ chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit(),
-					Arrays.asList("Return", "Edit"));
+					Arrays.asList("Return", "View Invoice", "Edit"));
 			switch (choise) {
 			// chose to return
 			case 1: {
 				return;
 			}
-			// chose to edit
+			// chose to view invoice
 			case 2: {
 				try {
 					booking = chosenBooking;
+					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+							"/clientSide/fxml/ConfirmationScreen.fxml", true, true, booking);
+				} catch (StatefulException | ScreenException e) {
+					e.printStackTrace();
+				}
+				return;
+			}
+			// chose to edit
+			case 3: {
+				try {
+					booking = chosenBooking;
 					ScreenManager.getInstance().showScreen("BookingEditingScreenController",
-							"/clientSide/fxml/BookingEditingScreen.fxml", true, true,
-							StageSettings.defaultSettings("Booking Editing"),
-							new Pair<Booking, ParkVisitor>(booking, visitor));
+							"/clientSide/fxml/BookingEditingScreen.fxml", true, true, booking);
 				} catch (StatefulException | ScreenException e) {
 					e.printStackTrace();
 				}
 			}
 			}
+		} else if (chosenBooking.getStatus().equals("Finished")) {
+			// creating a pop up message for the user to choose what to do next
+			int choise = showConfirmationAlert(
+					"Edit booking to " + chosenBooking.getParkBooked().getParkName() + " park for "
+							+ chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit(),
+					Arrays.asList("Return", "View Invoice"));
+			switch (choise) {
+			// chose to return
+			case 1: {
+				return;
+			}
+			// chose to view invoice
+			case 2: {
+				try {
+					booking = chosenBooking;
+					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+							"/clientSide/fxml/ConfirmationScreen.fxml", true, true, booking);
+				} catch (StatefulException | ScreenException e) {
+					e.printStackTrace();
+				}
+				return;
+			}
+			}
 		} else { // IF WAITING LIST
-			int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
-					"Cancel waiting list spot to " + chosenBooking.getParkBooked().getParkName() + " park for "
-							+ chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit()
-							+ "\nThis action can't be undone",
+			int choise = showConfirmationAlert("Cancel waiting list spot to "
+					+ chosenBooking.getParkBooked().getParkName() + " park for " + chosenBooking.getDayOfVisit() + ", "
+					+ chosenBooking.getTimeOfVisit() + "\nThis action can't be undone",
 					Arrays.asList("Return", "Cancel"));
 			switch (choise) {
 			// chose to return
@@ -193,14 +227,12 @@ public class BookingViewScreenController extends AbstractScreen implements State
 			// chose to cancel
 			case 2: {
 				if (!control.deleteBookingFromWaitingList(chosenBooking)) {
-					showErrorAlert(ScreenManager.getInstance().getStage(),
-							"We were unable to cancel your waiting list spot.\nPlease try again later.");
+					showErrorAlert("We were unable to cancel your waiting list spot.\nPlease try again later.");
 					return;
 				} else {
-					showInformationAlert(ScreenManager.getInstance().getStage(),
-							"Your waiting list booking to " + chosenBooking.getParkBooked().getParkName() + " Park for "
-									+ chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit()
-									+ " was cancelled successfully");
+					showInformationAlert("Your waiting list booking to " + chosenBooking.getParkBooked().getParkName()
+							+ " Park for " + chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit()
+							+ " was cancelled successfully");
 					futureTable.getItems().remove(chosenBooking);
 				}
 			}
@@ -284,9 +316,9 @@ public class BookingViewScreenController extends AbstractScreen implements State
 		backButton.setVisible(visible);
 	}
 
-	///////////////////////////////////////////////////////
-	/// JAVAFX, FXML, ABSTRACT SCREEN, STATEFUL METHODS ///
-	///////////////////////////////////////////////////////
+	////////////////////////////////////////////
+	/// ABSTRACT SCREEN AND STATEFUL METHODS ///
+	////////////////////////////////////////////
 
 	@Override
 	/**
@@ -347,7 +379,12 @@ public class BookingViewScreenController extends AbstractScreen implements State
 			TableRow<Booking> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
 				if (!row.isEmpty() && event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
-					showInformationAlert(ScreenManager.getInstance().getStage(), "Past bookings cannot be edited");
+					Booking clickedRowData = row.getItem();
+					if (clickedRowData.getStatus().equals("Cancelled")) {
+						showInformationAlert("Past bookings cannot be edited");
+					} else {
+						bookingClicked(clickedRowData);
+					}
 				}
 			});
 			return row;

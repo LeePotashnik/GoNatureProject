@@ -4,12 +4,12 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
+import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import clientSide.control.ReportsController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.StageSettings;
 import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.Park;
@@ -28,11 +28,11 @@ import javafx.util.Pair;
  * Controller for the Park Manager Report Screen.
  * This class is responsible for handling user interactions on the park manager's report screen.
  */
-public class ParkManagerReportScreenController extends AbstractScreen implements Stateful{
+public class ParkManagerReportScreenController extends AbstractScreen{
 	
 	private ReportsController control;//controller
 	private ParkManager parkManager;
-	private Park park;
+
 	
 	/// FXML AND JAVAFX COMPONENTS
     @FXML
@@ -70,21 +70,21 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
         String selectedYear = choiceBoxYear.getValue();
         // Validate that both month and year are selected
         if (selectedMonth == null || selectedYear == null) {
-            showErrorAlert(ScreenManager.getInstance().getStage(), "Please select both a month and a year before generating the report.");
+            showErrorAlert("Please select both a month and a year before generating the report.");
             return;
         }
         try {
-        	  if (!control.isReportDataAvailable(selectedMonth, selectedYear, this.park, "done")) {
-               	showErrorAlert(ScreenManager.getInstance().getStage(), "No data available for the selected time period.");                
+        	  if (!control.isReportDataAvailable(selectedMonth, selectedYear, parkManager.getParkObject(), "done")) {
+               	showErrorAlert("No data available for the selected time period.");                
                	return;
         	   }
-            Pair<Integer, Integer> visitorsData = control.generateTotalNumberOfVisitorsReport(selectedMonth, selectedYear, this.park);
-            boolean saveSuccess = control.saveTotalNumberOfVisitorsReport(selectedMonth, selectedYear, this.park);
+            Pair<Integer, Integer> visitorsData = control.generateTotalNumberOfVisitorsReport(selectedMonth, selectedYear, parkManager.getParkObject());
+            boolean saveSuccess = control.saveTotalNumberOfVisitorsReport(selectedMonth, selectedYear, parkManager.getParkObject());
             System.out.println(saveSuccess); 
-            ScreenManager.getInstance().showScreen("TotalNumberOfVisitorsReportController", "/clientSide/fxml/TotalNumberOfVisitorsReport.fxml",true, true, StageSettings.defaultSettings("Total number of visitors Report"), visitorsData);
+            ScreenManager.getInstance().showScreen("TotalNumberOfVisitorsReportController", "/clientSide/fxml/TotalNumberOfVisitorsReport.fxml",true, false, visitorsData);
         } catch (StatefulException | ScreenException e) {
             e.printStackTrace();
-            showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred while generating the report.");
+            showErrorAlert("An error occurred while generating the report.");
         }
         
     }
@@ -100,21 +100,21 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
         String selectedYear = choiceBoxYear.getValue();
     	// Validate that both month and year are selected
         if (selectedMonth == null || selectedYear == null) {
-            showErrorAlert(ScreenManager.getInstance().getStage(), "Please select both a month and a year before generating the report.");
+            showErrorAlert("Please select both a month and a year before generating the report.");
             return;
         }
         try {
-        	if (!control.isReportDataAvailable(selectedMonth, selectedYear, this.park, "done")) {
-               	showErrorAlert(ScreenManager.getInstance().getStage(), "No data available for the selected time period.");                
+        	if (!control.isReportDataAvailable(selectedMonth, selectedYear, parkManager.getParkObject(), "done")) {
+               	showErrorAlert("No data available for the selected time period.");                
                	return;
         	   }
-           	List<Pair<LocalDate, Integer>> usageData = control.generateUsageReport(selectedMonth, selectedYear, this.park);
-           	boolean saveSuccess = control.saveUsageReport(selectedMonth, selectedYear, this.park);
+           	List<Pair<LocalDate, Integer>> usageData = control.generateUsageReport(selectedMonth, selectedYear, parkManager.getParkObject());
+           	boolean saveSuccess = control.saveUsageReport(selectedMonth, selectedYear, parkManager.getParkObject());
             System.out.println(saveSuccess); 
-           	ScreenManager.getInstance().showScreen("UsageReportController", "/clientSide/fxml/UsageReport.fxml", true, true, StageSettings.defaultSettings("Total number of visitors Report"), usageData);
+           	ScreenManager.getInstance().showScreen("UsageReportController", "/clientSide/fxml/UsageReport.fxml", true, false, usageData);
         } catch (StatefulException | ScreenException e) {
            e.printStackTrace();
-           showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred while generating the report.");
+           showErrorAlert("An error occurred while generating the report.");
         }
     }
 
@@ -138,7 +138,11 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
 	 */
     @Override
 	public void initialize() {
-		// initializing the image component
+		parkManager=(ParkManager) GoNatureUsersController.getInstance().restoreUser();
+		GoNatureUsersController.getInstance().saveUser(parkManager);
+		parkName.getStyleClass().add("label-center");
+    	parkName.setText("Hello "+parkManager.getManages()+" manager!");
+    	// initializing the image component
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		List<String> months = Arrays.asList("01", "02", "03", "04", "05", "06","07", "08", "09", "10", "11", "12");
 		List<String> years=Arrays.asList("2021","2022","2023","2024");
@@ -158,16 +162,7 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
 	 * This method is called in order to set pre-info into the GUI components
 	 */
     @Override
-	public void loadBefore(Object information) {
-    	control = ReportsController.getInstance(); // Ensure control is initialized
-    	// in case the user is logged in
-    	if (information instanceof ParkManager) {
-    		parkManager = (ParkManager)information;
-    		park= parkManager.getParkObject();
-    		parkName.getStyleClass().add("label-center");
-        	parkName.setText("Hello "+parkManager.getManages()+" manager!");
-    	}
-    	
+	public void loadBefore(Object information) {	
     }
     
     /**
@@ -178,25 +173,6 @@ public class ParkManagerReportScreenController extends AbstractScreen implements
 		return "Park Manger Reports";
 		
 	}
-	/**
-	 * This method is called if this screen needs to save its current state for
-	 * later restoring
-	 */
-	@Override
-	public void saveState() {
-		control.saveParkManager(parkManager);
-		
-	}
-	/**
-	 * This method is called if this screen saved its past state, and now needs to
-	 * restore it
-	 */
-	@Override
-	public void restoreState() {
-		parkManager = control.restoreParkManager();
-		park = ParkController.getInstance().restorePark();
-		parkName.getStyleClass().add("label-center");
-    	parkName.setText("Hello "+parkManager.getManages()+" manager!");
-	}
+
 	
 }

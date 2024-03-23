@@ -57,7 +57,7 @@ public class CancellationReportController extends AbstractScreen {
     @FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(true,true);
+			ScreenManager.getInstance().goToPreviousScreen(true,false);
     	  } catch (ScreenException | StatefulException e) {
     	        e.printStackTrace();
     	  }
@@ -104,7 +104,7 @@ public class CancellationReportController extends AbstractScreen {
 	    List<Number> cancelledOrdersValues = new ArrayList<>();
 	    List<Number> noShowVisitorsValues = new ArrayList<>();
 	    aggregatedData.forEach((seriesName, dayCounts) -> {
-        if ("Client cancelled the reminder".equals(seriesName) || "Did not confirm".equals(seriesName)) {
+        if ("User Cancelled".equals(seriesName) || "Did not confirm".equals(seriesName)) {
             dayCounts.forEach((day, count) -> {
                 seriesCancelledOrders.getData().add(new XYChart.Data<>(day, count));
             });
@@ -120,7 +120,7 @@ public class CancellationReportController extends AbstractScreen {
 	        dataList.forEach(data -> {
 	            // Assuming data.getYValue() returns the cancellation amount
 	            Number amount = data.getYValue();
-	            if ("Client cancelled the reminder".equals(reason) || "Did not confirm".equals(reason)) {
+	            if ("User Cancelled".equals(reason) || "Did not confirm".equals(reason)) {
 	                cancelledOrdersValues.add(amount);
 	            } else if ("Did not arrive".equals(reason)) {
 	                noShowVisitorsValues.add(amount);
@@ -194,7 +194,7 @@ public class CancellationReportController extends AbstractScreen {
 	        populateChart(cancellationData);
 	    }
 	 else {
-        showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred. Cancellation data is not available.");
+        showErrorAlert("An error occurred. Cancellation data is not available.");
 	 }
 	}
 

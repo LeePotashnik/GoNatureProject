@@ -49,7 +49,7 @@ public class VisitReportController extends AbstractScreen {
     @FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(true,true);
+			ScreenManager.getInstance().goToPreviousScreen(true,false);
     	  } catch (ScreenException | StatefulException e) {
     	        e.printStackTrace();
     	  }
@@ -121,7 +121,7 @@ public class VisitReportController extends AbstractScreen {
 	        populateChart(chartData);
 	    }
 	 else {
-        showErrorAlert(ScreenManager.getInstance().getStage(), "An error occurred. Occupancy data is not available.");
+        showErrorAlert("An error occurred. Occupancy data is not available.");
 	 }
 	}
 		

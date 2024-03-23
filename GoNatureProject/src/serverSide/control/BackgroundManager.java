@@ -49,7 +49,7 @@ public class BackgroundManager {
 		scheduler = Executors.newScheduledThreadPool(1);
 		this.database = database;
 	}
-	
+
 	//////////////////////////////////
 	/// START BACKGROUND OPERATION ///
 	//////////////////////////////////
@@ -68,7 +68,7 @@ public class BackgroundManager {
 		} else {
 			delay = 0;
 		}
-		
+
 		// executing the scheduler
 		scheduler.scheduleAtFixedRate(() -> {
 			// executing the waiting lists background updates
@@ -244,23 +244,23 @@ public class BackgroundManager {
 		// executing queries
 		for (Park park : parks) {
 			// creating the select check for this specific park
-			Communication checkWaitingBookings = new Communication(CommunicationType.SELF);
+			Communication checkBookings = new Communication(CommunicationType.SELF);
 			try {
-				checkWaitingBookings.setQueryType(QueryType.SELECT);
+				checkBookings.setQueryType(QueryType.SELECT);
 			} catch (CommunicationException e) {
 				e.printStackTrace();
 			}
-			String tableName = parkControl.nameOfTable(park) + checkWaitingBookings.activeBookings;
-			checkWaitingBookings.setTables(Arrays.asList(tableName));
-			checkWaitingBookings.setSelectColumns(Arrays.asList("*"));
-			checkWaitingBookings.setWhereConditions(Arrays.asList("dayOfVisit"), Arrays.asList("<="),
+			String tableName = parkControl.nameOfTable(park) + checkBookings.activeBookings;
+			checkBookings.setTables(Arrays.asList(tableName));
+			checkBookings.setSelectColumns(Arrays.asList("*"));
+			checkBookings.setWhereConditions(Arrays.asList("dayOfVisit"), Arrays.asList("<="),
 					Arrays.asList(LocalDate.now()));
 
 			// getting the result from the database
 			// all bookings in the active bookings table of this park
 			// that their date has passed AND their hour has passed also, and they did not
 			// arrive to the park
-			ArrayList<Object[]> results = database.executeSelectQuery(checkWaitingBookings);
+			ArrayList<Object[]> results = database.executeSelectQuery(checkBookings);
 			ArrayList<String> idNumbers = new ArrayList<>();
 			ArrayList<Booking> cancelledBookings = new ArrayList<>();
 			LocalDate today = LocalDate.now();
@@ -275,7 +275,7 @@ public class BackgroundManager {
 				if ((visitDate.isEqual(today) && isTimeBeforeNow && areTimesNull) || visitDate.isBefore(today)) {
 					String idNumber = (String) row[0];
 					idNumbers.add(idNumber);
-					cancelledBookings.add(new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
+					Booking toBeDeleted = new Booking((String) row[0], ((Date) row[1]).toLocalDate(),
 							((Time) row[2]).toLocalTime(), ((Date) row[3]).toLocalDate(),
 							((String) row[4]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL,
 							(Integer) row[5], (String) row[6], (String) row[7], (String) row[8], (String) row[9],
@@ -284,7 +284,18 @@ public class BackgroundManager {
 							((Time) row[14]) == null ? null : ((Time) row[14]).toLocalTime(),
 							((Time) row[15]) == null ? null : ((Time) row[15]).toLocalTime(),
 							(Integer) row[16] == 0 ? false : true,
-							((Time) row[17]) == null ? null : ((Time) row[17]).toLocalTime(), park));
+							((Time) row[17]) == null ? null : ((Time) row[17]).toLocalTime(), park);
+					cancelledBookings.add(toBeDeleted);
+
+					// sending cancellation notification
+					notifications.sendCancellationEmailNotification(Arrays.asList(toBeDeleted.getEmailAddress(),
+							toBeDeleted.getPhoneNumber(), toBeDeleted.getParkBooked().getParkCity() + " Park",
+							toBeDeleted.getDayOfVisit(), toBeDeleted.getTimeOfVisit(),
+							toBeDeleted.getFirstName() + " " + toBeDeleted.getLastName(),
+							toBeDeleted.getParkBooked().getParkCity() + ", "
+									+ toBeDeleted.getParkBooked().getParkState(),
+							toBeDeleted.getNumberOfVisitors(), toBeDeleted.getFinalPrice(), toBeDeleted.isPaid()),
+							"Visitor did not arrive to the park.");
 				}
 			}
 
@@ -583,7 +594,8 @@ public class BackgroundManager {
 								transfer.getParkBooked().getParkCity() + " Park", transfer.getDayOfVisit(),
 								transfer.getTimeOfVisit(), transfer.getFirstName() + " " + transfer.getLastName(),
 								transfer.getParkBooked().getParkCity() + ", " + transfer.getParkBooked().getParkState(),
-								transfer.getNumberOfVisitors(), transfer.getFinalPrice(), transfer.isPaid()));
+								transfer.getNumberOfVisitors(), transfer.getFinalPrice(), transfer.isPaid()),
+						"Visitor did not confirm the reminder notification.");
 
 				// adding the id to the list, we be used as IN part of the delete query next
 				bookingIDs.add(transfer.getBookingId());

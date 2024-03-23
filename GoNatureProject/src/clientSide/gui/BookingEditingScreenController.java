@@ -10,12 +10,10 @@ import clientSide.control.ParkController;
 import common.communication.Communication;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.StageSettings;
 import common.controllers.StatefulException;
 import entities.Booking;
 import entities.Booking.VisitType;
 import entities.Park;
-import entities.ParkVisitor;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -47,10 +45,9 @@ public class BookingEditingScreenController extends BookingScreenController {
 	private ObservableList<Park> parksList; // list of the parks
 	private ObservableList<String> parksStrings; // list of the parks as strings for the parks combox box
 	private ObservableList<LocalTime> hours; // list of booking hours
-
-	// the user enters the screen with a visitor instance or only with an id number
-	private ParkVisitor visitor;
 	private boolean isGroupReservation; // determines if this is a regular or guided group
+
+	private static final String digitsOnly = "\\d+";
 
 	// booking objects and data
 	private Booking booking;
@@ -97,7 +94,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 	 * @param event
 	 */
 	void cancelReservation(ActionEvent event) {
-		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+		int choise = showConfirmationAlert(
 				"You are about to cancel your " + booking.getParkBooked().getParkName() + "Park reservation for "
 						+ booking.getDayOfVisit() + ", " + booking.getTimeOfVisit() + ".\nThis action can't be undone.",
 				Arrays.asList("Don't Cancel", "Continue and Cancel"));
@@ -118,9 +115,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 					// showing the cancellation screen
 					try {
 						ScreenManager.getInstance().showScreen("CancellationScreenController",
-								"/clientSide/fxml/CancellationScreen.fxml", true, false,
-								StageSettings.defaultSettings("Cancellation"),
-								new Pair<Booking, ParkVisitor>(booking, visitor));
+								"/clientSide/fxml/CancellationScreen.fxml", true, false, booking);
 					} catch (StatefulException | ScreenException e) {
 						e.printStackTrace();
 					}
@@ -140,8 +135,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 	void availabilityClicked(ActionEvent event) {
 		// first checking if the user changed any detail before sending a query request
 		if (!checkIfChanged()) {
-			showInformationAlert(ScreenManager.getInstance().getStage(),
-					"You need to change one/more of the details in order to update your booking");
+			showInformationAlert("You need to change one/more of the details in order to update your booking");
 		} else { // if changed any of the details
 			if (!validateDetails()) { // if details are not valid
 				return;
@@ -166,32 +160,18 @@ public class BookingEditingScreenController extends BookingScreenController {
 					Platform.runLater(() -> {
 						setVisible(true);
 						if (!isAvailable.get()) { // if the entered date and time are not available
-							showInformationAlert(ScreenManager.getInstance().getStage(),
-									"Unfortunately, " + parkDesired.getParkName() + " Park is not available for "
-											+ clone.getNumberOfVisitors() + " visitors on " + clone.getDayOfVisit() + ", "
-											+ clone.getTimeOfVisit());
+							showInformationAlert("Unfortunately, " + parkDesired.getParkName()
+									+ " Park is not available for " + clone.getNumberOfVisitors() + " visitors on "
+									+ clone.getDayOfVisit() + ", " + clone.getTimeOfVisit());
 						}
 
 						else { // if the date and time are available
-							showInformationAlert(ScreenManager.getInstance().getStage(),
+							showInformationAlert(
 									parkDesired.getParkName() + " Park is available for " + clone.getNumberOfVisitors()
-											+ " visitors on " + clone.getDayOfVisit() + ", " + clone.getTimeOfVisit()
-											+ "\nAvailability can change quickly due to high volume of orders");
+											+ " visitors on " + clone.getDayOfVisit() + ", " + clone.getTimeOfVisit());
 						}
 					});
 				}).start();
-
-//				if (control.checkParkAvailabilityForExistingBooking(booking, clone)) {
-//					showInformationAlert(ScreenManager.getInstance().getStage(),
-//							parkDesired.getParkName() + " Park is available for " + clone.getNumberOfVisitors()
-//									+ " visitors on " + clone.getDayOfVisit() + ", " + clone.getTimeOfVisit()
-//									+ "\nAvailability can change quickly due to high volume of orders");
-//				} else {
-//					showInformationAlert(ScreenManager.getInstance().getStage(),
-//							"Unfortunately, " + parkDesired.getParkName() + " Park is not available for "
-//									+ clone.getNumberOfVisitors() + " visitors on " + clone.getDayOfVisit() + ", "
-//									+ clone.getTimeOfVisit());
-//				}
 			}
 		}
 	}
@@ -205,13 +185,12 @@ public class BookingEditingScreenController extends BookingScreenController {
 	 */
 	void updateReservation(ActionEvent event) {
 		if (!checkIfChanged()) {
-			showInformationAlert(ScreenManager.getInstance().getStage(),
-					"You need to change one/more of the details in order to check park availability");
+			showInformationAlert("You need to change one/more of the details in order to check park availability");
 			return;
 		}
 
 		// making sure the user wants to replace his old booking with the new one
-		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+		int choise = showConfirmationAlert(
 				"You are about to update your " + booking.getParkBooked().getParkName() + " Park reservation for "
 						+ booking.getDayOfVisit() + ", " + booking.getTimeOfVisit() + ".\nThis action can't be undone.",
 				Arrays.asList("Don't Update", "Ok, Continue"));
@@ -444,7 +423,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 		}
 
 		// checking the visitors number
-		if (visitorsTxt.getText().isEmpty() || !visitorsTxt.getText().matches("\\d+")) {
+		if (visitorsTxt.getText().isEmpty() || !visitorsTxt.getText().matches(digitsOnly)) {
 			visitorsTxt.setStyle(setFieldToError());
 			error += "• enter a digit-only number of visitors\n";
 			valid = false;
@@ -475,7 +454,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 		}
 
 		if (!valid)
-			showErrorAlert(ScreenManager.getInstance().getStage(), error);
+			showErrorAlert(error);
 		return valid;
 	}
 
@@ -528,8 +507,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 		// the visitor's spot
 		boolean result = control.updateBooking(booking, newBooking);
 		if (!result) {
-			showErrorAlert(ScreenManager.getInstance().getStage(),
-					"There was an issue with updating your reservation. Please try again later");
+			showErrorAlert("There was an issue with updating your reservation. Please try again later");
 			return;
 		}
 
@@ -552,7 +530,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 			payMessage += "\nYour old booking was paid. This payment will be refunded.";
 		}
 
-		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(), payMessage,
+		int choise = showConfirmationAlert(payMessage,
 				Arrays.asList("Pay Now", "Pay Upon Arrival", "Cancel Reservation"));
 
 		switch (choise) {
@@ -560,16 +538,11 @@ public class BookingEditingScreenController extends BookingScreenController {
 		case 1: {
 			newBooking.setPaid(true);
 			newBooking.setFinalPrice(isGroupReservation ? preOrderPrice : discountPrice);
-			// updating the payment columns in the database
-			///////////////////////////////////////////////////
-			///// maybe transfer it to the payment screen /////
-			///////////////////////////////////////////////////
 			control.updateBookingPayment(newBooking);
 			// showing the payment screen
 			try {
-				ScreenManager.getInstance().showScreen("LoadingScreenController", "/clientSide/fxml/LoadingScreen.fxml",
-						true, false, StageSettings.defaultSettings("Payment"),
-						new Pair<Booking, ParkVisitor>(newBooking, visitor));
+				ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
+						"/clientSide/fxml/PaymentSystemScreen.fxml", true, false, newBooking);
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
@@ -585,9 +558,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 			// showing the confirmation screen
 			try {
 				ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-						"/clientSide/fxml/ConfirmationScreen.fxml", true, false,
-						StageSettings.defaultSettings("Confirmation"),
-						new Pair<Booking, ParkVisitor>(newBooking, visitor));
+						"/clientSide/fxml/ConfirmationScreen.fxml", true, false, newBooking);
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
@@ -614,7 +585,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 	 */
 	private void dateIsNotAvailable(Booking newBooking) {
 		// creating a pop up message for the user to choose what to do next
-		int choise = showConfirmationAlert(ScreenManager.getInstance().getStage(),
+		int choise = showConfirmationAlert(
 				"We care for your experience in " + newBooking.getParkBooked().getParkName()
 						+ " Park, so we limit the volume of visitors in the park."
 						+ "\nUnfortunately, the date and time you chose are not available at this moment.",
@@ -630,9 +601,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 		case 2: {
 			try {
 				ScreenManager.getInstance().showScreen("RescheduleScreenController",
-						"/clientSide/fxml/RescheduleScreen.fxml", true, true,
-						StageSettings.defaultSettings("Reschedule"),
-						new Pair<Booking, ParkVisitor>(newBooking, visitor));
+						"/clientSide/fxml/RescheduleScreen.fxml", true, true, newBooking);
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
@@ -644,8 +613,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 			// showing the waiting list screen
 			try {
 				ScreenManager.getInstance().showScreen("WaitingListScreenController",
-						"/clientSide/fxml/WaitingListScreen.fxml", true, true,
-						StageSettings.defaultSettings("Waiting List"), newBooking);
+						"/clientSide/fxml/WaitingListScreen.fxml", true, true, newBooking);
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
@@ -722,11 +690,8 @@ public class BookingEditingScreenController extends BookingScreenController {
 	 * the GUI components
 	 */
 	public void loadBefore(Object information) {
-		if (information instanceof Pair) {
-			@SuppressWarnings("unchecked")
-			Pair<Booking, ParkVisitor> pair = (Pair<Booking, ParkVisitor>) information;
-			booking = pair.getKey();
-			visitor = pair.getValue();
+		if (information instanceof Booking) {
+			booking = (Booking) information;
 			// setting all the info into the components of the screen
 			bookingLbl.setText("Booking ID: " + booking.getBookingId());
 			parkComboBox.getSelectionModel().select(parksList.indexOf(getParkFromList(booking.getParkBooked())));

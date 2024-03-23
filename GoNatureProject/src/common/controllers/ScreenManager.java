@@ -12,6 +12,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -69,7 +70,6 @@ public class ScreenManager {
 	 * @param saveState    true if the current screen needs to save its current
 	 *                     state, false otherwise. The screen in this case has to
 	 *                     implement Stateful.
-	 * @param settings     the settings to be implemented on the stage
 	 * @param information  an object that contains information for the screen,
 	 *                     before its load
 	 * @throws StatefulException if the saveState flag is true while the current
@@ -77,7 +77,7 @@ public class ScreenManager {
 	 * @throws ScreenException   if the loading of the FXML file failed
 	 */
 	public void showScreen(String screenName, String fxmlResource, boolean showOnce, boolean saveState,
-			StageSettings settings, Object information) throws StatefulException, ScreenException {
+			Object information) throws StatefulException, ScreenException {
 		if (!isActive) {
 			isActive = true;
 		}
@@ -119,7 +119,7 @@ public class ScreenManager {
 		if (information != null)
 			controller.loadBefore(information);
 
-		addRootAndStart(root, controller, settings);
+		addRootAndStart(root, controller);
 	}
 
 	/**
@@ -182,29 +182,25 @@ public class ScreenManager {
 			}
 		}
 
-		addRootAndStart(root, controller,
-				StageSettings.defaultSettings("GoNature System - " + controller.getScreenTitle()));
+		addRootAndStart(root, controller);
 	}
 
 	/**
-	 * This method gets a root, a controller and stage settings and shows the root
-	 * on the screen
+	 * This method gets a root, a controller and shows the root on the screen
 	 * 
-	 * @param root         the fxml root
-	 * @param controller   the screen's controller
-	 * @param settings     the stage settings
-	 * @param restoreState indicates whether the state of the previous screen needs
-	 *                     to be restored, or the previous screen should be loaded
+	 * @param root       the fxml root
+	 * @param controller the screen's controller
 	 * @throws StatefulException if the restoreState flag is true while the screen
 	 *                           does not implement Stateful
 	 */
-	private void addRootAndStart(Parent root, AbstractScreen controller, StageSettings settings)
-			throws StatefulException {
+	private void addRootAndStart(Parent root, AbstractScreen controller) throws StatefulException {
 		Scene scene = new Scene(root);
 		scene.getStylesheets().add(getClass().getResource("/clientSide/fxml/Styles.css").toExternalForm()); // setting
 																											// styles
 		stage.setScene(scene); // setting the scene
-		settings.implementSettings(settings, stage); // implementing the settings of the stage
+		stage.setTitle("GoNature - " + controller.getScreenTitle());
+		stage.setResizable(false);
+		stage.getIcons().add(new Image("/GoNatureSquareLogo.png"));
 		stage.setOnCloseRequest(controller::handleCloseRequest); // handleCloseRequest method of the
 																	// controller will be called
 		root.requestFocus(); // setting the focus on the root, not on the GUI components
@@ -249,7 +245,7 @@ public class ScreenManager {
 			}
 		});
 	}
-	
+
 	/**
 	 * @return if there's a stage active right now
 	 */

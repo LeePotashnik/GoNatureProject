@@ -41,7 +41,7 @@ public class TotalNumberOfVisitorsReportController extends AbstractScreen {
     @FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(true,true);
+			ScreenManager.getInstance().goToPreviousScreen(true,false);
     	  } catch (ScreenException | StatefulException e) {
     	        e.printStackTrace();
     	  }

@@ -32,9 +32,7 @@ import javafx.util.Pair;
 public class ReportsController {
 	
 	private static ReportsController instance;
-	// for saving and restoring purposes of the screen
-	private ParkManager savedParkManager;
-	private DepartmentManager savedDepartmentManager;
+
 
 	/**
 	 * An empty and private controller, for the singleton design pattern
@@ -503,7 +501,7 @@ public class ReportsController {
 
             String dayName = dayOfVisit.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
-            if ("Client cancelled the reminder".equals(cancellationReason) || "Did not confirm".equals(cancellationReason)) {
+            if ("User Cancelled".equals(cancellationReason) || "Did not confirm".equals(cancellationReason)) {
                 cancelledOrdersStats.get(dayName).add(numberOfVisitors);
             } else if ("Did not arrive".equals(cancellationReason)) {
                 noShowVisitorsStats.get(dayName).add(numberOfVisitors);
@@ -519,39 +517,13 @@ public class ReportsController {
                 .collect(Collectors.toList());
 
         Map<String, List<XYChart.Data<String, Number>>> chartData = new HashMap<>();
-        chartData.put("Client cancelled the reminder", cancelledOrdersAvgData);
+        chartData.put("User Cancelled", cancelledOrdersAvgData);
         chartData.put("Did not arrive", noShowVisitorsAvgData);
 
         return chartData;
  
     }
   
-    
-    /**
-	 * @param savedParkManager the savedParkManager to be saved
-	 */
-    public void saveParkManager(ParkManager savedParkManager) {
-    	this.savedParkManager = savedParkManager;
-    }
-    
-    /**
-	 * @return the saved park manager
-	 */
-    public ParkManager restoreParkManager() {
-    	return savedParkManager;
-    }
-    /**
-	 * @param saveDepartmentManager the savedDepartmentManager to be saved
-	 */
-    public void saveDepartmentManager(DepartmentManager savedDepartmentManager) {
-    	this.savedDepartmentManager = savedDepartmentManager;
-    }
-    
-    /**
-	 * @return the saved department manager
-	 */
-    public DepartmentManager restoreDepartmentManager() {
-    	return savedDepartmentManager;
-    }
+
 
 }
