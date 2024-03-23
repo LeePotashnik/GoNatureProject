@@ -48,7 +48,7 @@ public class RegistrationController {
 			request.setQueryType(QueryType.SELECT);
 			request.setTables(Arrays.asList("system_users"));
 			request.setSelectColumns(Arrays.asList("firstName", "lastName", "emailAddress", "phoneNumber","userName", "password"));
-			request.setWhereConditions(Arrays.asList("userId"), Arrays.asList("="), Arrays.asList(id));
+			request.setWhereConditions(Arrays.asList("userId","type"), Arrays.asList("=","AND","="), Arrays.asList(id,"User"));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
