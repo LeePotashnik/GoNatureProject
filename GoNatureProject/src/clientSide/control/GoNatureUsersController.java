@@ -113,14 +113,13 @@ public class GoNatureUsersController {
 	        } else if (user instanceof Representative) {
 	            // Perform logout logic specific to Representative
 	            return checkLogOut("representative", "representativeId");
-	        } else if (user instanceof ParkVisitor) {
+	        } else  { // Default logout logic if none of the above matches - ParkVisitor
 	            // Perform logout logic specific to GroupGuide
 	            ParkVisitor visitor = (ParkVisitor) user;
 	            if (visitor.getVisitorType() == VisitorType.GROUPGUIDE)
 	            	return checkLogOut("group_guide", "groupGuideId");
-	        } else {
-	            // Default logout logic if none of the above matches
-	            return checkLogOut("traveller", "travellerId");
+	            else 
+	            	return checkLogOut("traveller", "travellerId");
 	        }
 	    }
 	    return false; // Return false if user is null or logout fails

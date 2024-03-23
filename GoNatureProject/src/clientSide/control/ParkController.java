@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
@@ -192,86 +193,89 @@ public class ParkController {
         }              
 		return null; //If the visitor does not exist, null will be returned
     }
-
+	 
 	/**
 	 * A 'SELECT' SQL query is generated to access the relevant table.
      * This indicates if there is a corresponding booking in the database.
 	 * @param table 	The table to query for a booking.
 	 * @param ID 		The ID of the booker.
-
+	 * @param field		The specific id field in table
 	 * @return
 	 * 		It returns a Booking instance if exists, otherwise return null.
 	 */
-	public Booking checkIfBookingExists(String table,String field, String ID) {	
-    	Communication request = new Communication(CommunicationType.QUERY_REQUEST);
+	public ArrayList<Booking> checkIfBookingExists(String table,String field, String ID) {	
+    	Communication requestBookings = new Communication(CommunicationType.QUERY_REQUEST);
     	try {
-			request.setQueryType(QueryType.SELECT);
-	    	request.setTables(Arrays.asList(table));
-	    	request.setSelectColumns(Arrays.asList("*")); //returns all the data according to the inserted ID
-	    	request.setWhereConditions(Arrays.asList(field), Arrays.asList("="),Arrays.asList(ID));
+    		requestBookings.setQueryType(QueryType.SELECT);
+    		requestBookings.setTables(Arrays.asList(table));
+    		requestBookings.setSelectColumns(Arrays.asList("*")); //returns all the data according to the inserted ID
+    		requestBookings.setWhereConditions(Arrays.asList(field), Arrays.asList("="),Arrays.asList(ID));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-    	GoNatureClientUI.client.accept(request);
-    	ArrayList<Object[]> result = request.getResultList();
+    	GoNatureClientUI.client.accept(requestBookings);
+    	ArrayList<Object[]> result = requestBookings.getResultList();
         if (!result.isEmpty()) {
-        	Object[] row = result.get(0); // Get the first and only row 
-        	//String paid = (row[12] == null) ? row[12].toString().equals("1") : null;
+      		ArrayList<Booking> bookings = new ArrayList<>();
+      		for (Object[] row : requestBookings.getResultList()) {
+        	// Get row 
         	// Adjust the instantiation to match the Booking constructor
-        	if (row.length > 14 ) {
-        		//The reservation exists in the active bookings table of the park
-            	LocalTime entryParkTime = (row[14] != null) ? LocalTime.parse(row[14].toString()) : null;
-            	LocalTime exitParkTime = (row[15] != null) ? LocalTime.parse(row[15].toString()) : null;
-            	LocalTime reminderArrivalTime = (row[17] != null) ? LocalTime.parse(row[17].toString()) : null;
-        		
-	            Booking booking = new Booking(
-	                    row[0].toString(), // bookingId
-	                    LocalDate.parse(row[1].toString()), // dayOfVisit
-	                    LocalTime.parse(row[2].toString()), // timeOfVisit
-	                    LocalDate.parse(row[3].toString()), // dayOfBooking
-	                    row[4].toString().equals("individual") ? VisitType.INDIVIDUAL : VisitType.GROUP, // visitType
-	                    Integer.parseInt(row[5].toString()), // numberOfVisitors
-	                    row[6].toString(), // idNumber
-	                    row[7].toString(), // firstName
-	                    row[8].toString(), // lastName
-	                    row[9].toString(), // emailAddress
-	                    row[10].toString(), // phoneNumber
-	                    Integer.parseInt(row[11].toString()), // finalPrice
-	                    row[16] != null && row[12].toString().equals("1"), // paid ---------
-	                    row[16] != null && row[13].toString().equals("1"), // confirmed ---------
-	                    entryParkTime, // entryParkTime
-	                    exitParkTime, // exitParkTime
-	                    row[16] != null && row[16].toString().equals("1"), // isReceivedReminder ---------
-	                    reminderArrivalTime, // reminderArrivalTime
-	                    park
-	                );
-	                return booking;
-        	} else {
-        		//The reservation exists in the done bookings table of the park
-        		Booking booking = new Booking(
-                        row[0].toString(), // bookingId
-                        LocalDate.parse(row[1].toString()), // dayOfVisit
-                        LocalTime.parse(row[2].toString()), // timeOfVisit
-                        LocalDate.parse(row[3].toString()), // dayOfBooking
-                        row[4].toString().equals("individual") ? VisitType.INDIVIDUAL : VisitType.GROUP, // visitType
-                        Integer.parseInt(row[5].toString()), // numberOfVisitors
-                        row[6].toString(), // idNumber
-                        row[7].toString(), // firstName
-                        row[8].toString(), // lastName
-                        row[9].toString(), // emailAddress
-                        row[10].toString(), // phoneNumber
-                        Integer.parseInt(row[11].toString()), // finalPrice
-                        true, // paid 
-                        true, // confirmed 
-                        LocalTime.parse(row[12].toString()), // entryParkTime
-                        LocalTime.parse(row[13].toString()), // exitParkTime
-                        true, // isReceivedReminder 
-                        LocalTime.parse(row[12].toString()), // reminderArrivalTime - notRelevant
-                        park
-                    );
-                    return booking;
-        	}
-        }       
+	        	if (row.length > 14 ) {
+	        		//The reservation exists in the active bookings table of the park
+	            	LocalTime entryParkTime = (row[14] != null) ? LocalTime.parse(row[14].toString()) : null;
+	            	LocalTime exitParkTime = (row[15] != null) ? LocalTime.parse(row[15].toString()) : null;
+	            	LocalTime reminderArrivalTime = (row[17] != null) ? LocalTime.parse(row[17].toString()) : null;
+	        		
+		            Booking booking = new Booking(
+		                    row[0].toString(), // bookingId
+		                    LocalDate.parse(row[1].toString()), // dayOfVisit
+		                    LocalTime.parse(row[2].toString()), // timeOfVisit
+		                    LocalDate.parse(row[3].toString()), // dayOfBooking
+		                    row[4].toString().equals("individual") ? VisitType.INDIVIDUAL : VisitType.GROUP, // visitType
+		                    Integer.parseInt(row[5].toString()), // numberOfVisitors
+		                    row[6].toString(), // idNumber
+		                    row[7].toString(), // firstName
+		                    row[8].toString(), // lastName
+		                    row[9].toString(), // emailAddress
+		                    row[10].toString(), // phoneNumber
+		                    Integer.parseInt(row[11].toString()), // finalPrice
+		                    row[16] != null && row[12].toString().equals("1"), // paid ---------
+		                    row[16] != null && row[13].toString().equals("1"), // confirmed ---------
+		                    entryParkTime, // entryParkTime
+		                    exitParkTime, // exitParkTime
+		                    row[16] != null && row[16].toString().equals("1"), // isReceivedReminder ---------
+		                    reminderArrivalTime, // reminderArrivalTime
+		                    park
+		                );
+		            bookings.add(booking); 
+	        	} else {
+	        		//The reservation exists in the done bookings table of the park
+	        		Booking booking = new Booking(
+	                        row[0].toString(), // bookingId
+	                        LocalDate.parse(row[1].toString()), // dayOfVisit
+	                        LocalTime.parse(row[2].toString()), // timeOfVisit
+	                        LocalDate.parse(row[3].toString()), // dayOfBooking
+	                        row[4].toString().equals("individual") ? VisitType.INDIVIDUAL : VisitType.GROUP, // visitType
+	                        Integer.parseInt(row[5].toString()), // numberOfVisitors
+	                        row[6].toString(), // idNumber
+	                        row[7].toString(), // firstName
+	                        row[8].toString(), // lastName
+	                        row[9].toString(), // emailAddress
+	                        row[10].toString(), // phoneNumber
+	                        Integer.parseInt(row[11].toString()), // finalPrice
+	                        true, // paid 
+	                        true, // confirmed 
+	                        LocalTime.parse(row[12].toString()), // entryParkTime
+	                        LocalTime.parse(row[13].toString()), // exitParkTime
+	                        true, // isReceivedReminder 
+	                        LocalTime.parse(row[12].toString()), // reminderArrivalTime - notRelevant
+	                        park
+	                    );
+	        		bookings.add(booking);
+	        	}
+	        	return bookings;
+      		}
+        }
 		return null; //If the booking does not exist, null will be returned
     }
 	
@@ -429,11 +433,15 @@ public class ParkController {
      *  	It returns a boolean value indicating whether the update succeeded (true) or not(false).
      */
     public boolean updateTimeInPark(String park, String timeField, String ID) {
+        // Define a formatter that formats the time as hour and minute
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        // Format the current time using the formatter
+        String formattedTime = LocalTime.now().format(formatter);
     	Communication request = new Communication(CommunicationType.QUERY_REQUEST);
     	try {
 			request.setQueryType(QueryType.UPDATE);
 	    	request.setTables(Arrays.asList(park));
-	    	request.setColumnsAndValues(Arrays.asList(timeField), Arrays.asList(LocalTime.now()));
+	    	request.setColumnsAndValues(Arrays.asList(timeField), Arrays.asList(formattedTime));
 	    	request.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="),Arrays.asList(ID));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
@@ -546,6 +554,7 @@ public class ParkController {
 	 */
 	public boolean insertBookingToTable(Booking newBooking, String relevantTable, String type) {
 		// creating the request for the new booking insert
+		
 		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			insertRequest.setQueryType(QueryType.INSERT);
@@ -597,4 +606,5 @@ public class ParkController {
 		// getting the result from the database
 		return insertRequest.getQueryResult();
 	}
+	
 }

@@ -2,19 +2,15 @@ package clientSide.gui;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 
-import clientSide.control.BookingController;
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
-import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import entities.ParkEmployee;
-import entities.Park;
 import entities.Booking;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -26,7 +22,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.util.Pair;
 
 /**
  * Controls the functionality related to managing park entries and exits from the perspective of a park employee.
@@ -93,6 +88,8 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
             showErrorAlert("No existing reservation found for the provided booking ID.");
             return;
         }
+        System.out.println("HERE5: "+ booking.getParkBooked().getParkName());
+
         ScreenManager.getInstance().showScreen("ConfirmationScreenController",
 				"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
     }
@@ -114,7 +111,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
 		String parkTable = parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_active_booking";
 		Booking booking = null;
 		
-		booking = parkControl.checkIfBookingExists(parkTable,"bookingId",bookingId);
+		booking = parkControl.checkIfBookingExists(parkTable,"bookingId",bookingId).get(0);
 		if (booking == null) {
 			//booking ID does not exist in the database
 			showErrorAlert("No reservation exists for the given bookingID in this park.");
@@ -151,6 +148,8 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
 		if(parkControl.updateCurrentCapacity(parkEmployee.getWorkingIn().getParkName(),updateCapacity))//updates park current capacity
 			System.out.println("Park capacity updated");
 		if (!booking.isPaid()) {//needs to update DB: "paid" ?
+			if(parkControl.payForBooking(parkTable)) //
+				System.out.println("Payment successful.");
 			int decision = showConfirmationAlert("Please charge the customer: " + booking.getFinalPrice(),
 					Arrays.asList("Cash", "CreditCard"));
 			if (decision == 2) {// if the user clicked on "Credit Card" he will redirect to pay screen and then to confirmation screen
@@ -169,8 +168,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
 					e1.printStackTrace();
 				}
 			} 
-			if(parkControl.payForBooking(parkTable)) //
-				System.out.println("Payment successful.");
+			
 		}
     } 
 
@@ -197,7 +195,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
 		Booking booking = null;
 		
 		try {
-			booking = parkControl.checkIfBookingExists(parkTable,"bookingId",bookingId);
+			booking = parkControl.checkIfBookingExists(parkTable,"bookingId",bookingId).get(0);
 		} catch (NullPointerException e) {
 			//booking ID is not exists in the database
 			showErrorAlert("No reservation exists for the given bookingID in this park.");
@@ -248,10 +246,13 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
         	parkControl.nameOfTable(parkEmployee.getWorkingIn()) + "_park_done_booking",
         };
         for (String table : tables) {
-            Booking booking = parkControl.checkIfBookingExists(table,"bookingId",bookingId);
-            if (booking != null)
-            	return booking;
-        }
+        	try {
+        		Booking booking = parkControl.checkIfBookingExists(table,"bookingId",bookingId).get(0);
+        		return booking;
+        	} catch (NullPointerException e) {
+        		System.out.println("not exist in " + table); 
+    		}
+        }        
         return null;
     }
 
@@ -263,7 +264,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
     @FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(false, true);
+			ScreenManager.getInstance().goToPreviousScreen(false, false);
 		} catch (ScreenException | StatefulException e) {
 			e.printStackTrace();
 		}
@@ -305,22 +306,31 @@ public class ParkEntryManagementScreenController extends AbstractScreen{
 	 */
 	@Override
 	public void initialize() {
-		this.parkEmployee = (ParkEmployee) userControl.restoreUser();
-		this.titleLbl.setText(parkEmployee.getWorkingIn().getParkName());
+	    // Restore the park employee's user session.
+	    this.parkEmployee = (ParkEmployee) userControl.restoreUser();
+
+	    // Update the title label with the park name and emphasize it.
+	    this.titleLbl.setText(parkEmployee.getWorkingIn().getParkName());
 	    this.titleLbl.underlineProperty();
-		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
-		exitTimeBTN.setStyle("-fx-alignment: center-right;");
-		entryTimeBTN.setStyle("-fx-alignment: center-right;");
-		titleLbl.setStyle("-fx-alignment: center-right;");
-		visitorsLbl.setStyle("-fx-alignment: center-right;");
-		invoiceButton.setStyle("-fx-alignment: center-right;");
-		bookingIDLbl.setStyle("-fx-alignment: center-right;");
-		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
-		backImage.setFitHeight(30);
-		backImage.setFitWidth(30);
-		backImage.setPreserveRatio(true);
-		backButton.setGraphic(backImage);
-		backButton.setPadding(new Insets(1, 1, 1, 1));	
+
+	    // Load and display the GoNature logo.
+	    goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+
+	    // Apply styling and alignment to buttons and labels for consistency.
+	    exitTimeBTN.setStyle("-fx-alignment: center-right;");
+	    entryTimeBTN.setStyle("-fx-alignment: center-right;");
+	    titleLbl.setStyle("-fx-alignment: center-right;");
+	    visitorsLbl.setStyle("-fx-alignment: center-right;");
+	    invoiceButton.setStyle("-fx-alignment: center-right;");
+	    bookingIDLbl.setStyle("-fx-alignment: center-right;");
+
+	    // Set up the back button with a custom image, adjusting size and padding.
+	    ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
+	    backImage.setFitHeight(30);
+	    backImage.setFitWidth(30);
+	    backImage.setPreserveRatio(true);
+	    backButton.setGraphic(backImage);
+	    backButton.setPadding(new Insets(1, 1, 1, 1)); 
 	}
 
 	/**
