@@ -85,7 +85,7 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen {
     	  }
     	  // Check if "All Parks" is selected
     	    if ("All Parks".equals(selectedParkName)) {
-    	        showErrorAlert("This report can only be generated for spesific park.");
+    	        showErrorAlert("This report can only be generated for specific park.");
     	        return;
     	    }
     	  Park selectedPark = parks.stream()
@@ -96,7 +96,7 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen {
 		   // Check if report data is available for the selected park, month, and year.
 		   if (!control.isParkManagerReportAvailable(selectedMonth, selectedYear, selectedPark, "total_visitors")) {
 		    // If data is not available, show a message to the user.
-			   showErrorAlert("This report is not available yet.");
+			   showErrorAlert("The park manager has not produced the report yet.");
 			   return;
 		   }
 		   Pair<Integer, Integer> visitorsData = control.generateTotalNumberOfVisitorsReport(selectedMonth, selectedYear, selectedPark);
@@ -135,7 +135,7 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen {
 		   // Check if report data is available for the selected park, month, and year.
 		   if (!control.isParkManagerReportAvailable(selectedMonth, selectedYear, selectedPark, "usage_report")) {
 		    // If data is not available, show a message to the user.
-			   showErrorAlert("This report is not available yet.");
+			   showErrorAlert("The park manager has not produced the report yet.");
 			   return;
 		   }
 		   List<Pair<LocalDate, Integer>> usageData = control.generateUsageReport(selectedMonth, selectedYear, selectedPark);
@@ -271,7 +271,7 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen {
     @FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(false,true);
+			ScreenManager.getInstance().goToPreviousScreen(false,false);
     	  } catch (ScreenException | StatefulException e) {
     	        e.printStackTrace();
     	  }

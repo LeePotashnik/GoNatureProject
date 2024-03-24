@@ -124,7 +124,7 @@ public class ParkManagerReportScreenController extends AbstractScreen{
 	@FXML
     void returnToPreviousScreen(ActionEvent event) {
     	try {
-			ScreenManager.getInstance().goToPreviousScreen(false,true);
+			ScreenManager.getInstance().goToPreviousScreen(false,false);
     	  } catch (ScreenException | StatefulException e) {
     	        e.printStackTrace();
     	  }
