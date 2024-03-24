@@ -193,7 +193,7 @@ public class ParkController {
 		return null; //If the visitor does not exist, null will be returned
     }
 	 
-		/**
+	/**
 	 * A 'SELECT' SQL query is generated to access the relevant table.
      * This indicates if there is a corresponding booking in the database.
 	 * @param table 	The table to query for a booking.
@@ -376,6 +376,7 @@ public class ParkController {
      */
     public boolean updateCurrentCapacity(String park, int amount) {
     	Communication request = new Communication(CommunicationType.QUERY_REQUEST);
+    	request.setCritical(true);
 		System.out.println(park);
 
     	try {
@@ -581,6 +582,7 @@ public class ParkController {
 							newBooking.getNumberOfVisitors(), newBooking.getIdNumber(), newBooking.getFirstName(), 
 							newBooking.getLastName(), newBooking.getEmailAddress(), newBooking.getPhoneNumber(), 
 							"User Cancelled"));
+		    	BookingController.getInstance().sendNotification(newBooking, true);
 			    break;
 			default: //active
 			    insertRequest.setColumnsAndValues(Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType", "numberOfVisitors",

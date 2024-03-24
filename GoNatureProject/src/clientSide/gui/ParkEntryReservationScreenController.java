@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import clientSide.control.BookingController;
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import clientSide.control.PaymentController;
@@ -156,6 +157,7 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 				        case 1: // Cash
 				        	paid =true;
 				            try { 
+						    	BookingController.getInstance().sendNotification(newBooking, false);
 				            	ScreenManager.getInstance().showScreen("ConfirmationScreenController", 
 					                    "/clientSide/fxml/ConfirmationScreen.fxml", true, false, newBooking);
 				            } catch (StatefulException | ScreenException e) {
