@@ -25,12 +25,12 @@
             <Font name="Calibri Light" size="16.0" />
          </font>
       </TextField>
-      <Button fx:id="connectBtn" layoutX="67.0" layoutY="303.0" mnemonicParsing="false" onAction="#connectToServer" text="Connect Server">
+      <Button fx:id="connectBtn" layoutX="44.0" layoutY="303.0" mnemonicParsing="false" onAction="#connectToServer" text="Connect Server">
          <font>
             <Font name="Calibri" size="16.0" />
          </font>
       </Button>
-      <Button fx:id="disconnectBtn" layoutX="58.0" layoutY="303.0" mnemonicParsing="false" onAction="#disconnectFromServer" text="Disconnect Server">
+      <Button fx:id="disconnectBtn" layoutX="37.0" layoutY="303.0" mnemonicParsing="false" onAction="#disconnectFromServer" text="Disconnect Server">
          <font>
             <Font name="Calibri" size="16.0" />
          </font>
@@ -112,12 +112,7 @@
             <Font name="Calibri Bold" size="16.0" />
          </font>
       </Label>
-      <Button fx:id="clearBtn" layoutX="629.0" layoutY="348.0" mnemonicParsing="false" onAction="#clearBtnClicked" text="Clear">
-         <font>
-            <Font name="Calibri" size="12.0" />
-         </font>
-      </Button>
-      <Button fx:id="importBtn" layoutX="205.0" layoutY="303.0" mnemonicParsing="false" onAction="#importUsersFromExternalSystem" text="Import Users">
+      <Button fx:id="importBtn" layoutX="194.0" layoutY="303.0" mnemonicParsing="false" onAction="#importUsersFromExternalSystem" text="Import Users">
          <font>
             <Font name="Calibri" size="16.0" />
          </font>

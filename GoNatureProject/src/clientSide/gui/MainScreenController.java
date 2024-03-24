@@ -184,6 +184,7 @@ public class MainScreenController extends AbstractScreen {
 						} else { // if not logged in >>> loggin the user in
 							usersControl.saveUser(user);
 							loginControl.updateUserIsLoggedIn(user);
+							user.setLoggedIn(true);
 							openRelevantScreen(user);
 						}
 					}
