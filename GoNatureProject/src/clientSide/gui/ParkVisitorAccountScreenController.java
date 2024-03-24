@@ -73,7 +73,7 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 		userControl = GoNatureUsersController.getInstance();
 	}
 
-	public ParkVisitor getParkManager() {
+	public ParkVisitor getParkVisitor() {
 		return parkVisitor;
 	}
 
@@ -111,7 +111,7 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 
 	/**
 	 * @param event When the 'Visit Booking' button is pressed, the park visitor
-	 *              will be redirected to the 'ManagingBookingScreen'
+	 *              will be redirected to the 'CheckingNotificarionsScreen'
 	 */
 	@FXML
 	void ArrivalConfirmationPopUp(ActionEvent event) {
