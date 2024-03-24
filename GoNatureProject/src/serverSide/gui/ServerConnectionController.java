@@ -38,7 +38,7 @@ public class ServerConnectionController extends AbstractScreen {
 	//////////////////////////////////
 
 	@FXML
-	private Button connectBtn, disconnectBtn, clearBtn, importBtn;
+	private Button connectBtn, disconnectBtn, importBtn;
 	@FXML
 	private ImageView goNatureLogo;
 	@FXML
@@ -109,17 +109,6 @@ public class ServerConnectionController extends AbstractScreen {
 			statusLabel.setText("Disconnected");
 			statusLabel.setStyle("-fx-background-color: #ffe6e6; -fx-text-alignment: center;");
 		}
-	}
-
-	@FXML
-	/**
-	 * This method is called after the Clear button is clicked. Clears the server
-	 * console text area.
-	 * 
-	 * @param event
-	 */
-	void clearBtnClicked(ActionEvent event) {
-		consoleArea.setText("");
 	}
 
 	@FXML

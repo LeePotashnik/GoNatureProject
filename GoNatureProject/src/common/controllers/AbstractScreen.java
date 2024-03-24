@@ -10,6 +10,7 @@ import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
+import entities.SystemUser;
 import javafx.animation.AnimationTimer;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
@@ -71,7 +72,8 @@ public abstract class AbstractScreen {
 	 */
 	public void handleCloseRequest(WindowEvent event) {
 		// if the client is not connected or the user did not log in yet
-		if (GoNatureClientUI.client == null || GoNatureUsersController.getInstance().restoreUser() == null) {
+		SystemUser user = GoNatureUsersController.getInstance().restoreUser();
+		if (GoNatureClientUI.client == null || user == null || !user.isLoggedIn()) {
 			int decision = showConfirmationAlert("Are you sure you want to leave?", Arrays.asList("Yes", "No"));
 			if (decision == 2) // if the user clicked on "No"
 				event.consume();
