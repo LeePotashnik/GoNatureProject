@@ -224,7 +224,7 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
 	    this.NameLable.underlineProperty(); // Emphasize the name for better visibility.
 
 	    // Set the GoNature logo to enhance brand consistency.
-	    goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
+	    goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 
 	    // Apply alignment styles to ensure that UI elements are consistently presented.
 	    NameLable.setStyle("-fx-alignment: center-right;"); // Ensure the label is right-aligned.
