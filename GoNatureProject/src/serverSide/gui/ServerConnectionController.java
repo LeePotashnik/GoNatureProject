@@ -135,12 +135,15 @@ public class ServerConnectionController extends AbstractScreen {
 			case SUCCESS:
 				showInformationAlert("Employees data has been imported successfully");
 				importBtn.setDisable(true);
+				break;
 			case NOTHING_TO_IMPORT:
 				showInformationAlert("There's no data to import at the moment");
 				importBtn.setDisable(true);
+				break;
 			case FAILURE:
 				showErrorAlert("Importing data has failed. Please try again later");
 				importBtn.setDisable(true);
+				break;
 			}
 		}
 	}

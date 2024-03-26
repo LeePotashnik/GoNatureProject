@@ -475,6 +475,6 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 	 * Returns the screen's title
 	 */
 	public String getScreenTitle() {
-		return "Account Screen";
+		return "Account";
 	}
 }

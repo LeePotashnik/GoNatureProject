@@ -411,6 +411,6 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 	 * Returns the screen's title
 	 */
 	public String getScreenTitle() {
-		return parkEmployee.getWorkingIn().getParkName() + " Park - Entrance Management";
+		return parkEmployee.getWorkingIn().getParkName() + " - Park Entrance Management";
 	}
 }

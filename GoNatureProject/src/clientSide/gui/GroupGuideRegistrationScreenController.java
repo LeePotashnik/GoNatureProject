@@ -13,12 +13,13 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
-import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 
 public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	private final String DIGITS_ONLY_REGEX = "\\d+";
@@ -27,22 +28,23 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	//////////////////////////////////
 	/// FXML AND JAVAFX COMPONENTS ///
 	//////////////////////////////////
+
 	@FXML
-	private Button backButton, registerbtn;
+	private Button backButton, registerbtn, checkIDbtn;
 	@FXML
 	private TextField UserNameTxt, emailTxt, firstNameTxt, idTxt, lastNameTxt, phoneTxt;
 	@FXML
 	private Label name, emaillbl, passwordlbl, phonelbl, userNamelbl;
 	@FXML
-	private Separator secondSeparator;
-	@FXML
 	private PasswordField passwordTxt;
 	@FXML
 	private ImageView goNatureLogo;
 	@FXML
-	private Button checkIDbtn;
-	@FXML
 	private Pane pane;
+	@FXML
+	private VBox vbox;
+	@FXML
+	private HBox hbox1, hbox2, hbox3, hbox4, hbox5;
 
 	//////////////////////////////
 	/// EVENT HANDLING METHODS ///
@@ -64,7 +66,7 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 			ArrayList<Object[]> userDetails = registerController.getUserDetails(id);
 			if (userDetails.isEmpty()) {
 				idTxt.setStyle(setFieldToError());
-				showErrorAlert("This user's id doent not exists in our System.");
+				showErrorAlert("This user's id does not exists in our System.");
 			} else {
 				showInformationAlert("ID exists for a user. Details loaded for conversion.");
 				idTxt.setStyle(setFieldToRegular());
@@ -77,10 +79,8 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 				phoneTxt.setDisable(true);
 				UserNameTxt.setDisable(true);
 				passwordTxt.setDisable(true);
-
 			}
 		}
-
 	}
 
 	/**
@@ -107,13 +107,13 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 																				// from the 'system_user' table and
 																				// insert him to the 'group_guide' table
 			if (!deleteSuccess) { // delete from 'system_users'
-				showErrorAlert("Failed to delete user from 'system_users'.");
+				showErrorAlert("Failed to register the group guide.");
 				return;
 			}
 			boolean insertSuccess = registerController.groupGuideInsertToDB(id, firstName, lastName, email, phone,
 					username, password);
 			if (insertSuccess) { // insert to 'group_guide'
-				showInformationAlert("Registration successful.");
+				showInformationAlert("Registration Successful.");
 				try {
 					returnToPreviousScreen(null);
 				} catch (ScreenException | StatefulException e) {
@@ -124,7 +124,7 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 			}
 		}
 	}
-	
+
 	@FXML
 	/**
 	 * If the pane clicked, all focus from the GUI components will be disabled
@@ -152,7 +152,7 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	////////////////////////
 	/// INSTANCE METHODS ///
 	////////////////////////
-	
+
 	/**
 	 * This method validates the entered details by the user
 	 * 
@@ -174,71 +174,28 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	}
 
 	/**
-	 * Shows all registration fields and the register button, making them visible
-	 * and managed within the layout.
+	 * Shows all registration fields and the register button, making them enabled
 	 */
 	private void showAllFieldsAndRegisterButton() {
-		// Make all elements visible and take space
-		firstNameTxt.setVisible(true);
-		firstNameTxt.setManaged(true);
-		lastNameTxt.setVisible(true);
-		lastNameTxt.setManaged(true);
-		emailTxt.setVisible(true);
-		emailTxt.setManaged(true);
-		phoneTxt.setVisible(true);
-		phoneTxt.setManaged(true);
-		UserNameTxt.setVisible(true);
-		UserNameTxt.setManaged(true);
-		passwordTxt.setVisible(true);
-		passwordTxt.setManaged(true);
-		registerbtn.setVisible(true);
-		registerbtn.setManaged(true);
-
-		name.setVisible(true);
-		name.setManaged(true);
-		emaillbl.setVisible(true);
-		emaillbl.setManaged(true);
-		passwordlbl.setVisible(true);
-		passwordlbl.setManaged(true);
-		phonelbl.setVisible(true);
-		phonelbl.setManaged(true);
-		secondSeparator.setVisible(true);
-		secondSeparator.setManaged(true);
-		userNamelbl.setVisible(true);
-		userNamelbl.setManaged(true);
+		hbox1.setDisable(true);
+		hbox2.setDisable(false);
+		hbox3.setDisable(false);
+		hbox4.setDisable(false);
+		hbox5.setDisable(false);
+		registerbtn.setDisable(false);
 	}
 
 	/**
 	 * Hides all fields except for the ID field and the check ID button, making them
-	 * invisible and not managed within the layout.
+	 * disabled
 	 */
 	private void hideAllExceptIDAndCheckID() {
-		firstNameTxt.setVisible(false);
-		firstNameTxt.setManaged(false);
-		lastNameTxt.setVisible(false);
-		lastNameTxt.setManaged(false);
-		emailTxt.setVisible(false);
-		emailTxt.setManaged(false);
-		phoneTxt.setVisible(false);
-		phoneTxt.setManaged(false);
-		UserNameTxt.setVisible(false);
-		UserNameTxt.setManaged(false);
-		passwordTxt.setVisible(false);
-		passwordTxt.setManaged(false);
-		registerbtn.setVisible(false);
-		registerbtn.setManaged(false);
-		name.setVisible(false);
-		name.setManaged(false);
-		emaillbl.setVisible(false);
-		emaillbl.setManaged(false);
-		passwordlbl.setVisible(false);
-		passwordlbl.setManaged(false);
-		phonelbl.setVisible(false);
-		phonelbl.setManaged(false);
-		secondSeparator.setVisible(false);
-		secondSeparator.setManaged(false);
-		userNamelbl.setVisible(false);
-		userNamelbl.setManaged(false);
+		hbox1.setDisable(false);
+		hbox2.setDisable(true);
+		hbox3.setDisable(true);
+		hbox4.setDisable(true);
+		hbox5.setDisable(true);
+		registerbtn.setDisable(true);
 	}
 
 	/**

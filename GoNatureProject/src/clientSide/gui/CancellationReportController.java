@@ -336,6 +336,6 @@ public class CancellationReportController extends AbstractScreen {
 	 */
 	@Override
 	public String getScreenTitle() {
-		return "Cancellation Report";
+		return "Cancellations Report";
 	}
 }

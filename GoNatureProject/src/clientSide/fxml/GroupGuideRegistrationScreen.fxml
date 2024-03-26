@@ -6,7 +6,10 @@
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
 <Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.GroupGuideRegistrationScreenController">
@@ -16,79 +19,130 @@
             <Font name="Calibri" size="14.0" />
          </font>
       </Button>
-      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
-      <Label layoutX="164.0" layoutY="64.0" prefHeight="44.0" prefWidth="393.0" text="Group Guide Registration">
+      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />
+      <Label layoutX="151.0" layoutY="65.0" prefHeight="44.0" prefWidth="393.0" text="Group Guide Registration">
          <font>
-            <Font name="Cambria" size="36.0" />
+            <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <Label fx:id="name" layoutX="181.0" layoutY="177.0" text="Name">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </Label>
-      <TextField fx:id="firstNameTxt" layoutX="180.0" layoutY="198.0" prefHeight="28.0" prefWidth="171.0" promptText="First name">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </TextField>
-      <TextField fx:id="lastNameTxt" layoutX="364.0" layoutY="198.0" prefHeight="28.0" prefWidth="171.0" promptText="Last name">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </TextField>
-      <Label layoutX="179.0" layoutY="122.0" prefHeight="18.0" prefWidth="82.0" text="ID number">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </Label>
-      <TextField fx:id="idTxt" layoutX="180.0" layoutY="140.0" prefHeight="29.0" prefWidth="171.0" promptText="Your ID number">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font></TextField>
-      <Label fx:id="emaillbl" layoutX="182.0" layoutY="233.0" text="Email">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </Label>
-      <TextField fx:id="emailTxt" layoutX="180.0" layoutY="250.0" prefHeight="28.0" prefWidth="355.0" promptText="Your Email">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </TextField>
-      <Label fx:id="phonelbl" layoutX="182.0" layoutY="287.0" text="Phone number">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </Label>
-      <TextField fx:id="phoneTxt" layoutX="180.0" layoutY="305.0" prefHeight="28.0" prefWidth="355.0" promptText="Your phone number">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </TextField>
-      <Separator fx:id="secondSeparator" layoutX="180.0" layoutY="333.0" prefHeight="17.0" prefWidth="355.0" />
-      <Label fx:id="userNamelbl" layoutX="182.0" layoutY="349.0" text="User name">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </Label>
-      <TextField fx:id="UserNameTxt" layoutX="180.0" layoutY="366.0" prefHeight="25.0" prefWidth="171.0" promptText="Create User name" />
-      <Label fx:id="passwordlbl" layoutX="363.0" layoutY="349.0" text="Password">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </Label>
-      <PasswordField fx:id="passwordTxt" layoutX="363.0" layoutY="366.0" prefHeight="25.0" prefWidth="171.0" promptText="Create Password" />
-      <Button fx:id="registerbtn" layoutX="302.0" layoutY="414.0" mnemonicParsing="false" onAction="#register" prefHeight="50.0" prefWidth="82.0" text="Register">
+      <Button fx:id="registerbtn" layoutX="256.0" layoutY="452.0" mnemonicParsing="false" onAction="#register" prefHeight="30.0" prefWidth="188.0" text="Approve Group Guide">
          <font>
             <Font name="Calibri" size="16.0" />
          </font>
       </Button>
-      <Button fx:id="checkIDbtn" layoutX="450.0" layoutY="140.0" mnemonicParsing="false" onAction="#checkId" text="Check ID">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </Button>
-      <Separator layoutX="181.0" layoutY="175.0" prefHeight="4.0" prefWidth="355.0" />
+      <VBox fx:id="vbox" layoutX="32.0" layoutY="112.0" prefHeight="348.0" prefWidth="630.0">
+         <children>
+            <Separator prefHeight="40.0" prefWidth="355.0" />
+            <HBox fx:id="hbox1" prefHeight="30.0" prefWidth="630.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="120.0" />
+                  <Label prefHeight="30.0" prefWidth="100.0" text="ID number:">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="20.0" />
+                  <TextField fx:id="idTxt" prefHeight="29.0" prefWidth="170.0" promptText="enter id number">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="20.0" />
+                  <Button fx:id="checkIDbtn" mnemonicParsing="false" onAction="#checkId" prefHeight="30.0" prefWidth="80.0" text="Check ID">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </Button>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="120.0" />
+               </children>
+            </HBox>
+            <Separator prefHeight="40.0" prefWidth="355.0" />
+            <HBox fx:id="hbox2" prefHeight="30.0" prefWidth="630.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="85.0" />
+                  <Label fx:id="name" prefHeight="30.0" prefWidth="100.0" text="Full Name:">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="firstNameTxt" prefHeight="30.0" prefWidth="170.0" promptText="first name">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="20.0" />
+                  <TextField fx:id="lastNameTxt" prefHeight="30.0" prefWidth="170.0" promptText="last name">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="85.0" />
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="630.0" />
+            <HBox fx:id="hbox3" prefHeight="30.0" prefWidth="630.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="85.0" />
+                  <Label fx:id="emaillbl" prefHeight="30.0" prefWidth="100.0" text="Email:">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="emailTxt" prefHeight="30.0" prefWidth="360.0" promptText="email address">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="85.0" />
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="630.0" />
+            <HBox fx:id="hbox4" prefHeight="30.0" prefWidth="630.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="85.0" />
+                  <Label fx:id="phonelbl" prefHeight="30.0" prefWidth="100.0" text="Phone:">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="phoneTxt" prefHeight="30.0" prefWidth="360.0" promptText="phone number">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="85.0" />
+               </children>
+            </HBox>
+            <Separator prefHeight="40.0" prefWidth="355.0" />
+            <HBox fx:id="hbox5" prefHeight="30.0" prefWidth="630.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="85.0" />
+                  <Label fx:id="userNamelbl" prefHeight="30.0" prefWidth="100.0" text="Username:">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="UserNameTxt" prefHeight="30.0" prefWidth="120.0" promptText="username">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="20.0" />
+                  <Label fx:id="passwordlbl" prefHeight="30.0" prefWidth="100.0" text="Password:">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </Label>
+                  <PasswordField fx:id="passwordTxt" prefHeight="30.0" prefWidth="120.0" promptText="password">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </PasswordField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="85.0" />
+               </children>
+            </HBox>
+            <Separator prefHeight="40.0" prefWidth="630.0" />
+         </children>
+      </VBox>
    </children>
 </Pane>

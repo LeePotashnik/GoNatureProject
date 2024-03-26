@@ -54,6 +54,7 @@ public class GoNatureServerUI extends Application {
 			e.printStackTrace();
 		}
 		System.out.println("Server is disconnected");
+		System.exit(0);
 	}
 
 	/**

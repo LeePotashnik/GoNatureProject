@@ -318,6 +318,6 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
 	 * Returns the screen's title
 	 */
 	public String getScreenTitle() {
-		return "Service Representative";
+		return "Service Representative Account";
 	}
 }

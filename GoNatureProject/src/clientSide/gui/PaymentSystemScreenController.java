@@ -502,7 +502,7 @@ public class PaymentSystemScreenController extends AbstractScreen {
 	 */
 	@Override
 	public String getScreenTitle() {
-		return "Payment Screen";
+		return "Payment Processing";
 	}
 
 }
