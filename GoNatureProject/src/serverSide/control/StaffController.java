@@ -3,6 +3,7 @@ package serverSide.control;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
@@ -29,15 +30,20 @@ public class StaffController {
 	 * @throws DatabaseException if there's a problem accessing the database.
 	 */
 	public boolean importUsers() {
+		boolean done=false;
 		try {
-			importUsersType("Employee");
-			importUsersType("Park Manager");
-			importUsersType("Department Manager");
-			importUsersType("Representative");
+			if(importUsersType("Employee")) 
+				done = true;
+			if(importUsersType("Park Manager")) 
+				done = true;
+			if(importUsersType("Department Manager")) 
+				done = true;
+			if(importUsersType("Representative")) 
+				done = true;
 		} catch (DatabaseException e) {
-			return false;
-		}
-		return true;
+			e.printStackTrace();
+		} 
+		return done;
 	}
 
 	private String nameOfTable(String park) {
@@ -267,4 +273,20 @@ public class StaffController {
 			throw new DatabaseException("Problem with Representative INSERT query");
 		}
 	}
-}
+	
+	public ArrayList<Object[]> getNewUserDetails(String id) {
+		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			request.setQueryType(QueryType.SELECT);
+			request.setTables(Arrays.asList("system_users"));
+			request.setSelectColumns(Arrays.asList("firstName", "lastName", "emailAddress", "phoneNumber","userName", "password"));
+			request.setWhereConditions(Arrays.asList("userId","type"), Arrays.asList("=","AND","="), Arrays.asList(id,"User"));
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		GoNatureClientUI.client.accept(request);
+		ArrayList<Object[]> result = request.getResultList();
+		return result;
+
+	}
+	}
