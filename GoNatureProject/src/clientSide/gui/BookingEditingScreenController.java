@@ -714,6 +714,6 @@ public class BookingEditingScreenController extends BookingScreenController {
 	 * Returns the screen's title
 	 */
 	public String getScreenTitle() {
-		return "Booking Editing";
+		return "Booking Editing and Cancelling";
 	}
 }

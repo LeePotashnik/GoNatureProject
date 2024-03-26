@@ -237,6 +237,6 @@ public class WaitingListScreenController extends AbstractScreen {
 	 * returns the screen's title
 	 */
 	public String getScreenTitle() {
-		return "Waiting List";
+		return "Park's Waiting List";
 	}
 }

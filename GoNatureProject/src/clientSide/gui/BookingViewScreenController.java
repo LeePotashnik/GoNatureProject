@@ -467,6 +467,6 @@ public class BookingViewScreenController extends AbstractScreen implements State
 	 * Returns the screen's title
 	 */
 	public String getScreenTitle() {
-		return "Booking View";
+		return "Booking Management";
 	}
 }

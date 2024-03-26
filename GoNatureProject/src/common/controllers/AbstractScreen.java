@@ -74,29 +74,47 @@ public abstract class AbstractScreen {
 	 * @param event the event of clicking on the X of the window
 	 */
 	public void handleCloseRequest(WindowEvent event) {
-		// if the client is not connected or the user did not log in yet
-		SystemUser user = GoNatureUsersController.getInstance().restoreUser();
-		if (GoNatureClientUI.client == null || user == null || !user.isLoggedIn()) {
+		// if the client is not connected
+		if (GoNatureClientUI.client == null) {
 			int decision = showConfirmationAlert("Are you sure you want to leave?", Arrays.asList("Yes", "No"));
-			if (decision == 2) // if the user clicked on "No"
+			switch (decision) {
+			case 1: // Yes
+				System.exit(0);
+			case 2: // No
 				event.consume();
-			else { // if the user clicked on "Yes"
+				return;
+			}
+		}
+
+		// if the user did not log in yet, but the client is connected to the server
+		SystemUser user = GoNatureUsersController.getInstance().restoreUser();
+		if (user == null || !user.isLoggedIn()) {
+			int decision = showConfirmationAlert("Are you sure you want to leave?", Arrays.asList("Yes", "No"));
+			switch (decision) {
+			case 1: // Yes
 				Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
 				message.setClientMessageType(ClientMessageType.DISCONNECT);
 				GoNatureClientUI.client.accept(message);
-				System.out.println("Client exited the application"); // just exit
+				System.out.println("Client exited the application");
+				System.exit(0);
+			case 2: // No
+				event.consume();
+				return;
 			}
 		} else {
 			int decision = showConfirmationAlert("Are you sure you want to log out from the system?",
 					Arrays.asList("Yes", "No"));
-			if (decision == 2) // if the user clicked on "No"
-				event.consume();
-			else { // if the user clicked on "Yes"
+			switch (decision) {
+			case 1: // Yes
 				GoNatureUsersController.getInstance().logoutUser();
 				// creating a communication request for disconnecting from the server port
 				Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
 				message.setClientMessageType(ClientMessageType.DISCONNECT);
 				GoNatureClientUI.client.accept(message);
+				System.exit(0);
+			case 2: // No
+				event.consume();
+				return;
 			}
 		}
 	}
