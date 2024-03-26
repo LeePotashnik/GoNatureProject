@@ -2,8 +2,10 @@ package clientSide.gui;
 
 import clientSide.control.ParkController;
 import common.controllers.AbstractScreen;
+import common.controllers.ScreenException;
+import common.controllers.ScreenManager;
+import common.controllers.StatefulException;
 import entities.Booking;
-import entities.ParkVisitor;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -11,14 +13,13 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
-import javafx.util.Pair;
 
 /**
  * The CancellationScreenController is called after a booking if successfully
  * cancelled, showing a cancellation confirmation to the user.
  */
 public class CancellationScreenController extends AbstractScreen {
-	private ParkVisitor visitor;
+	private Booking booking;
 
 	//////////////////////////////////
 	/// JAVAFX ANF FXML COMPONENTS ///
@@ -45,11 +46,12 @@ public class CancellationScreenController extends AbstractScreen {
 	 * @param event
 	 */
 	void returnToAccount(ActionEvent event) {
-		/// HERE: only connected visitors arrive!
-		if (visitor == null) { // is not connected to the system, entered only with id
-			showInformationAlert("Now returning to main screen.");
-		} else {
-			showInformationAlert("Now returning to account screen.");
+		ScreenManager.getInstance().resetScreensStack();
+		try {
+			ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController",
+					"/clientSide/fxml/ParkVisitorAccountScreen.fxml", false, false, null);
+		} catch (StatefulException | ScreenException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -76,12 +78,8 @@ public class CancellationScreenController extends AbstractScreen {
 	 * components with information from these instances.
 	 */
 	public void loadBefore(Object information) {
-		Booking booking;
-		if (information != null && information instanceof Pair) {
-			@SuppressWarnings("unchecked")
-			Pair<Booking, ParkVisitor> pair = (Pair<Booking, ParkVisitor>) information;
-			booking = pair.getKey();
-			visitor = pair.getValue();
+		if (information != null && information instanceof Booking) {
+			booking = (Booking)information;
 
 			parkNameLabel.setText("Park Name: " + booking.getParkBooked().getParkName());
 			parkAddressLabel.setText("Park Location: " + booking.getParkBooked().getParkCity() + ", "
@@ -111,6 +109,6 @@ public class CancellationScreenController extends AbstractScreen {
 	 * Returns the screen's title
 	 */
 	public String getScreenTitle() {
-		return "Reservation Confirmation";
+		return "Cancellation";
 	}
 }

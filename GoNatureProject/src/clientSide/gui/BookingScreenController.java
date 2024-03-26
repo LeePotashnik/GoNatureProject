@@ -568,7 +568,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 		// checking the first name
 		if (!firstNameTxt.isDisabled()
-				&& (firstNameTxt.getText().isEmpty() || !firstNameTxt.getText().matches(lettersInput))) {
+				&& (firstNameTxt.getText() == null || firstNameTxt.getText().isEmpty() || !firstNameTxt.getText().matches(lettersInput))) {
 			firstNameTxt.setStyle(setFieldToError());
 			error += "• enter a valid first name\n";
 			valid = false;
@@ -576,14 +576,14 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 		// checking the last name
 		if (!lastNameTxt.isDisabled()
-				&& (lastNameTxt.getText().isEmpty() || !lastNameTxt.getText().matches(lettersInput))) {
+				&& (lastNameTxt.getText() == null || lastNameTxt.getText().isEmpty() || !lastNameTxt.getText().matches(lettersInput))) {
 			lastNameTxt.setStyle(setFieldToError());
 			error += "• enter a valid last name\n";
 			valid = false;
 		}
 
 		// checking the visitors number
-		if (visitorsTxt.getText().isEmpty() || !visitorsTxt.getText().matches(digitsOnly)) {
+		if (visitorsTxt.getText() == null || visitorsTxt.getText().isEmpty() || !visitorsTxt.getText().matches(digitsOnly)) {
 			visitorsTxt.setStyle(setFieldToError());
 			error += "• enter a digit-only number of visitors\n";
 			valid = false;
@@ -614,14 +614,14 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		}
 
 		// checking the email address
-		if (emailTxt.getText().isEmpty() || !emailTxt.getText().matches(emailInput)) {
+		if (emailTxt.getText() == null || emailTxt.getText().isEmpty() || !emailTxt.getText().matches(emailInput)) {
 			emailTxt.setStyle(setFieldToError());
 			error += "• enter a valid email address\n";
 			valid = false;
 		}
 
 		// checking the phone number
-		if (phoneTxt.getText().isEmpty() || !phoneTxt.getText().matches(phoneInput)) {
+		if (phoneTxt.getText() == null || phoneTxt.getText().isEmpty() || !phoneTxt.getText().matches(phoneInput)) {
 			phoneTxt.setStyle(setFieldToError());
 			error += "• enter a valid phone number\n";
 			valid = false;

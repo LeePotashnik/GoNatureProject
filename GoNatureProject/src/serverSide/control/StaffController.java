@@ -13,10 +13,9 @@ import serverSide.jdbc.DatabaseException;
 
 public class StaffController {
 	private DatabaseController database;
+
 	public enum ImportStatus {
-	    SUCCESS,
-	    NOTHING_TO_IMPORT,
-	    FAILURE
+		SUCCESS, NOTHING_TO_IMPORT, FAILURE
 	}
 
 	/**
@@ -31,32 +30,33 @@ public class StaffController {
 	/**
 	 * Imports users into their respective tables based on user type.
 	 * 
-	 * @return An ImportStatus indicating the outcome of the import process. Possible return values are:
-	 *         - SUCCESS if at least one user type is successfully imported.
-	 *         - NOTHING_TO_IMPORT if no users of any type are found to import.
-	 *         - FAILURE if an error occurs during the import process.
+	 * @return An ImportStatus indicating the outcome of the import process.
+	 *         Possible return values are: - SUCCESS if at least one user type is
+	 *         successfully imported. - NOTHING_TO_IMPORT if no users of any type
+	 *         are found to import. - FAILURE if an error occurs during the import
+	 *         process.
 	 * @throws DatabaseException if there's a problem accessing the database.
 	 */
 	public ImportStatus importUsers() {
-	    try {
-	        boolean atLeastOneImported = false;
-	        if (importUsersType("Employee")) 
-	        	atLeastOneImported = true;
-	        if (importUsersType("Park Manager")) 
-	        	atLeastOneImported = true;
-	        if (importUsersType("Department Manager")) 
-	        	atLeastOneImported = true;
-	        if (importUsersType("Representative")) 
-	        	atLeastOneImported = true;
+		try {
+			boolean atLeastOneImported = false;
+			if (importUsersType("Employee"))
+				atLeastOneImported = true;
+			if (importUsersType("Park Manager"))
+				atLeastOneImported = true;
+			if (importUsersType("Department Manager"))
+				atLeastOneImported = true;
+			if (importUsersType("Representative"))
+				atLeastOneImported = true;
 
-	        if (!atLeastOneImported) {
-	            return ImportStatus.NOTHING_TO_IMPORT;
-	        }
-	        return ImportStatus.SUCCESS;
-	    } catch (DatabaseException e) {
-	        e.printStackTrace();
-	        return ImportStatus.FAILURE;
-	    }
+			if (!atLeastOneImported) {
+				return ImportStatus.NOTHING_TO_IMPORT;
+			}
+			return ImportStatus.SUCCESS;
+		} catch (DatabaseException e) {
+			e.printStackTrace();
+			return ImportStatus.FAILURE;
+		}
 	}
 
 	private String nameOfTable(String park) {
@@ -175,8 +175,7 @@ public class StaffController {
 		Communication request = new Communication(CommunicationType.SELF);
 		try {
 			request.setQueryType(QueryType.INSERT);
-			request.setTables(
-					Arrays.asList(nameOfTable(park) + Communication.parkEmployees));
+			request.setTables(Arrays.asList(nameOfTable(park) + Communication.parkEmployees));
 			request.setColumnsAndValues(
 					Arrays.asList("employeeId", "firstName", "lastName", "emailAddress", "phoneNumber", "userName",
 							"password", "isLoggedIn"),
@@ -286,14 +285,16 @@ public class StaffController {
 			throw new DatabaseException("Problem with Representative INSERT query");
 		}
 	}
-	
+
 	public ArrayList<Object[]> getNewUserDetails(String id) {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			request.setQueryType(QueryType.SELECT);
 			request.setTables(Arrays.asList("system_users"));
-			request.setSelectColumns(Arrays.asList("firstName", "lastName", "emailAddress", "phoneNumber","userName", "password"));
-			request.setWhereConditions(Arrays.asList("userId","type"), Arrays.asList("=","AND","="), Arrays.asList(id,"User"));
+			request.setSelectColumns(
+					Arrays.asList("firstName", "lastName", "emailAddress", "phoneNumber", "userName", "password"));
+			request.setWhereConditions(Arrays.asList("userId", "type"), Arrays.asList("=", "AND", "="),
+					Arrays.asList(id, "User"));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
@@ -302,4 +303,4 @@ public class StaffController {
 		return result;
 
 	}
-	}
+}

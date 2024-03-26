@@ -37,6 +37,8 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 public class MainScreenController extends AbstractScreen {
+	boolean screenIsActive;
+	private javafx.animation.Timeline slideshowTimeline;
 	// properties for the images animation
 	private final static int IMAGE_VIEW_COUNT = 3; // Display 3 images at a time
 	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT]; // Array for ImageViews
@@ -50,6 +52,7 @@ public class MainScreenController extends AbstractScreen {
 	public MainScreenController() {
 		loginControl = new LoginController();
 		usersControl = GoNatureUsersController.getInstance();
+		screenIsActive = true;
 	}
 
 	//////////////////////////////////
@@ -96,7 +99,7 @@ public class MainScreenController extends AbstractScreen {
 			// moving the data fetching operation to a background thread
 			setVisible(false);
 			String idNumber = idNumberTxt.getText();
-			new Thread(() -> {
+			Thread taskThread = new Thread(() -> {
 				// this operation is now off the JavaFX Application Thread
 				final SystemUser user = loginControl.checkIfTravellerExists(idNumber);
 				final AtomicBoolean hasBookings = new AtomicBoolean(), isRegisteredEmployee = new AtomicBoolean();
@@ -140,6 +143,7 @@ public class MainScreenController extends AbstractScreen {
 						} else { // if not logged in >>> loggin the user in
 							usersControl.saveUser(user);
 							loginControl.updateUserIsLoggedIn(user);
+							user.setLoggedIn(true);
 							if (hasBookings.get()) { // if has bookings
 								openRelevantScreen(user);
 							} else { // if does not have bookings
@@ -153,7 +157,9 @@ public class MainScreenController extends AbstractScreen {
 						}
 					}
 				});
-			}).start();
+			});
+			taskThread.start();
+			stopSlideshow();
 		}
 	}
 
@@ -326,6 +332,11 @@ public class MainScreenController extends AbstractScreen {
 	 * This method starts the parks images slide show using fade transitions
 	 */
 	private void startSlideshow() {
+		if (slideshowTimeline != null) {
+	        slideshowTimeline.stop();
+	    }
+	    slideshowTimeline = new javafx.animation.Timeline();
+	    
 		// Create a runnable task for changing images
 		FadeTransition fade1 = new FadeTransition(Duration.millis(2000), image1);
 		fade1.setFromValue(0.0);
@@ -370,11 +381,20 @@ public class MainScreenController extends AbstractScreen {
 		};
 
 		// Schedule the task to run periodically
-		javafx.animation.Timeline timeline = new javafx.animation.Timeline(
-				new javafx.animation.KeyFrame(Duration.seconds(5), // Change images every 5 seconds
-						event -> changeImagesTask.run()));
-		timeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
-		timeline.play();
+		slideshowTimeline.getKeyFrames().add(
+		        new javafx.animation.KeyFrame(Duration.seconds(5), // Change images every 5 seconds
+		            event -> changeImagesTask.run()));
+		    slideshowTimeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
+		    slideshowTimeline.play();
+	}
+	
+	/**
+	 * This method stops the slide show
+	 */
+	private void stopSlideshow() {
+	    if (slideshowTimeline != null) {
+	        slideshowTimeline.stop();
+	    }
 	}
 
 	/**
