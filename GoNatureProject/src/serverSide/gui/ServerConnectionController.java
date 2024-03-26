@@ -105,6 +105,7 @@ public class ServerConnectionController extends AbstractScreen {
 	void disconnectFromServer(ActionEvent event) {
 		if (disconnect()) {
 			disconnectBtn.setDisable(true);
+			importBtn.setDisable(true);
 			pane.requestFocus();
 			statusLabel.setText("Disconnected");
 			statusLabel.setStyle("-fx-background-color: #ffe6e6; -fx-text-alignment: center;");
@@ -172,6 +173,9 @@ public class ServerConnectionController extends AbstractScreen {
 		String error = "";
 		hostTxtField.setStyle(setFieldToRegular());
 		portTxtField.setStyle(setFieldToRegular());
+		databaseTxtField.setStyle(setFieldToRegular());
+		rootTxtField.setStyle(setFieldToRegular());
+		passwordTxtField.setStyle(setFieldToRegular());
 
 		// validating host
 		String hostAddress = hostTxtField.getText();
@@ -198,6 +202,28 @@ public class ServerConnectionController extends AbstractScreen {
 			result = false;
 			error += "Port number must be in range (1024-65535)";
 		}
+
+		// checking the database path
+		if (databaseTxtField.getText().trim().isEmpty()) {
+			databaseTxtField.setStyle(setFieldToError());
+			result = false;
+			error += "You must enter a valid database path\n";
+		}
+
+		// checking the database root
+		if (rootTxtField.getText().trim().isEmpty()) {
+			rootTxtField.setStyle(setFieldToError());
+			result = false;
+			error += "You must enter a valid database root\n";
+		}
+
+		// checking the database password
+		if (passwordTxtField.getText().trim().isEmpty()) {
+			passwordTxtField.setStyle(setFieldToError());
+			result = false;
+			error += "You must enter a valid database password\n";
+		}
+
 		if (!result)
 			showErrorAlert(error);
 		return result;
@@ -362,10 +388,14 @@ public class ServerConnectionController extends AbstractScreen {
 
 		statusLabel.setText("Disconnected");
 		statusLabel.setStyle("-fx-background-color: #ffe6e6; -fx-text-alignment: center;");
+		statusLabel.setAlignment(Pos.CENTER);
 
 		setupTextFieldToDigitsOnly(portTxtField);
 
 		importBtn.setDisable(true);
+		
+		// setting the application's background
+		setApplicationBackground(pane);
 
 		// for later use
 //		consoleArea.setEditable(false);

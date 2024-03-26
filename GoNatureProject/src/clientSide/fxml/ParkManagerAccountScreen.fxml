@@ -10,40 +10,40 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkManagerAccountScreenController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkManagerAccountScreenController">
    <children>
-      <Label fx:id="Title" alignment="CENTER" layoutX="11.0" layoutY="67.0" prefHeight="38.0" prefWidth="678.0" text="Account Screen">
+      <Label fx:id="titleLbl" alignment="CENTER" layoutX="11.0" layoutY="65.0" prefHeight="38.0" prefWidth="678.0" text="Account Screen">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <Button fx:id="logOutBTN" layoutX="36.0" layoutY="25.0" mnemonicParsing="false" onAction="#logOut" text="Log Out" textAlignment="CENTER">
+      <Button fx:id="logOutBtn" layoutX="36.0" layoutY="25.0" mnemonicParsing="false" onAction="#logOut" text="Log Out" textAlignment="CENTER">
          <font>
             <Font name="Calibri" size="16.0" />
          </font>
       </Button>
-      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />
       <VBox fx:id="controlVbox" layoutX="27.0" layoutY="114.0" prefHeight="360.0" prefWidth="250.0">
          <children>
             <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
-            <Label prefWidth="250.0" text="Manage your bookings:" underline="true">
+            <Label prefWidth="250.0" text="Adjust Park Parameters:" underline="true">
                <font>
                   <Font name="Calibri Bold" size="18.0" />
                </font>
             </Label>
-            <Label prefWidth="250.0" text="Update park parameters">
+            <Label prefWidth="250.0" text="Update current park parameters">
                <font>
                   <Font name="Calibri" size="16.0" />
                </font>
             </Label>
             <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
-            <Button fx:id="AdjustinDataBTN" alignment="CENTER" mnemonicParsing="false" onAction="#GoToParametersAdjustingScreen" prefHeight="30.0" prefWidth="160.0" text="Adjusting Park Data" textAlignment="CENTER">
+            <Button fx:id="adjustingDataBtn" alignment="CENTER" mnemonicParsing="false" onAction="#goToParametersAdjustingScreen" prefHeight="30.0" prefWidth="160.0" text="Adjust Parameters" textAlignment="CENTER">
                <font>
                   <Font name="Calibri" size="16.0" />
                </font>
             </Button>
             <Separator prefHeight="30.0" prefWidth="200.0" />
-            <Label prefWidth="250.0" text="Park Manager Updates:" underline="true">
+            <Label prefWidth="250.0" text="View Park Capacities:" underline="true">
                <font>
                   <Font name="Calibri Bold" size="18.0" />
                </font>
@@ -54,24 +54,29 @@
                </font>
             </Label>
             <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
-            <Button fx:id="capacityBTN" mnemonicParsing="false" onAction="#GetCurrentMaximumCapacity" prefHeight="30.0" prefWidth="160.0" text="Current Capacity" textAlignment="CENTER">
+            <Button fx:id="capacityBtn" mnemonicParsing="false" onAction="#getCurrentMaximumCapacity" prefHeight="30.0" prefWidth="160.0" text="Current Capacities" textAlignment="CENTER">
                <font>
                   <Font name="Calibri" size="16.0" />
                </font>
             </Button>
             <Separator prefHeight="30.0" prefWidth="200.0" />
-            <Label prefWidth="250.0" text="Generating Park Reports:" underline="true">
+            <Label prefWidth="250.0" text="Generate Park Reports:" underline="true">
                <font>
                   <Font name="Calibri Bold" size="18.0" />
                </font>
             </Label>
-            <Label prefWidth="250.0" text="Create usage, total number of visitors">
+            <Label prefWidth="250.0" text="Create usage reports and total">
+               <font>
+                  <Font name="Calibri" size="16.0" />
+               </font>
+            </Label>
+            <Label prefWidth="250.0" text="number of visitors reports">
                <font>
                   <Font name="Calibri" size="16.0" />
                </font>
             </Label>
             <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
-            <Button fx:id="reportsBTN" alignment="CENTER" mnemonicParsing="false" onAction="#GoToParkManagerReportsScreen" prefHeight="30.0" prefWidth="160.0" text="Reports" textAlignment="CENTER">
+            <Button fx:id="reportsBtn" alignment="CENTER" mnemonicParsing="false" onAction="#goToParkManagerReportsScreen" prefHeight="30.0" prefWidth="160.0" text="Generate Reports" textAlignment="CENTER">
                <font>
                   <Font name="Calibri" size="16.0" />
                </font>
@@ -112,7 +117,7 @@
             </HBox>
          </children>
       </VBox>
-      <Label fx:id="NameLable" alignment="CENTER" layoutX="58.0" layoutY="95.0" prefHeight="38.0" prefWidth="599.0" text="Label">
+      <Label fx:id="nameLbl" alignment="CENTER" layoutX="58.0" layoutY="95.0" prefHeight="38.0" prefWidth="599.0" text="Label">
       	<font>
             <Font name="Calibri" size="20.0" />
         </font>

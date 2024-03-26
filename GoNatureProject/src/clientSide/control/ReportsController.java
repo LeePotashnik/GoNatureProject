@@ -69,8 +69,8 @@ public class ReportsController {
 	 */
 	public boolean isReportDataAvailable(String selectedMonth, String selectedYear, Park selectedPark,
 			String reportType) {
-		String parkTableName = ParkController.getInstance().nameOfTable(selectedPark) + "_park_" + reportType
-				+ "_booking";
+		String parkTableName = ParkController.getInstance().nameOfTable(selectedPark)
+				+ (reportType.equals("done") ? Communication.doneBookings : Communication.cancelledBookings);
 		Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
 		try {
 			comm.setQueryType(Communication.QueryType.SELECT);
@@ -110,12 +110,11 @@ public class ReportsController {
 	 */
 	public boolean isParkManagerReportAvailable(String selectedMonth, String selectedYear, Park park,
 			String reportType) {
-		String reportTableName = reportType.equals("total_visitors") ? "total_number_of_visitors_report"
-				: "usage_report";
+		String reportTableName = reportType.equals("total_visitors") ? Communication.totalReport
+				: Communication.usageReport;
 		// String parkName = park.getParkName();
 		String parkTableName = ParkController.getInstance().nameOfTable(park);
 		if (park == null || selectedMonth == null || selectedYear == null) {
-			System.out.println("One or more method arguments are null");
 			return false;
 		}
 		Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
@@ -160,7 +159,7 @@ public class ReportsController {
 		if (park == null) {
 			throw new IllegalArgumentException("Park cannot be null");
 		}
-		String parkTableName = ParkController.getInstance().nameOfTable(park) + "_park_done_booking";
+		String parkTableName = ParkController.getInstance().nameOfTable(park) + Communication.doneBookings;
 		Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
 		// Set the type of the query
 		try {
@@ -197,14 +196,14 @@ public class ReportsController {
 	 */
 	public boolean saveUsageReport(String selectedMonth, String selectedYear, Park park) {
 
-		String tableName = "usage_report";
 		String date = selectedYear + "-" + selectedMonth + "-30";
 		String parkTableName = ParkController.getInstance().nameOfTable(park);
+
 		// Set the type of the query
 		try {
 			Communication select = new Communication(Communication.CommunicationType.QUERY_REQUEST);
 			select.setQueryType(Communication.QueryType.SELECT);
-			select.setTables(Arrays.asList(tableName));
+			select.setTables(Arrays.asList(Communication.usageReport));
 			select.setSelectColumns(Arrays.asList("park_name", "date"));
 			int month = Integer.parseInt(selectedMonth);
 			int year = Integer.parseInt(selectedYear);
@@ -220,7 +219,7 @@ public class ReportsController {
 			}
 			Communication comm = new Communication(CommunicationType.QUERY_REQUEST);
 			comm.setQueryType(Communication.QueryType.INSERT);
-			comm.setTables(Collections.singletonList(tableName));
+			comm.setTables(Collections.singletonList(Communication.usageReport));
 			comm.setColumnsAndValues(Arrays.asList("park_name", "date"), Arrays.asList(parkTableName, date));
 			// Send the insert operation request
 			GoNatureClientUI.client.accept(comm);
@@ -287,7 +286,7 @@ public class ReportsController {
 		if (park == null) {
 			throw new IllegalArgumentException("Park cannot be null");
 		}
-		String parkTableName = ParkController.getInstance().nameOfTable(park) + "_park_done_booking";
+		String parkTableName = ParkController.getInstance().nameOfTable(park) + Communication.doneBookings;
 		Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
 		// Set the type of the query
 		try {
@@ -337,7 +336,7 @@ public class ReportsController {
 	 */
 	public boolean saveTotalNumberOfVisitorsReport(String selectedMonth, String selectedYear, Park park) {
 
-		String tableName = "total_number_of_visitors_report";
+		String tableName = Communication.totalReport;
 		String date = selectedYear + "-" + selectedMonth + "-30";
 		String parkTableName = ParkController.getInstance().nameOfTable(park);
 		// Set the type of the query
@@ -391,7 +390,7 @@ public class ReportsController {
 		}
 
 		// Construct the name of the database table for the park's bookings.
-		String parkTableName = ParkController.getInstance().nameOfTable(selectedPark) + "_park_done_booking";
+		String parkTableName = ParkController.getInstance().nameOfTable(selectedPark) + Communication.doneBookings;
 
 		// Initialize a new communication request to query the database.
 		Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
@@ -476,7 +475,7 @@ public class ReportsController {
 			throw new IllegalArgumentException("Park cannot be null");
 		}
 		// Prepare a database query to select cancellation data for the specified park
-		String parkTableName = ParkController.getInstance().nameOfTable(selectedPark) + "_park_cancelled_booking";
+		String parkTableName = ParkController.getInstance().nameOfTable(selectedPark) + Communication.cancelledBookings;
 		Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
 		// Set the type of the query
 		try {
@@ -498,7 +497,6 @@ public class ReportsController {
 		// charting
 		GoNatureClientUI.client.accept(comm);
 		return processFetchedCancellationDataForChart(comm.getResultList());
-
 	}
 
 	/**
@@ -533,9 +531,9 @@ public class ReportsController {
 
 			String dayName = dayOfVisit.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
-			if ("User Cancelled".equals(cancellationReason) || "Did not confirm".equals(cancellationReason)) {
+			if (Communication.userCancelled.equals(cancellationReason) || "Did not confirm".equals(cancellationReason)) {
 				cancelledOrdersStats.get(dayName).add(numberOfVisitors);
-			} else if ("Did not arrive".equals(cancellationReason)) {
+			} else if (Communication.userDidNotArrive.equals(cancellationReason)) {
 				noShowVisitorsStats.get(dayName).add(numberOfVisitors);
 			}
 		}
@@ -555,11 +553,9 @@ public class ReportsController {
 				.collect(Collectors.toList());
 
 		Map<String, List<XYChart.Data<String, Number>>> chartData = new HashMap<>();
-		chartData.put("User Cancelled", cancelledOrdersAvgData);
-		chartData.put("Did not arrive", noShowVisitorsAvgData);
+		chartData.put(Communication.userCancelled, cancelledOrdersAvgData);
+		chartData.put(Communication.userDidNotArrive, noShowVisitorsAvgData);
 
 		return chartData;
-
 	}
-
 }

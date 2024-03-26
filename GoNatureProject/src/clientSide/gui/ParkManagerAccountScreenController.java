@@ -1,5 +1,7 @@
 package clientSide.gui;
 
+import java.time.LocalTime;
+
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import common.communication.CommunicationException;
@@ -7,6 +9,7 @@ import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
+import entities.Park;
 import entities.ParkManager;
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
@@ -14,143 +17,164 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 /**
- * The ParkManagerAccountScreenController class controls the park manager account screen.
- * It handles all the user interactions within the park manager account screen.
- * This class extends AbstractScreen.
+ * The ParkManagerAccountScreenController class controls the park manager
+ * account screen. It handles all the user interactions within the park manager
+ * account screen. This class extends AbstractScreen.
  * 
- * The class manages park and user data through the use of ParkController and GoNatureUsersController instances,
- * enabling it to perform operations related to park management functionalities.
+ * The class manages park and user data through the use of ParkController and
+ * GoNatureUsersController instances, enabling it to perform operations related
+ * to park management functionalities.
  */
 
-public class ParkManagerAccountScreenController extends AbstractScreen{
-	
-	private GoNatureUsersController userControl;	
+public class ParkManagerAccountScreenController extends AbstractScreen {
+	private GoNatureUsersController userControl;
 	private ParkController parkControl;
 	private ParkManager parkManager;
+
+	/**
+	 * Constructor
+	 */
+	public ParkManagerAccountScreenController() {
+		userControl = GoNatureUsersController.getInstance();
+		parkControl = ParkController.getInstance();
+	}
 
 	// properties for the images animation
 	private final static int IMAGE_VIEW_COUNT = 9; // Display 9 images at a time
 	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT]; // Array for ImageViews
 	private int currentIndex = 0; // Index to track current image set
-	
+
+	//////////////////////////////////
+	/// JAVAFX AND FXML COMPONENTS ///
+	//////////////////////////////////
+
 	@FXML
-    private Label Title, NameLable;
-    @FXML
-    private Button capacityBTN, logOutBTN, AdjustinDataBTN, reportsBTN;
-    @FXML
-    private ImageView goNatureLogo, image1, image2, image3, image4, image5, image6, image7, image8, image9;
+	private Label titleLbl, nameLbl;
+	@FXML
+	private Button capacityBtn, logOutBtn, adjustingDataBtn, reportsBtn;
+	@FXML
+	private ImageView goNatureLogo, image1, image2, image3, image4, image5, image6, image7, image8, image9;
 	@FXML
 	private VBox imagesVbox, controlVbox;
 	@FXML
 	private Pane pane;
 	@FXML
 	private Rectangle rec;
-	
-	public ParkManagerAccountScreenController() {
-		userControl = GoNatureUsersController.getInstance();
-		parkControl = ParkController.getInstance();
-	}
-	
-	public ParkManager getParkManager() {
-		return parkManager;
-	}
 
-	public void setParkManager(ParkManager parkManager) {
-		this.parkManager = parkManager;
-	}
-	
-    /**
-     * @param event
-     * When the 'AdjustinData' button is pressed, 
-     * the park MANAGER will be redirected to the 'ParametersAdjustingScreen'
-     */
-    @FXML
-    void GoToParametersAdjustingScreen(ActionEvent event) {
-    	try {
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
+
+	/**
+	 * @param event When the 'AdjustinData' button is pressed, the park MANAGER will
+	 *              be redirected to the 'ParametersAdjustingScreen'
+	 */
+	@FXML
+	void goToParametersAdjustingScreen(ActionEvent event) {
+		try {
 			ScreenManager.getInstance().showScreen("ParametersAdjustingScreenConrtroller",
 					"/clientSide/fxml/ParametersAdjustingScreen.fxml", false, false, null);
 		} catch (StatefulException | ScreenException e) {
 			e.printStackTrace();
 		}
-    }
+	}
 
-    /**
-     * @param event
-     * When the 'Current Capacity' button is pressed, 
-     * the park manager will see a pop-up screen with the capacity according to park parameters at the DB
-     */
-    @FXML
-    void GetCurrentMaximumCapacity(ActionEvent event) {
-    	//updates park parameters
-		String[] returnsVal = new String[4]; 
-		returnsVal = parkControl.checkCurrentCapacity(parkManager.getParkObject().getParkName());
+	/**
+	 * @param event When the 'Current Capacity' button is pressed, the park manager
+	 *              will see a pop-up screen with the capacity according to park
+	 *              parameters at the DB
+	 */
+	@FXML
+	void getCurrentMaximumCapacity(ActionEvent event) {
+		// updates park parameters
+		Park managerPark = parkManager.getParkObject();
+		String[] returnsVal = new String[4];
+		returnsVal = parkControl.checkCurrentCapacity(managerPark.getParkName());
 		if (returnsVal != null) {
-			//sets the parameters
-			parkManager.getParkObject().setMaximumVisitors(Integer.parseInt(returnsVal[0]));
-			parkManager.getParkObject().setMaximumOrders(Integer.parseInt(returnsVal[1]));
-			parkManager.getParkObject().setTimeLimit(Integer.parseInt(returnsVal[2])); 
-			parkManager.getParkObject().setCurrentCapacity(Integer.parseInt(returnsVal[3])); 
+			// sets the parameters
+			managerPark.setMaximumVisitors(Integer.parseInt(returnsVal[0]));
+			managerPark.setMaximumOrders(Integer.parseInt(returnsVal[1]));
+			managerPark.setTimeLimit(Integer.parseInt(returnsVal[2]));
+			managerPark.setCurrentCapacity(Integer.parseInt(returnsVal[3]));
 		}
-    	int actualCapacity = parkManager.getParkObject().getMaximumOrders() * parkManager.getParkObject().getMaximumVisitors() / 100;
-    	showInformationAlert("The maximum visitors capacity: " + parkManager.getParkObject().getMaximumVisitors() + 
-    			"\nThe maximum allowable quantity of visitors: " + actualCapacity + "\nThe current amount of visitors: " +
-    			parkManager.getParkObject().getCurrentCapacity() + "\nThe time limit for each visit: " +
-    			parkManager.getParkObject().getTimeLimit());
-    }
 
-    
-    /**
-     * @param event
-     * When the 'Reports' button is pressed, 
-     * the park MANAGER will be redirected to the 'ParkManagerReportScreen'
-     */
-    @FXML
-    void GoToParkManagerReportsScreen(ActionEvent event) {
-    	try {
+		String showCapacities = managerPark.getParkName() + " Park Capacities:";
+		showCapacities += "\nCurrent Park Capacity: " + managerPark.getCurrentCapacity();
+		showCapacities += "\nMaximum Visitors Allowance: " + managerPark.getMaximumVisitors();
+		showCapacities += "\nMaximum Visitors by Orders: " + managerPark.getMaximumOrders();
+		showCapacities += "\nPark's Visits Time Limts: " + managerPark.getTimeLimit();
+		showInformationAlert(showCapacities);
+	}
+
+	/**
+	 * @param event When the 'Reports' button is pressed, the park MANAGER will be
+	 *              redirected to the 'ParkManagerReportScreen'
+	 */
+	@FXML
+	void goToParkManagerReportsScreen(ActionEvent event) {
+		try {
 			ScreenManager.getInstance().showScreen("ParkManagerReportScreenController",
 					"/clientSide/fxml/ParkManagerReportScreen.fxml", false, false, null);
 		} catch (StatefulException | ScreenException e) {
 			e.printStackTrace();
 		}
-    }
+	}
 
+	/**
+	 * @param event park manager clicked on 'Log out' button, an update query is
+	 *              executed to alter the value of the 'isLoggedIn' field
+	 * @throws CommunicationException
+	 */
+	@FXML
+	void logOut(ActionEvent event) {
+		if (userControl.logoutUser()) {
+			parkManager.setLoggedIn(false);
+			System.out.println("Park Manager logged out");
+			try {
+				ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml",
+						true, false, null);
+			} catch (ScreenException | StatefulException e) {
+				e.printStackTrace();
+			}
+		} else
+			showErrorAlert("Failed to log out");
+	}
 
-    /**
-     * @param event
-     * park manager clicked on 'Log out' button, an update query is executed to alter the value of the 'isLoggedIn' field
-     * @throws CommunicationException 
-     */
-    @FXML
-    void logOut(ActionEvent event) {
-    	if (userControl.logoutUser()) {
-        	parkManager.setLoggedIn(false);
-    		System.out.println("Park Manager logged out");
-    		try {
-        		ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml", true,
-        				false, null);
-        	} catch (ScreenException | StatefulException e) {
-        				e.printStackTrace();
-    		}
-    	}
-        else 
-        	showErrorAlert("Failed to log out"); 	
-    }
-    
 	@FXML
 	void paneClicked(MouseEvent event) {
 		pane.requestFocus();
 		event.consume();
 	}
-    
+
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
+
+	/**
+	 * @return The park manager's instance
+	 */
+	public ParkManager getParkManager() {
+		return parkManager;
+	}
+
+	/**
+	 * @param parkManager
+	 */
+	public void setParkManager(ParkManager parkManager) {
+		this.parkManager = parkManager;
+	}
+
 	/**
 	 * This method starts the parks images slide show using fade transitions
 	 */
@@ -247,77 +271,101 @@ public class ParkManagerAccountScreenController extends AbstractScreen{
 		timeline.play();
 	}
 
-    /**
-     * Initializes the controller class. This method is automatically called
-     * after the FXML file has been loaded. It performs several initial setup tasks.
-     */
-    @Override
-    public void initialize() {
-        // Restore the ParkManager user from the saved state to set up user context.
-        parkManager = (ParkManager) userControl.restoreUser();
+	/**
+	 * @return A greeting according to the current time of the day
+	 */
+	private String getGreeting() {
+		LocalTime now = LocalTime.now();
+		int hour = now.getHour();
+		if (hour >= 6 && hour <= 12) {
+			return "Good Morning, ";
+		} else if (hour > 12 && hour <= 18) {
+			return "Good Afternoon, ";
+		} else if (hour > 18 && hour <= 22) {
+			return "Good Evening, ";
+		} else {
+			return "Good Night, ";
+		}
+	}
 
-        // Fetch the park object associated with the manager and update the parkManager instance.
-        parkManager.setParkObject(parkControl.fetchManagerParksList("parkManagerId", parkManager.getIdNumber()).get(0));
-
-        // Save the updated parkManager and its park object for later use within the session.
-        userControl.saveUser(parkManager);
-        parkControl.savePark(parkManager.getParkObject());
-
-        // Update UI labels with personalized texts, such as greeting the manager by name.
-        this.NameLable.setText("Hello " + parkManager.getFirstName() + " " + parkManager.getLastName());
-        this.NameLable.underlineProperty(); // Emphasize the name by underlining.
-        this.Title.setText(parkManager.getParkObject().getParkName() + "'s " + getScreenTitle());
-        this.Title.underlineProperty(); // Emphasize the title by underlining.
-
-        // Set the GoNature logo.
-        goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
-
-        // Apply styling to ensure consistent alignment and appearance of UI elements.
-        NameLable.setStyle("-fx-alignment: center-right;");
-        Title.setStyle("-fx-alignment: center-right;");
-        capacityBTN.setStyle("-fx-alignment: center-right;");
-        AdjustinDataBTN.setStyle("-fx-alignment: center-right;");
-        reportsBTN.setStyle("-fx-alignment: center-right;");
-        logOutBTN.setStyle("-fx-alignment: center-right;");
-        NameLable.setAlignment(Pos.CENTER);
-        Title.setAlignment(Pos.CENTER);
-        
-     // setting the image view array
-     		imageViews[0] = image1;
-     		imageViews[1] = image2;
-     		imageViews[2] = image3;
-     		imageViews[3] = image4;
-     		imageViews[4] = image5;
-     		imageViews[5] = image6;
-     		imageViews[6] = image7;
-     		imageViews[7] = image8;
-     		imageViews[8] = image9;
-
-     		// setting 3 first images
-     		imageViews[0].setImage(new Image(imagePaths.get(0)));
-     		imageViews[1].setImage(new Image(imagePaths.get(1)));
-     		imageViews[2].setImage(new Image(imagePaths.get(2)));
-     		imageViews[3].setImage(new Image(imagePaths.get(3)));
-     		imageViews[4].setImage(new Image(imagePaths.get(4)));
-     		imageViews[5].setImage(new Image(imagePaths.get(5)));
-     		imageViews[6].setImage(new Image(imagePaths.get(6)));
-     		imageViews[7].setImage(new Image(imagePaths.get(7)));
-     		imageViews[8].setImage(new Image(imagePaths.get(8)));
-
-     		currentIndex = 9;
-        startSlideshow();
-    }
-
+	///////////////////////////////
+	/// ABSTRACT SCREEN METHODS ///
+	///////////////////////////////
 
 	/**
-	 * @param information The information passed from the previous screen, expected to be a ParkManager instance.
+	 * Initializes the controller class. This method is automatically called after
+	 * the FXML file has been loaded. It performs several initial setup tasks.
 	 */
 	@Override
-	public void loadBefore(Object information) {
+	public void initialize() {
+		// Restore the ParkManager user from the saved state to set up user context.
+		parkManager = (ParkManager) userControl.restoreUser();
+
+		// Fetch the park object associated with the manager and update the parkManager
+		// instance.
+		parkManager.setParkObject(parkControl.fetchManagerParksList("parkManagerId", parkManager.getIdNumber()).get(0));
+
+		// Save the updated park object for later use within the session.
+		parkControl.savePark(parkManager.getParkObject());
+
+		// Update UI labels with personalized texts, such as greeting the manager by
+		// name.
+		nameLbl.setText(getGreeting() + parkManager.getFirstName() + " " + parkManager.getLastName() + "!");
+		nameLbl.underlineProperty(); // Emphasize the name by underlining.
+		titleLbl.setText(parkManager.getParkObject().getParkName() + " Park");
+		titleLbl.underlineProperty(); // Emphasize the title by underlining.
+
+		// Set the GoNature logo.
+		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+
+		// Apply styling to ensure consistent alignment and appearance of UI elements.
+		nameLbl.setAlignment(Pos.CENTER);
+		nameLbl.layoutXProperty().bind(pane.widthProperty().subtract(nameLbl.widthProperty()).divide(2));
+		titleLbl.setAlignment(Pos.CENTER);
+		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
+
+		// setting the image view array
+		imageViews[0] = image1;
+		imageViews[1] = image2;
+		imageViews[2] = image3;
+		imageViews[3] = image4;
+		imageViews[4] = image5;
+		imageViews[5] = image6;
+		imageViews[6] = image7;
+		imageViews[7] = image8;
+		imageViews[8] = image9;
+
+		// setting 9 first images
+		for (int i = 0; i <= 8; i++) {
+			imageViews[i].setImage(new Image(imagePaths.get(i)));
+		}
+
+		currentIndex = 9;
+		startSlideshow();
+
+		// setting the rectangle's shadow
+		DropShadow dropShadow = new DropShadow();
+		dropShadow.setRadius(10.0);
+		dropShadow.setOffsetX(5.0);
+		dropShadow.setOffsetY(5.0);
+		dropShadow.setColor(Color.rgb(50, 50, 50));
+		rec.setEffect(dropShadow);
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	@Override
+	public void loadBefore(Object information) {
+		// irrelevant here
+	}
+
+	@Override
+	/**
+	 * Returns the screen's title
+	 */
 	public String getScreenTitle() {
-		return "Park Manager";
+		return parkManager.getParkObject().getParkName() + " - Park Manager Account";
 	}
 }

@@ -13,12 +13,12 @@
 
 <Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkVisitorAccountScreenController">
    <children>
-      <Label fx:id="NameLable" layoutX="11.0" layoutY="67.0" prefHeight="38.0" prefWidth="678.0" text="Account Screen">
+      <Label fx:id="nameLbl" layoutX="11.0" layoutY="67.0" prefHeight="38.0" prefWidth="678.0" text="Account Screen">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <Button fx:id="logOutBTN" layoutX="36.0" layoutY="25.0" mnemonicParsing="false" onAction="#logOut" text="Log Out" textAlignment="CENTER">
+      <Button fx:id="logOutBtn" layoutX="36.0" layoutY="25.0" mnemonicParsing="false" onAction="#logOut" text="Log Out" textAlignment="CENTER">
          <font>
             <Font name="Calibri" size="16.0" />
          </font>
@@ -38,7 +38,7 @@
                </font>
             </Label>
             <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
-            <Button fx:id="managingBookingBTN" mnemonicParsing="false" onAction="#goTOManagingBookingScreen" prefHeight="30.0" prefWidth="160.0" text="Manage Bookings" textAlignment="CENTER">
+            <Button fx:id="managingBookingBtn" mnemonicParsing="false" onAction="#goTOManagingBookingScreen" prefHeight="30.0" prefWidth="160.0" text="Manage Bookings" textAlignment="CENTER">
                <font>
                   <Font name="Calibri" size="16.0" />
                </font>
@@ -55,7 +55,7 @@
                </font>
             </Label>
             <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
-            <Button fx:id="arrivalConfirmationBTN" mnemonicParsing="false" onAction="#ArrivalConfirmationPopUp" prefHeight="30.0" prefWidth="160.0" text="Cofirm Arrivals" textAlignment="CENTER">
+            <Button fx:id="arrivalConfirmationBtn" mnemonicParsing="false" onAction="#ArrivalConfirmationPopUp" prefHeight="30.0" prefWidth="160.0" text="Cofirm Arrivals" textAlignment="CENTER">
                <font>
                   <Font name="Calibri" size="16.0" />
                </font>
@@ -72,7 +72,7 @@
                </font>
             </Label>
             <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
-            <Button fx:id="visitBookingBTN" mnemonicParsing="false" onAction="#goTOVisitBookingScreen" prefHeight="30.0" prefWidth="160.0" text="Booking Reservation" textAlignment="CENTER">
+            <Button fx:id="visitBookingBtn" mnemonicParsing="false" onAction="#goTOVisitBookingScreen" prefHeight="30.0" prefWidth="160.0" text="Booking Reservation" textAlignment="CENTER">
                <font>
                   <Font name="Calibri" size="16.0" />
                </font>

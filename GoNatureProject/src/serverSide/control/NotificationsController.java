@@ -105,8 +105,18 @@ public class NotificationsController {
 		boolean isPaid = (Boolean) details.get(9);
 		String message = "Hello, " + fullName + "!";
 		message += "\n\nWe are pleased to confirm your reservation to " + parkName + "!";
-		message += "\nYou will get a reminder 24 hours before the day of your booking,";
-		message += "\nThis reminder will have to be confirmed in the GoNature app within 2 hours in order to save your booking.";
+
+		// if the booking occurs in less than 24 hours
+		if (Math.abs(Duration.between(LocalDateTime.of(dayofvisit, timeOfVisit), LocalDateTime.now())
+				.toHours()) <= BackgroundManager.reminderSendBeforeTime) {
+			message += "\nSoon you will get a reminder of your booking.";
+		} else {
+			message += "\nYou will get a reminder " + BackgroundManager.reminderSendBeforeTime
+					+ " hours before the day of your booking.";
+		}
+
+		message += "\nThis reminder will have to be confirmed in the GoNature app within "
+				+ BackgroundManager.reminderCancellationTime + " hours in order to save your booking.";
 		message += "\n\nIf you will not confirm, your booking will automatically be cancelled.";
 		message += "\n\nThank you and we are looking forward to see you!";
 		message += "\n\nBest Regards, GoNature";
@@ -116,7 +126,41 @@ public class NotificationsController {
 		message += "\nTime: " + timeOfVisit;
 		message += "\nNumber of Visitors: " + numberOfVisitors;
 		message += "\nFinal Price: " + finalPrice + "$";
-		message += "\nNumber of Visitors: " + numberOfVisitors + "    Final Price: " + finalPrice + "$";
+		message += isPaid ? "\nYour booking is fully paid!"
+				: "\nYour booking is not paid, you will need to pay at the park entrance.";
+
+		sendEmail(emailAddress, "GoNature - Confirmation", message);
+	}
+	
+	/**
+	 * Sends a booking confirmation email notification to a user, without a reminder.
+	 * Used in the park entrance for sending invoices.
+	 *
+	 * @param ArrayList that contains The booking details for which the confirmation
+	 *                  is sent.
+	 */
+	public void sendConfirmationWithoudReminderEmailNotification(List<Object> details) {
+		String emailAddress = (String) details.get(0);
+// 		String phoneNumber = (String)details.get(1);
+		String parkName = (String) details.get(2);
+		LocalDate dayofvisit = (LocalDate) details.get(3);
+		LocalTime timeOfVisit = (LocalTime) details.get(4);
+		String fullName = (String) details.get(5);
+		String parkLocation = (String) details.get(6);
+		Integer numberOfVisitors = (int) details.get(7);
+		Integer finalPrice = (Integer) details.get(8);
+		boolean isPaid = (Boolean) details.get(9);
+		String message = "Hello, " + fullName + "!";
+		message += "\n\nWe are pleased to confirm your reservation to " + parkName + "!";
+
+		message += "\n\nThank you and we hope you will have an amazing time.";
+		message += "\n\nBest Regards, GoNature";
+		message += "\n\nYOUR BOOKING DETAILS:";
+		message += "\nPark: " + parkName + " in " + parkLocation;
+		message += "\nDate: " + dayofvisit;
+		message += "\nTime: " + timeOfVisit;
+		message += "\nNumber of Visitors: " + numberOfVisitors;
+		message += "\nFinal Price: " + finalPrice + "$";
 		message += isPaid ? "\nYour booking is fully paid!"
 				: "\nYour booking is not paid, you will need to pay at the park entrance.";
 

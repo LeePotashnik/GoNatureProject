@@ -12,9 +12,9 @@ import entities.DepartmentManager;
 import entities.ParkEmployee;
 import entities.ParkManager;
 import entities.ParkVisitor;
+import entities.ParkVisitor.VisitorType;
 import entities.Representative;
 import entities.SystemUser;
-import entities.ParkVisitor.VisitorType;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -24,6 +24,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
@@ -64,7 +65,9 @@ public class MainScreenController extends AbstractScreen {
 	@FXML
 	private VBox vbox, signInVbox, orVbox, idVbox;
 	@FXML
-	private TextField usernameTxt, passwordTxt, idNumberTxt;
+	private TextField usernameTxt, idNumberTxt;
+	@FXML
+	private PasswordField passwordTxt;
 	@FXML
 	private Label titleLbl, lbl1, lbl2, lbl3, waitLabel;
 	@FXML
@@ -119,6 +122,7 @@ public class MainScreenController extends AbstractScreen {
 							ParkVisitor traveller = new ParkVisitor(idNumber, null, null, null, null, null, null, true,
 									VisitorType.TRAVELLER);
 							usersControl.saveUser(traveller);
+							loginControl.updateUserIsLoggedIn(traveller);
 							// showing the new booking screen
 							try {
 								ScreenManager.getInstance().showScreen("BookingScreenController",
@@ -438,6 +442,9 @@ public class MainScreenController extends AbstractScreen {
 		progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
 		progressIndicator.layoutXProperty()
 				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	@Override

@@ -617,7 +617,7 @@ public class LoginController {
 		}
 		RequestForUpdateParkparameter.setTables(Arrays.asList(Communication.traveller));
 		RequestForUpdateParkparameter.setColumnsAndValues(Arrays.asList("travellerId", "isLoggedIn"),
-				Arrays.asList(idNumber, 1));
+				Arrays.asList(idNumber, 0));
 
 		GoNatureClientUI.client.accept(RequestForUpdateParkparameter); // sending the query to the server that will
 																		// connect to the DB

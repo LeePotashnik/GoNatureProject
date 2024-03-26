@@ -2,58 +2,206 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkEntryManagementScreenController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkEntryManagementScreenController">
    <children>
-      <Label fx:id="nameLbl" layoutX="36.0" layoutY="262.0" prefHeight="25.0" prefWidth="572.0" text="For update entry or exit park time:" textAlignment="RIGHT">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
-      <TextField fx:id="bookingIDTxt" layoutX="254.0" layoutY="197.0" prefHeight="35.0" prefWidth="136.0" promptText="Booking ID">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </TextField>
-      <Label fx:id="visitorsLbl" layoutX="33.0" layoutY="376.0" prefHeight="25.0" prefWidth="254.0" text="For generating invoices for visitors:" textAlignment="RIGHT">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
       <Button fx:id="backButton" layoutX="14.0" layoutY="15.0" mnemonicParsing="false" onAction="#returnToPreviousScreen" prefHeight="38.0" prefWidth="38.0">
          <font>
             <Font name="Calibri" size="14.0" />
          </font>
       </Button>
-      <ImageView fx:id="goNatureLogo" fitHeight="91.0" fitWidth="436.0" layoutX="121.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />      
-      <Label fx:id="titleLbl" layoutX="88.0" layoutY="134.0" prefHeight="38.0" prefWidth="522.0">
+      <Label fx:id="titleLbl" alignment="CENTER" layoutX="11.0" layoutY="65.0" prefHeight="38.0" prefWidth="678.0" text="Account Screen">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <Button fx:id="entryTimeBTN" layoutX="165.0" layoutY="308.0" mnemonicParsing="false" onAction="#UpdateEntryTime" text="Update Entry Time">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Button>
-      <Button fx:id="exitTimeBTN" layoutX="351.0" layoutY="308.0" mnemonicParsing="false" onAction="#UpdateExitTime" text="Update Exit Time">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Button>
-      <Button fx:id="invoiceButton" layoutX="227.0" layoutY="408.0" mnemonicParsing="false" onAction="#InvoiceScreen" text="Park Invoice Generation">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Button>
-      <Label fx:id="bookingIDLbl" layoutX="35.0" layoutY="172.0" prefHeight="25.0" prefWidth="572.0" text="Please insert booking ID:" textAlignment="RIGHT">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
+      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />
+      <VBox layoutX="30.0" layoutY="103.0" prefHeight="382.0" prefWidth="330.0">
+         <children>
+            <Label fx:id="bookingIDLbl" prefHeight="25.0" prefWidth="330.0" text="Please insert booking ID:" textAlignment="RIGHT" underline="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="10.0" stroke="TRANSPARENT" strokeType="INSIDE" width="330.0" />
+            <HBox prefHeight="30.0" prefWidth="330.0">
+               <children>
+                  <TextField fx:id="bookingIDTxt" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="180.0" promptText="Booking Id Number">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+                  <Button fx:id="checkBtn" mnemonicParsing="false" onAction="#checkIdClicked" prefHeight="36.0" prefWidth="140.0" text="Check Id">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Button>
+               </children>
+            </HBox>
+            <Separator prefHeight="30.0" prefWidth="200.0" />
+            <Label prefHeight="25.0" prefWidth="330.0" text="Booking Information:" textAlignment="RIGHT" underline="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <HBox prefHeight="28.0" prefWidth="330.0">
+               <children>
+                  <Label prefHeight="28.0" prefWidth="140.0" text="Booker Full Name:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+                  <Label fx:id="fullNameLbl" prefHeight="28.0" prefWidth="180.0" text="Booker Full Name" textAlignment="RIGHT">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="330.0" />
+            <HBox prefHeight="28.0" prefWidth="330.0">
+               <children>
+                  <Label prefHeight="28.0" prefWidth="140.0" text="Date and Time:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+                  <Label fx:id="dateLbl" prefHeight="28.0" prefWidth="180.0" text="Booking date&amp;time" textAlignment="RIGHT">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="330.0" />
+            <HBox prefHeight="28.0" prefWidth="330.0">
+               <children>
+                  <Label layoutY="28.0" prefHeight="28.0" prefWidth="140.0" text="Group Size:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+                  <Label fx:id="sizeLbl" layoutY="28.0" prefHeight="28.0" prefWidth="180.0" text="Booking group size" textAlignment="RIGHT">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="330.0" />
+            <HBox prefHeight="28.0" prefWidth="330.0">
+               <children>
+                  <Label prefHeight="28.0" prefWidth="140.0" text="Final Price:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+                  <Label fx:id="priceLbl" prefHeight="28.0" prefWidth="180.0" text="Booking final price" textAlignment="RIGHT">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="330.0" />
+            <HBox prefHeight="28.0" prefWidth="330.0">
+               <children>
+                  <Label prefHeight="28.0" prefWidth="140.0" text="Is Booking Paid:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+                  <Label fx:id="isPaidLbl" prefHeight="28.0" prefWidth="180.0" text="Booking isPaid" textAlignment="RIGHT">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="330.0" />
+            <HBox prefHeight="28.0" prefWidth="330.0">
+               <children>
+                  <Label prefHeight="28.0" prefWidth="140.0" text="Arrival Time:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+                  <Label fx:id="arrivalLbl" prefHeight="28.0" prefWidth="180.0" text="arrivalTime" textAlignment="RIGHT">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="330.0" />
+            <HBox prefHeight="28.0" prefWidth="330.0">
+               <children>
+                  <Label prefHeight="28.0" prefWidth="140.0" text="Leaving Time:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+                  <Label fx:id="leavingLbl" prefHeight="28.0" prefWidth="180.0" text="LeavingTime" textAlignment="RIGHT">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="330.0" />
+            <HBox prefHeight="28.0" prefWidth="330.0">
+               <children>
+                  <Label prefHeight="28.0" prefWidth="140.0" text="Booking Status:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="28.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+                  <Label fx:id="statusLbl" prefHeight="28.0" prefWidth="180.0" text="status" textAlignment="RIGHT">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+      <VBox layoutX="419.0" layoutY="250.0" prefHeight="200.0" prefWidth="180.0">
+         <children>
+            <Button fx:id="entryTimeBtn" mnemonicParsing="false" onAction="#updateEntryTime" prefWidth="180.0" text="Update Entry Time">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Button>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="180.0" />
+            <Button fx:id="exitTimeBtn" mnemonicParsing="false" onAction="#updateExitTime" prefWidth="180.0" text="Update Exit Time">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Button>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="180.0" />
+            <Button fx:id="invoiceBtn" mnemonicParsing="false" onAction="#invoiceScreen" prefWidth="180.0" text="Generate Invoice">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Button>
+         </children>
+      </VBox>
    </children>
 </Pane>

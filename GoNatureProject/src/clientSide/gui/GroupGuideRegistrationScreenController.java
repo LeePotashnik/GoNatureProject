@@ -17,6 +17,8 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 
 public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	private final String DIGITS_ONLY_REGEX = "\\d+";
@@ -39,6 +41,8 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	private ImageView goNatureLogo;
 	@FXML
 	private Button checkIDbtn;
+	@FXML
+	private Pane pane;
 
 	//////////////////////////////
 	/// EVENT HANDLING METHODS ///
@@ -120,14 +124,15 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 			}
 		}
 	}
-
-	private boolean DetailsValidation(String firstName, String lastName, String email, String phone, String username,
-			String password) {
-		if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || phone.isEmpty() || username.isEmpty()
-				|| password.isEmpty()) {
-			return false;
-		}
-		return true;
+	
+	@FXML
+	/**
+	 * If the pane clicked, all focus from the GUI components will be disabled
+	 * 
+	 * @param event
+	 */
+	void paneClicked(MouseEvent event) {
+		pane.requestFocus();
 	}
 
 	/**
@@ -147,6 +152,26 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	////////////////////////
 	/// INSTANCE METHODS ///
 	////////////////////////
+	
+	/**
+	 * This method validates the entered details by the user
+	 * 
+	 * @param firstName
+	 * @param lastName
+	 * @param email
+	 * @param phone
+	 * @param username
+	 * @param password
+	 * @return
+	 */
+	private boolean DetailsValidation(String firstName, String lastName, String email, String phone, String username,
+			String password) {
+		if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || phone.isEmpty() || username.isEmpty()
+				|| password.isEmpty()) {
+			return false;
+		}
+		return true;
+	}
 
 	/**
 	 * Shows all registration fields and the register button, making them visible
@@ -251,19 +276,14 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 		backButton.setPadding(new Insets(1, 1, 1, 1));
 		hideAllExceptIDAndCheckID();
 
+		// setting the application's background
+		setApplicationBackground(pane);
+
 	}
 
-	/**
-	 * Loads any necessary information before the screen is displayed. Currently not
-	 * implemented.
-	 *
-	 * @param information optional information that might be needed for
-	 *                    initialization.
-	 */
 	@Override
 	public void loadBefore(Object information) {
-		// TODO Auto-generated method stub
-
+		// irrelevant here
 	}
 
 	/**

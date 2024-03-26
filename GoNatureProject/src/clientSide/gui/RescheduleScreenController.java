@@ -34,6 +34,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.util.Pair;
 
 public class RescheduleScreenController extends AbstractScreen {
 	private BookingController control;
@@ -243,7 +244,8 @@ public class RescheduleScreenController extends AbstractScreen {
 					// showing the payment screen
 					try {
 						ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
-								"/clientSide/fxml/PaymentSystemScreen.fxml", true, false, booking);
+								"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
+								new Pair<Booking, String>(booking, "online"));
 					} catch (StatefulException | ScreenException e) {
 						e.printStackTrace();
 					}
@@ -436,6 +438,9 @@ public class RescheduleScreenController extends AbstractScreen {
 		progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
 		progressIndicator.layoutXProperty()
 				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	@Override

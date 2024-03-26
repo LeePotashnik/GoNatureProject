@@ -190,6 +190,9 @@ public class WaitingListScreenController extends AbstractScreen {
 		backImage.setPreserveRatio(true);
 		backButton.setGraphic(backImage);
 		backButton.setPadding(new Insets(1, 1, 1, 1));
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	@Override

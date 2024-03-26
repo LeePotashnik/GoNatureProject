@@ -33,12 +33,12 @@
          </stroke>
       </Rectangle>
       <ImageView fx:id="goNatureLogo" fitHeight="79.0" fitWidth="470.0" layoutX="115.0" layoutY="24.0" pickOnBounds="true" preserveRatio="true" />
-      <Label fx:id="titleLbl" layoutX="3.0" layoutY="305.0" prefHeight="38.0" prefWidth="694.0" text="Client Connection">
+      <Label fx:id="titleLbl" layoutX="3.0" layoutY="300.0" prefHeight="38.0" prefWidth="694.0" text="Client Connection">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <Label fx:id="instrLbl" layoutX="4.0" layoutY="343.0" prefHeight="23.0" prefWidth="694.0" text="Please enter host and port number to connect to the server:" textAlignment="CENTER">
+      <Label fx:id="instrLbl" layoutX="4.0" layoutY="338.0" prefHeight="23.0" prefWidth="694.0" text="Please enter host and port number to connect to the server:" textAlignment="CENTER">
          <font>
             <Font name="Calibri Light" size="20.0" />
          </font>

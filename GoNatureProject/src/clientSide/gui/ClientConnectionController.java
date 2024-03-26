@@ -287,6 +287,9 @@ public class ClientConnectionController extends AbstractScreen {
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 
 		setupTextFieldToDigitsOnly(portTxtField);
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	@Override

@@ -19,6 +19,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -374,5 +377,17 @@ public abstract class AbstractScreen {
 			imagePaths.add("/yellowstone.jpg");
 			imagePaths.add("/yosemite.jpg");
 		}
+	}
+
+	public void setApplicationBackground(Pane pane) {
+		// setting the background
+		ImageView backgroundImage = new ImageView(new Image("/applicationBackground.png"));
+
+		backgroundImage.fitWidthProperty().bind(ScreenManager.getInstance().getStage().widthProperty());
+		backgroundImage.fitHeightProperty().bind(ScreenManager.getInstance().getStage().heightProperty());
+		backgroundImage.setPreserveRatio(false);
+		backgroundImage.setOpacity(0.5);
+
+		pane.getChildren().add(0, backgroundImage);
 	}
 }

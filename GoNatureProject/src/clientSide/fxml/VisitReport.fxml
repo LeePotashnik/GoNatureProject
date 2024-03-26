@@ -8,20 +8,20 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.VisitReportController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.VisitReportController">
    <children>
       <Button fx:id="backButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onAction="#returnToPreviousScreen" prefHeight="38.0" prefWidth="38.0">
          <font>
             <Font name="Calibri" size="14.0" />
          </font>
       </Button>
-      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
-      <Label fx:id="VisitReport" layoutX="270.0" layoutY="77.0" prefHeight="38.0" prefWidth="230.0" text="Visit Report">
+      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />
+      <Label fx:id="visitReport" layoutX="270.0" layoutY="65.0" prefHeight="38.0" prefWidth="230.0" text="Visits Report">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <ScatterChart fx:id="VisitScatterChart" layoutX="90.0" layoutY="111.0" prefHeight="372.0" prefWidth="496.0">
+      <ScatterChart fx:id="visitScatterChart" layoutX="90.0" layoutY="111.0" prefHeight="372.0" prefWidth="496.0">
         <xAxis>
           <NumberAxis fx:id="hoursAxis" label="Entrance Time" side="BOTTOM" />
         </xAxis>
