@@ -531,7 +531,7 @@ public class ReportsController {
 
 			String dayName = dayOfVisit.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
-			if (Communication.userCancelled.equals(cancellationReason) || "Did not confirm".equals(cancellationReason)) {
+			if (Communication.userCancelled.equals(cancellationReason) || Communication.userDidNotConfirm.equals(cancellationReason)) {
 				cancelledOrdersStats.get(dayName).add(numberOfVisitors);
 			} else if (Communication.userDidNotArrive.equals(cancellationReason)) {
 				noShowVisitorsStats.get(dayName).add(numberOfVisitors);
@@ -554,6 +554,7 @@ public class ReportsController {
 
 		Map<String, List<XYChart.Data<String, Number>>> chartData = new HashMap<>();
 		chartData.put(Communication.userCancelled, cancelledOrdersAvgData);
+		chartData.put(Communication.userDidNotConfirm, cancelledOrdersAvgData);
 		chartData.put(Communication.userDidNotArrive, noShowVisitorsAvgData);
 
 		return chartData;
