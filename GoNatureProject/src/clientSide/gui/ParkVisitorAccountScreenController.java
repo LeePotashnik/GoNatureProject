@@ -155,13 +155,9 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 	 */
 	@FXML
 	void logOut(ActionEvent event) {
-		int choise = showConfirmationAlert("Are you sure you want to log out?", Arrays.asList("No", "Yes"));
-
+		int choise = showConfirmationAlert("Are you sure you want to log out?", Arrays.asList("Yes", "No"));
 		switch (choise) {
-		case 1: // clicked "No"
-			event.consume();
-			break;
-		case 2: // clicked "Yes"
+		case 1: // clicked "Yes"
 			if (userControl.logoutUser())
 				parkVisitor.setLoggedIn(false);
 			try {
@@ -169,6 +165,10 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 			} catch (ScreenException | StatefulException e) {
 				e.printStackTrace();
 			}
+			
+		case 2: // clicked "No"
+			event.consume();
+			break;
 		}
 	}
 
@@ -389,14 +389,12 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 		// Restores the park visitor from the saved state to ensure continuity in user
 		// experience.
 		parkVisitor = (ParkVisitor) userControl.restoreUser();
-		// Saves the current state of the park visitor for potential future use.
-		userControl.saveUser(parkVisitor);
-
 		// Sets greeting text dynamically based on the visitor's information.
 		if (parkVisitor.getVisitorType() == VisitorType.GROUPGUIDE) {
 			nameLbl.setText(getGreeting() + parkVisitor.getFirstName() + " " + parkVisitor.getLastName() + "!");
 			nameLbl.underlineProperty(); // Adds underline to emphasize the name label.
 		} else {
+			parkVisitor.setLoggedIn(true);
 			nameLbl.setText(getGreeting() + "and Welcome!");
 		}
 

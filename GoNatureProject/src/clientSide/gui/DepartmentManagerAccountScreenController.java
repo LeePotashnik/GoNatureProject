@@ -2,6 +2,7 @@ package clientSide.gui;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
@@ -128,17 +129,16 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen {
 				departmentManager.getResponsible().get(i).setCurrentCapacity(Integer.parseInt(currCap[3]));
 			}
 		}
-		int i = 0;
-		String output = "";
-		for (i = 0; i < departmentManager.getResponsible().size(); i++) {
-			Park park = departmentManager.getResponsible().get(i);
-			// String[] currCap = parkControl.checkCurrentCapacity(parkName);
-			output += "Capacity parameters in " + park.getParkName() + " park:\n	maximum visitors: "
-					+ park.getMaximumVisitors() + "\n	maximum allowable quantity of visitors: "
-					+ park.getMaximumOrders() + "\n	current capacity:  " + park.getCurrentCapacity()
-					+ "\n	time limit: " + park.getTimeLimit() + "\n";
+		StringBuilder showCapacities = new StringBuilder();
+		for (Park park : departmentManager.getResponsible()) {
+			showCapacities.append(park.getParkName()).append(" Park Capacities:");
+			showCapacities.append("\n\tCurrent Park Capacity: ").append(park.getCurrentCapacity());
+			showCapacities.append("\n\tMaximum Visitors Allowance: ").append(park.getMaximumVisitors());
+			showCapacities.append("\n\tMaximum Visitors by Orders: ").append(park.getMaximumOrders());
+			showCapacities.append("\n\tPark's Visits Time Limits: ").append(park.getTimeLimit());
+			showCapacities.append("\n");
 		}
-		showInformationAlert(output);
+		showInformationAlert(showCapacities.toString());
 	}
 
 	/**
@@ -152,17 +152,21 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen {
 	 */
 	@FXML
 	void logOut(ActionEvent event) {
-		if (userControl.logoutUser()) {
-			departmentManager.setLoggedIn(false);
-			System.out.println("Department Manager logged out");
+		int choise = showConfirmationAlert("Are you sure you want to log out?", Arrays.asList("Yes", "No"));
+		switch (choise) {
+		case 1: // clicked "Yes"
+			if (userControl.logoutUser())
+				departmentManager.setLoggedIn(false);
 			try {
-				ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml",
-						true, false, null);
+				ScreenManager.getInstance().goToPreviousScreen(false, false);
 			} catch (ScreenException | StatefulException e) {
 				e.printStackTrace();
 			}
-		} else
-			showErrorAlert("Failed to log out");
+			
+		case 2: // clicked "No"
+			event.consume();
+			break;
+		}
 	}
 
 	@FXML

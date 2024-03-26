@@ -44,7 +44,8 @@ public class Communication implements Serializable {
 
 	/// CNCELLATION REASONS ///
 	public static final String userCancelled = "User Cancelled";
-	public static final String userDidNotArrive = "User Did Not Arrive";
+	public static final String userDidNotArrive = "Did not arrive";
+	public static final String userDidNotConfirm = "Did not confirm";
 
 	// the communication type
 	/**

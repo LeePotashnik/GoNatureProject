@@ -1,6 +1,7 @@
 package clientSide.gui;
 
 import java.time.LocalTime;
+import java.util.Arrays;
 
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
@@ -109,12 +110,14 @@ public class ParkManagerAccountScreenController extends AbstractScreen {
 			managerPark.setCurrentCapacity(Integer.parseInt(returnsVal[3]));
 		}
 
-		String showCapacities = managerPark.getParkName() + " Park Capacities:";
-		showCapacities += "\nCurrent Park Capacity: " + managerPark.getCurrentCapacity();
-		showCapacities += "\nMaximum Visitors Allowance: " + managerPark.getMaximumVisitors();
-		showCapacities += "\nMaximum Visitors by Orders: " + managerPark.getMaximumOrders();
-		showCapacities += "\nPark's Visits Time Limts: " + managerPark.getTimeLimit();
-		showInformationAlert(showCapacities);
+		StringBuilder showCapacities = new StringBuilder();
+		showCapacities.append(managerPark.getParkName()).append(" Park Capacities:");
+		showCapacities.append("\n\tCurrent Park Capacity: ").append(managerPark.getCurrentCapacity());
+		showCapacities.append("\n\tMaximum Visitors Allowance: ").append(managerPark.getMaximumVisitors());
+		showCapacities.append("\n\tMaximum Visitors by Orders: ").append(managerPark.getMaximumOrders());
+		showCapacities.append("\n\tPark's Visits Time Limits: ").append(managerPark.getTimeLimit());
+
+		showInformationAlert(showCapacities.toString());
 	}
 
 	/**
@@ -138,17 +141,21 @@ public class ParkManagerAccountScreenController extends AbstractScreen {
 	 */
 	@FXML
 	void logOut(ActionEvent event) {
-		if (userControl.logoutUser()) {
-			parkManager.setLoggedIn(false);
-			System.out.println("Park Manager logged out");
+		int choise = showConfirmationAlert("Are you sure you want to log out?", Arrays.asList("Yes", "No"));
+		switch (choise) {
+		case 1: // clicked "Yes"
+			if (userControl.logoutUser())
+				parkManager.setLoggedIn(false);
 			try {
-				ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml",
-						true, false, null);
+				ScreenManager.getInstance().goToPreviousScreen(false, false);
 			} catch (ScreenException | StatefulException e) {
 				e.printStackTrace();
 			}
-		} else
-			showErrorAlert("Failed to log out");
+			
+		case 2: // clicked "No"
+			event.consume();
+			break;
+		}
 	}
 
 	@FXML
@@ -304,9 +311,6 @@ public class ParkManagerAccountScreenController extends AbstractScreen {
 		// Fetch the park object associated with the manager and update the parkManager
 		// instance.
 		parkManager.setParkObject(parkControl.fetchManagerParksList("parkManagerId", parkManager.getIdNumber()).get(0));
-
-		// Save the updated park object for later use within the session.
-		parkControl.savePark(parkManager.getParkObject());
 
 		// Update UI labels with personalized texts, such as greeting the manager by
 		// name.

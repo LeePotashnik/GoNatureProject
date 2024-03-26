@@ -78,8 +78,7 @@ public class TotalNumberOfVisitorsReportController extends AbstractScreen {
 		totalVisitorsPaiChart.getData().clear(); // Clear previous data if any
 		totalVisitorsPaiChart.getData().addAll(singleVisitorsData, groupVisitorsData);
 
-		totalVisitorsPaiChart.getData().forEach(data -> data.nameProperty()
-				.bind(javafx.beans.binding.Bindings.concat(data.getName(), " ", data.pieValueProperty())));
+		totalVisitorsPaiChart.getData().forEach(data -> data.nameProperty().bind(javafx.beans.binding.Bindings.concat(data.getName(), " ", data.pieValueProperty())));
 	}
 
 	///////////////////////////////
@@ -93,12 +92,12 @@ public class TotalNumberOfVisitorsReportController extends AbstractScreen {
 	public void initialize() {
 		// initializing the image component of the logo and centering it
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
-		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
-
+		pane.widthProperty().addListener((obs, oldVal, newVal) -> {
+	        double width = newVal.doubleValue();
+	        goNatureLogo.setLayoutX((width - goNatureLogo.getFitWidth()) / 2);
+	    });
 		// centering the title label
 		totalVisitorsReport.setAlignment(Pos.CENTER);
-		totalVisitorsReport.layoutXProperty()
-				.bind(pane.widthProperty().subtract(totalVisitorsReport.widthProperty()).divide(2));
 
 		// setting the back button image
 		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
