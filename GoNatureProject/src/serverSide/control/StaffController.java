@@ -13,6 +13,11 @@ import serverSide.jdbc.DatabaseException;
 
 public class StaffController {
 	private DatabaseController database;
+	public enum ImportStatus {
+	    SUCCESS,
+	    NOTHING_TO_IMPORT,
+	    FAILURE
+	}
 
 	/**
 	 * Private constructor to prevent external instantiation.
@@ -26,24 +31,32 @@ public class StaffController {
 	/**
 	 * Imports users into their respective tables based on user type.
 	 * 
-	 * @return true if all users are imported successfully, false otherwise.
+	 * @return An ImportStatus indicating the outcome of the import process. Possible return values are:
+	 *         - SUCCESS if at least one user type is successfully imported.
+	 *         - NOTHING_TO_IMPORT if no users of any type are found to import.
+	 *         - FAILURE if an error occurs during the import process.
 	 * @throws DatabaseException if there's a problem accessing the database.
 	 */
-	public boolean importUsers() {
-		boolean done=false;
-		try {
-			if(importUsersType("Employee")) 
-				done = true;
-			if(importUsersType("Park Manager")) 
-				done = true;
-			if(importUsersType("Department Manager")) 
-				done = true;
-			if(importUsersType("Representative")) 
-				done = true;
-		} catch (DatabaseException e) {
-			e.printStackTrace();
-		} 
-		return done;
+	public ImportStatus importUsers() {
+	    try {
+	        boolean atLeastOneImported = false;
+	        if (importUsersType("Employee")) 
+	        	atLeastOneImported = true;
+	        if (importUsersType("Park Manager")) 
+	        	atLeastOneImported = true;
+	        if (importUsersType("Department Manager")) 
+	        	atLeastOneImported = true;
+	        if (importUsersType("Representative")) 
+	        	atLeastOneImported = true;
+
+	        if (!atLeastOneImported) {
+	            return ImportStatus.NOTHING_TO_IMPORT;
+	        }
+	        return ImportStatus.SUCCESS;
+	    } catch (DatabaseException e) {
+	        e.printStackTrace();
+	        return ImportStatus.FAILURE;
+	    }
 	}
 
 	private String nameOfTable(String park) {
