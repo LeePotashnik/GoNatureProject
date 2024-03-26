@@ -155,13 +155,9 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 	 */
 	@FXML
 	void logOut(ActionEvent event) {
-		int choise = showConfirmationAlert("Are you sure you want to log out?", Arrays.asList("No", "Yes"));
-
+		int choise = showConfirmationAlert("Are you sure you want to log out?", Arrays.asList("Yes", "No"));
 		switch (choise) {
-		case 1: // clicked "No"
-			event.consume();
-			break;
-		case 2: // clicked "Yes"
+		case 1: // clicked "Yes"
 			if (userControl.logoutUser())
 				parkVisitor.setLoggedIn(false);
 			try {
@@ -169,6 +165,10 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 			} catch (ScreenException | StatefulException e) {
 				e.printStackTrace();
 			}
+			
+		case 2: // clicked "No"
+			event.consume();
+			break;
 		}
 	}
 
