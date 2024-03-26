@@ -15,6 +15,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
+import serverSide.control.StaffController.ImportStatus;
 import serverSide.jdbc.DatabaseController;
 import serverSide.jdbc.DatabaseException;
 
@@ -197,7 +198,7 @@ public class GoNatureServer extends AbstractServer {
 	 * This method is called in order to import users data from the Users Management
 	 * System into GoNature database
 	 */
-	public boolean importUsersFromExternalSystem() {
+	public ImportStatus importUsersFromExternalSystem() {
 		if (staffController == null) {
 			staffController = new StaffController(database);
 		}

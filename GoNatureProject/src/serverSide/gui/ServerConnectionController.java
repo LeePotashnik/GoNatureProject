@@ -131,11 +131,16 @@ public class ServerConnectionController extends AbstractScreen {
 			return;
 
 		case 2:
-			if (GoNatureServerUI.server.importUsersFromExternalSystem()) {
-				showInformationAlert("The users data import succeed");
+			switch (GoNatureServerUI.server.importUsersFromExternalSystem()) {
+			case SUCCESS:
+				showInformationAlert("Employees data has been imported successfully");
 				importBtn.setDisable(true);
-			} else {
-				showInformationAlert("The users data import failed");
+			case NOTHING_TO_IMPORT:
+				showInformationAlert("There's no data to import at the moment");
+				importBtn.setDisable(true);
+			case FAILURE:
+				showErrorAlert("Importing data has failed. Please try again later");
+				importBtn.setDisable(true);
 			}
 		}
 	}

@@ -394,7 +394,6 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 			nameLbl.setText(getGreeting() + parkVisitor.getFirstName() + " " + parkVisitor.getLastName() + "!");
 			nameLbl.underlineProperty(); // Adds underline to emphasize the name label.
 		} else {
-			parkVisitor.setLoggedIn(true);
 			nameLbl.setText(getGreeting() + "and Welcome!");
 		}
 

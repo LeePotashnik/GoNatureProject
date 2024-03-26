@@ -35,7 +35,7 @@
             <Font name="Calibri Bold" size="18.0" />
          </font>
       </Label>
-      <Button fx:id="processPayment" layoutX="530.0" layoutY="460.0" mnemonicParsing="false" onAction="#processPayment" text="Process Payment">
+      <Button fx:id="processPayment" layoutX="523.0" layoutY="440.0" mnemonicParsing="false" onAction="#processPayment" text="Process Payment">
          <font>
             <Font name="Calibri" size="16.0" />
          </font>
@@ -74,77 +74,77 @@
       <VBox layoutX="32.0" layoutY="268.0" prefHeight="186.0" prefWidth="640.0">
          <children>
             <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="640.0" />
-            <HBox prefHeight="25.0" prefWidth="640.0">
+            <HBox maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" prefWidth="640.0">
                <children>
-                  <Label fx:id="label1" prefHeight="25.0" prefWidth="94.0" text="Card Number:">
+                  <Label fx:id="label1" prefHeight="30.0" prefWidth="94.0" text="Card Number:">
                      <font>
                         <Font name="Calibri Bold" size="16.0" />
                      </font>
                   </Label>
                   <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="25.0" stroke="TRANSPARENT" strokeType="INSIDE" width="26.0" />
-                  <TextField fx:id="cardNumber1Txt" prefHeight="25.0" prefWidth="90.0">
+                  <TextField fx:id="cardNumber1Txt" prefHeight="30.0" prefWidth="90.0">
                      <font>
                         <Font name="Calibri" size="14.0" />
                      </font>
                   </TextField>
                   <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="25.0" stroke="TRANSPARENT" strokeType="INSIDE" width="15.0" />
-                  <TextField fx:id="cardNumber2Txt" prefHeight="25.0" prefWidth="90.0">
+                  <TextField fx:id="cardNumber2Txt" prefHeight="30.0" prefWidth="90.0">
                      <font>
                         <Font name="Calibri" size="14.0" />
                      </font>
                   </TextField>
                   <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="25.0" stroke="TRANSPARENT" strokeType="INSIDE" width="15.0" />
-                  <TextField fx:id="cardNumber3Txt" prefHeight="25.0" prefWidth="90.0">
+                  <TextField fx:id="cardNumber3Txt" prefHeight="30.0" prefWidth="90.0">
                      <font>
                         <Font name="Calibri" size="14.0" />
                      </font>
                   </TextField>
                   <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="25.0" stroke="TRANSPARENT" strokeType="INSIDE" width="15.0" />
-                  <TextField fx:id="cardNumber4Txt" onKeyPressed="#lastCardNumberTabPressed" prefHeight="25.0" prefWidth="90.0">
+                  <TextField fx:id="cardNumber4Txt" onKeyPressed="#lastCardNumberTabPressed" prefHeight="30.0" prefWidth="90.0">
                      <font>
                         <Font name="Calibri" size="14.0" />
                      </font>
                   </TextField>
                </children>
             </HBox>
-            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="640.0" />
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="640.0" />
             <HBox prefHeight="25.0" prefWidth="640.0">
                <children>
-                  <Label fx:id="label2" prefHeight="25.0" prefWidth="120.0" text="Expiration Date:">
+                  <Label fx:id="label2" prefHeight="40.0" prefWidth="120.0" text="Expiration Date:">
                      <font>
                         <Font name="Calibri Bold" size="16.0" />
                      </font>
                   </Label>
-                  <ComboBox fx:id="monthComboBox" onKeyPressed="#monthTabPressed" prefHeight="30.0" prefWidth="100.0" promptText="Month" />
+                  <ComboBox fx:id="monthComboBox" maxHeight="-Infinity" minHeight="-Infinity" onKeyPressed="#monthTabPressed" prefHeight="40.0" prefWidth="120.0" promptText="Month" />
                   <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="25.0" stroke="TRANSPARENT" strokeType="INSIDE" width="25.0" />
-                  <ComboBox fx:id="yearComboBox" onKeyPressed="#yearTabPressed" prefHeight="30.0" prefWidth="100.0" promptText="Year" />
+                  <ComboBox fx:id="yearComboBox" onKeyPressed="#yearTabPressed" prefHeight="40.0" prefWidth="120.0" promptText="Year" />
                   <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="25.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
                </children>
             </HBox>
-            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="640.0" />
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="640.0" />
             <HBox prefHeight="25.0" prefWidth="640.0">
                <children>
-                  <Label fx:id="label3" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="25.0" prefWidth="120.0" text="CVV:">
+                  <Label fx:id="label3" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="30.0" prefWidth="120.0" text="CVV:">
                      <font>
                         <Font name="Calibri Bold" size="16.0" />
                      </font>
                   </Label>
-                  <TextField fx:id="cvvTxt" maxHeight="-Infinity" minHeight="-Infinity" onKeyPressed="#cvvTabPressed" prefHeight="25.0" prefWidth="90.0">
+                  <TextField fx:id="cvvTxt" maxHeight="-Infinity" minHeight="-Infinity" onKeyPressed="#cvvTabPressed" prefHeight="30.0" prefWidth="90.0">
                      <font>
                         <Font name="Calibri" size="16.0" />
                      </font>
                   </TextField>
                </children>
             </HBox>
-            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="20.0" stroke="TRANSPARENT" strokeType="INSIDE" width="640.0" />
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="640.0" />
             <HBox prefHeight="25.0" prefWidth="640.0">
                <children>
-                  <Label fx:id="label4" prefHeight="25.0" prefWidth="120.0" text="Card Holder:">
+                  <Label fx:id="label4" prefHeight="30.0" prefWidth="120.0" text="Card Holder:">
                      <font>
                         <Font name="Calibri Bold" size="16.0" />
                      </font>
                   </Label>
-                  <TextField fx:id="holderNameTxt" maxHeight="-Infinity" minHeight="-Infinity" onKeyPressed="#holderNameTabPressed" prefHeight="25.0" prefWidth="245.0" promptText="Enter the card's holder full name">
+                  <TextField fx:id="holderNameTxt" maxHeight="-Infinity" minHeight="-Infinity" onKeyPressed="#holderNameTabPressed" prefHeight="30.0" prefWidth="245.0" promptText="Enter the card's holder full name">
                      <font>
                         <Font name="Calibri" size="16.0" />
                      </font>
