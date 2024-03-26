@@ -161,7 +161,8 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 			if (userControl.logoutUser())
 				parkVisitor.setLoggedIn(false);
 			try {
-				ScreenManager.getInstance().goToPreviousScreen(false, false);
+				ScreenManager.getInstance().showScreen("MainScreenController",
+						"/clientSide/fxml/MainScreen.fxml", true, false, null);
 			} catch (ScreenException | StatefulException e) {
 				e.printStackTrace();
 			}
