@@ -31,7 +31,10 @@ public class StaffController {
 	/**
 	 * Imports users into their respective tables based on user type.
 	 * 
-	 * @return true if all users are imported successfully, false otherwise.
+	 * @return An ImportStatus indicating the outcome of the import process. Possible return values are:
+	 *         - SUCCESS if at least one user type is successfully imported.
+	 *         - NOTHING_TO_IMPORT if no users of any type are found to import.
+	 *         - FAILURE if an error occurs during the import process.
 	 * @throws DatabaseException if there's a problem accessing the database.
 	 */
 	public ImportStatus importUsers() {
