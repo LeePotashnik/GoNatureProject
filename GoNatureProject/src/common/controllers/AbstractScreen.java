@@ -81,6 +81,9 @@ public abstract class AbstractScreen {
 			if (decision == 2) // if the user clicked on "No"
 				event.consume();
 			else { // if the user clicked on "Yes"
+				Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
+				message.setClientMessageType(ClientMessageType.DISCONNECT);
+				GoNatureClientUI.client.accept(message);
 				System.out.println("Client exited the application"); // just exit
 			}
 		} else {
