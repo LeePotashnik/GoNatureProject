@@ -175,7 +175,11 @@ public class ParametersApprovingScreenConrtroller extends AbstractScreen {
 	 * Initializes the fxml components
 	 */
 	public void initialize() {
+		// setting title and image
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
+		titleLbl.setAlignment(Pos.CENTER);
 		// setting the back button image:
 		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
 		backImage.setFitHeight(30);
@@ -211,6 +215,9 @@ public class ParametersApprovingScreenConrtroller extends AbstractScreen {
 
 		infoLbl.setText("Of " + departmentManager.getManagesDepartment() + " Department");
 		infoLbl.setAlignment(Pos.CENTER);
+
+		// setting the application's background
+		setApplicationBackground(pane);
 
 		// now adding the pendingAdjustment list to the table view
 		setTable();

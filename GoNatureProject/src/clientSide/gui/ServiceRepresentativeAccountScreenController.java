@@ -1,5 +1,7 @@
 package clientSide.gui;
 
+import java.time.LocalTime;
+
 import clientSide.control.GoNatureUsersController;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
@@ -9,6 +11,7 @@ import entities.Representative;
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -20,32 +23,41 @@ import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 /**
- * /**
- * The ServiceRepresentativeAccountScreenController class is responsible for handling all interactions
- * within the service representative account screen. 
- * This class allows manage functionalities specific to their role. 
- * It extends AbstractScreen.
+ * /** The ServiceRepresentativeAccountScreenController class is responsible for
+ * handling all interactions within the service representative account screen.
+ * This class allows manage functionalities specific to their role. It extends
+ * AbstractScreen.
  * 
- * This controller manages user data through the GoNatureUsersController, enabling operations such as
- * authentication, registration, and user session management.
+ * This controller manages user data through the GoNatureUsersController,
+ * enabling operations such as authentication, registration, and user session
+ * management.
  */
-public class ServiceRepresentativeAccountScreenController extends AbstractScreen{
-
+public class ServiceRepresentativeAccountScreenController extends AbstractScreen {
 	private GoNatureUsersController userControl;
-
 	private Representative representative;
-    @FXML
-    private Button GuideRegistrationBTN, logOutBTN;
-    
+
 	// properties for the images animation
 	private final static int IMAGE_VIEW_COUNT = 9; // Display 9 images at a time
 	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT]; // Array for ImageViews
 	private int currentIndex = 0; // Index to track current image set
-	
-    @FXML
-    private Label Title, NameLable;
-    @FXML
-    private ImageView goNatureLogo, image1, image2, image3, image4, image5, image6, image7, image8, image9;
+
+	/**
+	 * Constructor
+	 */
+	public ServiceRepresentativeAccountScreenController() {
+		userControl = GoNatureUsersController.getInstance();
+	}
+
+	//////////////////////////////////
+	/// JAVAFX AND FXML COMPONENTS ///
+	//////////////////////////////////
+
+	@FXML
+	private Button guideRegisterBtn, logOutBtn;
+	@FXML
+	private Label titleLbl, nameLbl;
+	@FXML
+	private ImageView goNatureLogo, image1, image2, image3, image4, image5, image6, image7, image8, image9;
 	@FXML
 	private VBox imagesVbox, controlVbox;
 	@FXML
@@ -53,65 +65,75 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
 	@FXML
 	private Rectangle rec;
 
-    public ServiceRepresentativeAccountScreenController() {
-    	userControl = GoNatureUsersController.getInstance();
-	}
-    
-    public Representative getRepresentative() {
-		return representative;
-	}
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
 
-	public void setRepresentative(Representative representative) {
-		this.representative = representative;
-	}
-	
-    /**
-     * @param event
-     * When the 'Guide Registration' button is pressed, 
-     * the Service Representative will be redirected to the 'GuideRegistrationScreen'
-     */
-    @FXML
-    void GoToGuideRegistrationScreen(ActionEvent event) {
-    	try {
+	/**
+	 * @param event When the 'Guide Registration' button is pressed, the Service
+	 *              Representative will be redirected to the
+	 *              'GuideRegistrationScreen'
+	 */
+	@FXML
+	void goToGuideRegistrationScreen(ActionEvent event) {
+		try {
 			ScreenManager.getInstance().showScreen("GroupGuideRegistrationScreenController",
-					"/clientSide/fxml/GroupGuideRegistrationScreen.fxml", true, false,null );
+					"/clientSide/fxml/GroupGuideRegistrationScreen.fxml", true, false, null);
 		} catch (StatefulException | ScreenException e) {
 			e.printStackTrace();
-		} 
-    }
-
-    /**
-     * @param event
-     * park manager clicked on 'Log out' button, an update query is executed to alter the value of the 'isLoggedIn' field
-     */
-    @FXML
-    void logOut(ActionEvent event) {
-    	if (userControl.logoutUser()) {
-    		representative.setLoggedIn(false);
-    		System.out.println("Service Representative logged out");
-    		try {
-        		ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml", true,
-        				false, null);
-        	} catch (ScreenException | StatefulException e) {
-        				e.printStackTrace();
-    		}
-    	}
-        else 
-        	showErrorAlert("Failed to log out"); 	
-    }
-	
-	@Override
-	public String getScreenTitle() {
-		return "Service Representative";
+		}
 	}
-	
+
+	/**
+	 * @param event park manager clicked on 'Log out' button, an update query is
+	 *              executed to alter the value of the 'isLoggedIn' field
+	 */
 	@FXML
+	void logOut(ActionEvent event) {
+		if (userControl.logoutUser()) {
+			representative.setLoggedIn(false);
+			try {
+				ScreenManager.getInstance().showScreen("MainScreenConrtroller", "/clientSide/fxml/MainScreen.fxml",
+						true, false, null);
+			} catch (ScreenException | StatefulException e) {
+				e.printStackTrace();
+			}
+		} else
+			showErrorAlert("Failed to log out");
+	}
+
+	@FXML
+	/**
+	 * Sets the focus to the pane when clicked
+	 * 
+	 * @param event
+	 */
 	void paneClicked(MouseEvent event) {
 		pane.requestFocus();
 		event.consume();
 	}
-    
-    /**
+
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
+
+	/**
+	 * @return the service representative instance
+	 */
+	public Representative getRepresentative() {
+		return representative;
+	}
+
+	/**
+	 * Sets the service representative
+	 * 
+	 * @param representative
+	 */
+	public void setRepresentative(Representative representative) {
+		this.representative = representative;
+	}
+
+	/**
 	 * This method starts the parks images slide show using fade transitions
 	 */
 	private void startSlideshow() {
@@ -206,64 +228,96 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
 		timeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
 		timeline.play();
 	}
-	
+
 	/**
-	 * Initializes the controller class. This method is automatically called
-	 * after the FXML file has been loaded, setting the initial state of the UI components.
+	 * @return A greeting according to the current time of the day
+	 */
+	private String getGreeting() {
+		LocalTime now = LocalTime.now();
+		int hour = now.getHour();
+		if (hour >= 6 && hour <= 12) {
+			return "Good Morning, ";
+		} else if (hour > 12 && hour <= 18) {
+			return "Good Afternoon, ";
+		} else if (hour > 18 && hour <= 22) {
+			return "Good Evening, ";
+		} else {
+			return "Good Night, ";
+		}
+	}
+
+	///////////////////////////////
+	/// ABSTRACT SCREEN METHODS ///
+	///////////////////////////////
+
+	/**
+	 * Initializes the controller class. This method is automatically called after
+	 * the FXML file has been loaded, setting the initial state of the UI
+	 * components.
 	 */
 	@Override
 	public void initialize() {
-	    // Restore the Representative user from the saved state.
-	    representative = (Representative) userControl.restoreUser();
+		// Restore the Representative user from the saved state.
+		representative = (Representative) userControl.restoreUser();
 
-	    // Keep the representative's information updated in the session.
-	    userControl.saveUser(representative);
+		// Keep the representative's information updated in the session.
+		userControl.saveUser(representative);
 
-	    // Set the greeting message with the representative's name and underline it for emphasis.
-	    this.NameLable.setText("Hello " + representative.getFirstName() + " " + representative.getLastName());
-	    this.NameLable.underlineProperty(); // Emphasize the name for better visibility.
+		// Set the greeting message with the representative's name and underline it for
+		// emphasis.
+		nameLbl.setText(getGreeting() + representative.getFirstName() + " " + representative.getLastName() + "!");
+		nameLbl.underlineProperty(); // Emphasize the name for better visibility.
 
-	    // Set the GoNature logo to enhance brand consistency.
-	    goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+		// Sets the GoNature logo on the screen.
+		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
 
-	    // Apply alignment styles to ensure that UI elements are consistently presented.
-	    NameLable.setStyle("-fx-alignment: center-right;"); // Ensure the label is right-aligned.
-	    Title.setStyle("-fx-alignment: center-right;"); // Ensure the title label is right-aligned.
-	    GuideRegistrationBTN.setStyle("-fx-alignment: center-right;"); // Align button for consistency.
-	    logOutBTN.setStyle("-fx-alignment: center-right;"); // Align logout button to match other UI elements.
-        
-	    // setting the image view array
- 		imageViews[0] = image1;
- 		imageViews[1] = image2;
- 		imageViews[2] = image3;
- 		imageViews[3] = image4;
- 		imageViews[4] = image5;
- 		imageViews[5] = image6;
- 		imageViews[6] = image7;
- 		imageViews[7] = image8;
- 		imageViews[8] = image9;
+		// Applies alignment and style configurations to UI components to ensure
+		// consistency with the application's design.
+		nameLbl.setAlignment(Pos.CENTER);
+		nameLbl.layoutXProperty().bind(pane.widthProperty().subtract(nameLbl.widthProperty()).divide(2));
+		titleLbl.setAlignment(Pos.CENTER);
+		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
 
- 		// setting 3 first images
- 		imageViews[0].setImage(new Image(imagePaths.get(0)));
- 		imageViews[1].setImage(new Image(imagePaths.get(1)));
- 		imageViews[2].setImage(new Image(imagePaths.get(2)));
- 		imageViews[3].setImage(new Image(imagePaths.get(3)));
- 		imageViews[4].setImage(new Image(imagePaths.get(4)));
- 		imageViews[5].setImage(new Image(imagePaths.get(5)));
- 		imageViews[6].setImage(new Image(imagePaths.get(6)));
- 		imageViews[7].setImage(new Image(imagePaths.get(7)));
- 		imageViews[8].setImage(new Image(imagePaths.get(8)));
+		// setting the image view array
+		imageViews[0] = image1;
+		imageViews[1] = image2;
+		imageViews[2] = image3;
+		imageViews[3] = image4;
+		imageViews[4] = image5;
+		imageViews[5] = image6;
+		imageViews[6] = image7;
+		imageViews[7] = image8;
+		imageViews[8] = image9;
 
- 		currentIndex = 9;
- 		startSlideshow();
-    }
-		
+		// setting 9 first images
+		imageViews[0].setImage(new Image(imagePaths.get(0)));
+		imageViews[1].setImage(new Image(imagePaths.get(1)));
+		imageViews[2].setImage(new Image(imagePaths.get(2)));
+		imageViews[3].setImage(new Image(imagePaths.get(3)));
+		imageViews[4].setImage(new Image(imagePaths.get(4)));
+		imageViews[5].setImage(new Image(imagePaths.get(5)));
+		imageViews[6].setImage(new Image(imagePaths.get(6)));
+		imageViews[7].setImage(new Image(imagePaths.get(7)));
+		imageViews[8].setImage(new Image(imagePaths.get(8)));
 
-	/**
-	 * @param information The data passed from the previous screen, expected to be a Representative instance.
-	 */
-	@Override
-	public void loadBefore(Object information) {
+		currentIndex = 9;
+		startSlideshow();
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
+	@Override
+	public void loadBefore(Object information) {
+		// irrelevant here
+	}
+
+	@Override
+	/**
+	 * Returns the screen's title
+	 */
+	public String getScreenTitle() {
+		return "Service Representative";
+	}
 }

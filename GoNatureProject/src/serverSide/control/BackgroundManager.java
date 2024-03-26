@@ -35,9 +35,9 @@ public class BackgroundManager {
 	private DatabaseController database;
 	private ParkController parkControl = ParkController.getInstance();
 	private ArrayList<Park> parks = new ArrayList<>();
-	private static int reminderCancellationTime = 2; // can be updated for future development
+	public static int reminderCancellationTime = 2; // can be updated for future development
 	private static int minutesGapOfBookingTimes = 0; // can be updated for future development
-	private static int reminderSendBeforeTime = 24; // can be updated for future development
+	public static int reminderSendBeforeTime = 24; // can be updated for future development
 	/**
 	 * What is the future booking range, in months. Default: 4 months
 	 */

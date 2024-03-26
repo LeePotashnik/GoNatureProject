@@ -24,7 +24,6 @@ public class Communication implements Serializable {
 	public static final String cancelledBookings = "_park_cancelled_booking";
 	public static final String doneBookings = "_park_done_booking";
 	public static final String parkEmployees = "_park_employees";
-	public static final String parkReport = "_park_report";
 	public static final String waitingList = "_park_waiting_list";
 	// tables in context of stakeholders
 	public static final String departmentManager = "department_manager";
@@ -39,6 +38,9 @@ public class Communication implements Serializable {
 	public static final String pendingAdjustment = "pending_adjustment";
 	public static final String viewedAdjustment = "viewed_adjustment";
 	public static final String pricing = "pricing";
+	// reports tables
+	public static final String totalReport = "total_number_of_visitors_report";
+	public static final String usageReport = "usage_report";
 
 	/// CNCELLATION REASONS ///
 	public static final String userCancelled = "User Cancelled";
@@ -118,7 +120,7 @@ public class Communication implements Serializable {
 
 	// a list of communications to execute as a transaction
 	private ArrayList<Communication> requestsList = null;
-	
+
 	// set to true if the query is done in a critical section
 	private boolean isCritical; // for critical sections park capacities updates
 
@@ -151,7 +153,7 @@ public class Communication implements Serializable {
 	////////////////////////////////////////////////////
 
 	public enum SecondaryRequest {
-		SEND_CONFIRMATION, SEND_CANCELLATION, SEND_REMINDER, UPDATE_WAITING_LIST;
+		SEND_CONFIRMATION, SEND_CANCELLATION, UPDATE_WAITING_LIST, SEND_CONFIRMATION_WITHOUT_REMINDER;
 	}
 
 	private SecondaryRequest secondaryRequest;
@@ -223,7 +225,7 @@ public class Communication implements Serializable {
 	public int getParkId() {
 		return parkId;
 	}
-	
+
 	/**
 	 * This method returns the secondery request's date
 	 * 
@@ -232,7 +234,7 @@ public class Communication implements Serializable {
 	public LocalDate getDate() {
 		return date;
 	}
-	
+
 	/**
 	 * This method returns the secondery request's time
 	 * 
@@ -241,7 +243,7 @@ public class Communication implements Serializable {
 	public LocalTime getTime() {
 		return time;
 	}
-	
+
 	/**
 	 * This method returns the secondary request's park name
 	 * 
@@ -250,7 +252,7 @@ public class Communication implements Serializable {
 	public String getParkName() {
 		return parkName;
 	}
-	
+
 	/**
 	 * This method returns the secondery request's email address
 	 * 
@@ -304,7 +306,7 @@ public class Communication implements Serializable {
 	public boolean isPaid() {
 		return paid;
 	}
-	
+
 	/**
 	 * This method returns the secondery request's park location
 	 * 
@@ -313,9 +315,10 @@ public class Communication implements Serializable {
 	public String getParkLocation() {
 		return parkLocation;
 	}
-	
+
 	/**
 	 * This method returns if this query is in a critical section
+	 * 
 	 * @return the isCritical property
 	 */
 	public boolean isCritical() {
@@ -396,7 +399,7 @@ public class Communication implements Serializable {
 	public void setSecondaryRequest(SecondaryRequest secondaryRequest) {
 		this.secondaryRequest = secondaryRequest;
 	}
-	
+
 	/**
 	 * This method sets the secondary request's park id
 	 * 
@@ -405,7 +408,7 @@ public class Communication implements Serializable {
 	public void setParkId(int parkId) {
 		this.parkId = parkId;
 	}
-	
+
 	/**
 	 * This method sets the secondary request's date
 	 * 
@@ -414,7 +417,7 @@ public class Communication implements Serializable {
 	public void setDate(LocalDate date) {
 		this.date = date;
 	}
-	
+
 	/**
 	 * This method sets the secondary request's time
 	 * 
@@ -486,7 +489,7 @@ public class Communication implements Serializable {
 	public void setPaid(boolean paid) {
 		this.paid = paid;
 	}
-	
+
 	/**
 	 * This method sets the secondary request's park location
 	 * 
@@ -495,7 +498,7 @@ public class Communication implements Serializable {
 	public void setParkLocation(String parkLocation) {
 		this.parkLocation = parkLocation;
 	}
-	
+
 	/**
 	 * This method sets the critical section boolean property
 	 * 

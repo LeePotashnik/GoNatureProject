@@ -3,6 +3,9 @@ package clientSide.gui;
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import common.controllers.AbstractScreen;
+import common.controllers.ScreenException;
+import common.controllers.ScreenManager;
+import common.controllers.StatefulException;
 import entities.Booking;
 import entities.ParkEmployee;
 import entities.ParkVisitor;
@@ -25,7 +28,7 @@ public class ConfirmationScreenController extends AbstractScreen {
 	//////////////////////////////////
 	/// JAVAFX AND FXML COMPONENTS ///
 	//////////////////////////////////
-			
+
 	@FXML
 	private Label bookingIdLabel, dateLabel, emailLabel, holderLabel, isPaidLabel, parkAddressLabel, parkNameLabel,
 			phoneLabel, priceLabel, timeLabel, visitorsLabel, titleLbl, secondLbl;
@@ -49,14 +52,22 @@ public class ConfirmationScreenController extends AbstractScreen {
 	void returnToAccount(ActionEvent event) {
 		SystemUser user = GoNatureUsersController.getInstance().restoreUser();
 		if (user instanceof ParkVisitor) {
-			showInformationAlert("Return to park visitor's screen.");
-//			ScreenManager.getInstance().resetScreensStack();
-//			ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController, getScreenTitle(), false, false, null, user);
+			ScreenManager.getInstance().resetScreensStack();
+			try {
+				ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController",
+						"/clientSide/fxml/ParkVisitorAccountScreen.fxml", false, false, null);
+			} catch (StatefulException | ScreenException e) {
+				e.printStackTrace();
+			}
 		}
 		if (user instanceof ParkEmployee) {
-			showInformationAlert("Return to park employee's screen.");
-//			ScreenManager.getInstance().resetScreensStack();
-//			ScreenManager.getInstance().showScreen("ParkEmployeeAccountScreenController, getScreenTitle(), false, false, null, user);
+			ScreenManager.getInstance().resetScreensStack();
+			try {
+				ScreenManager.getInstance().showScreen("ParkEmployeeAccountScreenController",
+						"/clientSide/fxml/ParkEmployeeAccountScreen.fxml", false, false, null);
+			} catch (StatefulException | ScreenException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -80,6 +91,9 @@ public class ConfirmationScreenController extends AbstractScreen {
 		secondLbl.setAlignment(Pos.CENTER);
 		secondLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
 		secondLbl.setStyle("-fx-text-alignment: center;");
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	@Override

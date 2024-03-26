@@ -1,5 +1,6 @@
 package clientSide.gui;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,12 +55,23 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 	private GoNatureUsersController userControl;
 	private ParkVisitor parkVisitor;
 
+	/**
+	 * Constructor
+	 */
+	public ParkVisitorAccountScreenController() {
+		userControl = GoNatureUsersController.getInstance();
+	}
+
+	//////////////////////////////////
+	/// JAVAFX AND FXML COMPONENTS ///
+	//////////////////////////////////
+
 	@FXML
 	private ImageView goNatureLogo, image1, image2, image3, image4, image5, image6, image7, image8, image9;
 	@FXML
-	private Button logOutBTN, managingBookingBTN, visitBookingBTN, arrivalConfirmationBTN;
+	private Button logOutBtn, managingBookingBtn, visitBookingBtn, arrivalConfirmationBtn;
 	@FXML
-	private Label NameLable, waitLabel;
+	private Label nameLbl, waitLabel;
 	@FXML
 	private ProgressIndicator progressIndicator;
 	@FXML
@@ -69,17 +81,9 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 	@FXML
 	private Rectangle rec;
 
-	public ParkVisitorAccountScreenController() {
-		userControl = GoNatureUsersController.getInstance();
-	}
-
-	public ParkVisitor getParkVisitor() {
-		return parkVisitor;
-	}
-
-	public void setParkVisitor(ParkVisitor parkVisitor) {
-		this.parkVisitor = parkVisitor;
-	}
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
 
 	/**
 	 * @param event When the 'Managing Booking' button is pressed, the park visitor
@@ -151,8 +155,8 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 	 */
 	@FXML
 	void logOut(ActionEvent event) {
-		int choise = showConfirmationAlert("Are you sure you want to log out?", Arrays.asList("No","Yes"));
-		
+		int choise = showConfirmationAlert("Are you sure you want to log out?", Arrays.asList("No", "Yes"));
+
 		switch (choise) {
 		case 1: // clicked "No"
 			event.consume();
@@ -169,9 +173,34 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 	}
 
 	@FXML
+	/**
+	 * Sets the focus to the pane if clicked
+	 * 
+	 * @param event
+	 */
 	void paneClicked(MouseEvent event) {
 		pane.requestFocus();
 		event.consume();
+	}
+
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
+
+	/**
+	 * @return the park visitor
+	 */
+	public ParkVisitor getParkVisitor() {
+		return parkVisitor;
+	}
+
+	/**
+	 * Sets the park visitor
+	 * 
+	 * @param parkVisitor
+	 */
+	public void setParkVisitor(ParkVisitor parkVisitor) {
+		this.parkVisitor = parkVisitor;
 	}
 
 	/**
@@ -311,16 +340,42 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 		timeline.play();
 	}
 
+	/**
+	 * Sets all components but the progress indicator and its label, to not visible
+	 * 
+	 * @param visible
+	 */
 	private void setVisible(boolean visible) {
 		progressIndicator.setVisible(!visible);
 		waitLabel.setVisible(!visible);
 		imagesVbox.setVisible(visible);
 		rec.setVisible(visible);
-		arrivalConfirmationBTN.setDisable(!visible);
-		logOutBTN.setDisable(!visible);
-		managingBookingBTN.setDisable(!visible);
-		visitBookingBTN.setDisable(!visible);
+		arrivalConfirmationBtn.setDisable(!visible);
+		logOutBtn.setDisable(!visible);
+		managingBookingBtn.setDisable(!visible);
+		visitBookingBtn.setDisable(!visible);
 	}
+
+	/**
+	 * @return A greeting according to the current time of the day
+	 */
+	private String getGreeting() {
+		LocalTime now = LocalTime.now();
+		int hour = now.getHour();
+		if (hour >= 6 && hour <= 12) {
+			return "Good Morning, ";
+		} else if (hour > 12 && hour <= 18) {
+			return "Good Afternoon, ";
+		} else if (hour > 18 && hour <= 22) {
+			return "Good Evening, ";
+		} else {
+			return "Good Night, ";
+		}
+	}
+
+	///////////////////////////////
+	/// ABSTRACT SCREEN METHODS ///
+	///////////////////////////////
 
 	/**
 	 * Initializes the controller class. This method is automatically called after
@@ -339,10 +394,10 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 
 		// Sets greeting text dynamically based on the visitor's information.
 		if (parkVisitor.getVisitorType() == VisitorType.GROUPGUIDE) {
-			this.NameLable.setText("Hello, " + parkVisitor.getFirstName() + " " + parkVisitor.getLastName() + "!");
-			this.NameLable.underlineProperty(); // Adds underline to emphasize the name label.
+			nameLbl.setText(getGreeting() + parkVisitor.getFirstName() + " " + parkVisitor.getLastName() + "!");
+			nameLbl.underlineProperty(); // Adds underline to emphasize the name label.
 		} else {
-			logOutBTN.setVisible(false); // Hides the logout button if not a group guide.
+			nameLbl.setText(getGreeting() + "and Welcome!");
 		}
 
 		// setting the porgress indicator
@@ -391,9 +446,14 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 			});
 		}).start();
 
-		// Sets the GoNature logo image.
+		// Sets the GoNature logo on the screen.
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
-		NameLable.setAlignment(Pos.CENTER);
+		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+
+		// Applies alignment and style configurations to UI components to ensure
+		// consistency with the application's design.
+		nameLbl.setAlignment(Pos.CENTER);
+		nameLbl.layoutXProperty().bind(pane.widthProperty().subtract(nameLbl.widthProperty()).divide(2));
 
 		// setting the rectangle's shadow
 		DropShadow dropShadow = new DropShadow();
@@ -402,15 +462,21 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 		dropShadow.setOffsetY(5.0);
 		dropShadow.setColor(Color.rgb(50, 50, 50));
 		rec.setEffect(dropShadow);
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	@Override
 	public void loadBefore(Object information) {
+		// irrelevant here
 	}
 
 	@Override
+	/**
+	 * Returns the screen's title
+	 */
 	public String getScreenTitle() {
 		return "Account Screen";
 	}
-
 }

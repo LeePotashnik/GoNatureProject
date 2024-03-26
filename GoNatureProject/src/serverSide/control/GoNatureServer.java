@@ -278,11 +278,14 @@ public class GoNatureServer extends AbstractServer {
 							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
 							request.isPaid()), "Visitor chose to cancel.");
 					break;
-				case SEND_REMINDER:
-					notifications.sendReminderEmailNotification(Arrays.asList(request.getEmail(), request.getPhone(),
-							request.getParkName(), request.getDate(), request.getTime(), request.getFullName(),
-							request.getParkLocation(), request.getVisitors(), request.getPrice(), request.isPaid()));
+				case SEND_CONFIRMATION_WITHOUT_REMINDER:
+					notifications.sendConfirmationWithoudReminderEmailNotification(Arrays.asList(request.getEmail(),
+							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
+							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
+							request.isPaid()));
+					break;
 				}
+				
 			}
 
 			try {

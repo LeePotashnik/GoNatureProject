@@ -255,6 +255,9 @@ public class ParametersAdjustingScreenConrtroller extends AbstractScreen {
 		hboxUpdate2.setAlignment(Pos.CENTER);
 		hboxUpdate3.setAlignment(Pos.CENTER);
 
+		// setting the application's background
+		setApplicationBackground(pane);
+
 		setLabels();
 	}
 

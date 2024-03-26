@@ -310,7 +310,9 @@ public class BookingController {
 	 * This method is called in order to send a confirmation or cancellation to the
 	 * booker
 	 * 
-	 * @param notify
+	 * @param notify   the booking to notify its holder
+	 * @param isCancel true if a cancellation notification is needed to be sent,
+	 *                 false if confirmation notification is needed to be sent
 	 */
 	public void sendNotification(Booking notify, boolean isCancel) {
 		Communication notifyBooking = new Communication(CommunicationType.QUERY_REQUEST);
@@ -321,34 +323,6 @@ public class BookingController {
 		}
 		notifyBooking.setSecondaryRequest(
 				isCancel ? SecondaryRequest.SEND_CANCELLATION : SecondaryRequest.SEND_CONFIRMATION);
-		notifyBooking.setFullName(notify.getFirstName() + " " + notify.getLastName());
-		notifyBooking.setEmail(notify.getEmailAddress());
-		notifyBooking.setPhone(notify.getPhoneNumber());
-		notifyBooking.setPrice(notify.getFinalPrice());
-		notifyBooking.setPaid(notify.isPaid());
-		notifyBooking.setVisitors(notify.getNumberOfVisitors());
-		notifyBooking.setDate(notify.getDayOfVisit());
-		notifyBooking.setTime(notify.getTimeOfVisit());
-		notifyBooking.setParkName(notify.getParkBooked().getParkName() + " Park");
-		notifyBooking
-				.setParkLocation(notify.getParkBooked().getParkCity() + ", " + notify.getParkBooked().getParkState());
-
-		GoNatureClientUI.client.accept(notifyBooking);
-	}
-
-	/**
-	 * This method is called in order to send a reminder to the booker
-	 * 
-	 * @param notify
-	 */
-	public void sendReminder(Booking notify, boolean isCancel) {
-		Communication notifyBooking = new Communication(CommunicationType.QUERY_REQUEST);
-		try {
-			notifyBooking.setQueryType(QueryType.NONE);
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-		notifyBooking.setSecondaryRequest(SecondaryRequest.SEND_REMINDER);
 		notifyBooking.setFullName(notify.getFirstName() + " " + notify.getLastName());
 		notifyBooking.setEmail(notify.getEmailAddress());
 		notifyBooking.setPhone(notify.getPhoneNumber());

@@ -15,6 +15,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
@@ -24,6 +25,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Pane;
 
 /**
  * Controls the Cancellation Report screen, displaying a chart with cancellation
@@ -31,15 +33,16 @@ import javafx.scene.image.ImageView;
  * no-shows.
  */
 public class CancellationReportController extends AbstractScreen {
-	/// FXML AND JAVAFX COMPONENTS
+	private Map<String, List<XYChart.Data<String, Number>>> currentChartData;
+
+	//////////////////////////////////
+	/// JAVAFX AND FXML COMPONENTS ///
+	//////////////////////////////////
+
 	@FXML
 	private ImageView goNatureLogo;
 	@FXML
-	private Button backButton;
-	@FXML
-	private Button LineChartBtn;
-//    @FXML
-//    private Button BarChartBtn;
+	private Button backButton, lineChartBtn;
 	@FXML
 	private BarChart<String, Number> cancellationBarChart;
 	@FXML
@@ -49,13 +52,13 @@ public class CancellationReportController extends AbstractScreen {
 	@FXML
 	private NumberAxis amountAxis;
 	@FXML
-	private Label medianLabelCancelled;
+	private Label medianLabelCancelled, medianLabelNoShow, titleLbl;
 	@FXML
-	private Label medianLabelNoShow;
-	@FXML
-	private Label titleLabel;
+	private Pane pane;
 
-	private Map<String, List<XYChart.Data<String, Number>>> currentChartData;
+	//////////////////////////////
+	/// EVENT HANDLING METHODS ///
+	//////////////////////////////
 
 	/**
 	 * This method is called after an event is created with clicking on the Back
@@ -73,34 +76,32 @@ public class CancellationReportController extends AbstractScreen {
 	}
 
 	/**
-	 * This method is called by the FXML and JAVAFX and initializes the screen
+	 * Handles the action of toggling between the bar chart and the line chart. This
+	 * method updates the visibility of the charts and the text of the toggle button
+	 * based on the current state.
+	 * 
+	 * @param event The event that triggered this action.
 	 */
 	@FXML
-	public void initialize() {
-		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
-		List<String> daysOrder = Arrays.asList("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
-				"Saturday");
-		daysAxis.setCategories(FXCollections.observableArrayList(daysOrder));
-
-		// setting the back button image
-		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
-		backImage.setFitHeight(30);
-		backImage.setFitWidth(30);
-		backImage.setPreserveRatio(true);
-		backButton.setGraphic(backImage);
-		backButton.setPadding(new Insets(1, 1, 1, 1));
-
-		// Initially hide the line chart
-		cancellationLineChart.setVisible(false);
-		// Configure Y-axis (NumberAxis) range from 0 to 100
-		amountAxis.setAutoRanging(false);
-		amountAxis.setLowerBound(0); // Set the lower bound to 0
-		amountAxis.setUpperBound(100); // Set the upper bound to 100
-		amountAxis.setTickUnit(10);
-		cancellationBarChart.setVisible(true); // Ensure the bar chart is initially visible
-		cancellationLineChart.setVisible(false); // Ensure the line chart is initially hidden
-		LineChartBtn.setText("Line Chart"); // Set the initial button text
+	void toggleChartView(ActionEvent event) {
+		if (cancellationBarChart.isVisible()) {
+			// If the bar chart is visible, hide it and show the line chart
+			cancellationBarChart.setVisible(false);
+			cancellationLineChart.setVisible(true);
+			populateLineChart(currentChartData); // Ensure the line chart is populated
+			lineChartBtn.setText("Bar Chart"); // Update the button text
+		} else {
+			// If the line chart is visible, hide it and show the bar chart
+			cancellationLineChart.setVisible(false);
+			cancellationBarChart.setVisible(true);
+			populateChart(currentChartData); // Ensure the bar chart is populated
+			lineChartBtn.setText("Line Chart"); // Update the button text
+		}
 	}
+
+	////////////////////////
+	/// INSTANCE METHODS ///
+	////////////////////////
 
 	/**
 	 * Populates a bar chart with cancellation data. This method expects a map with
@@ -218,45 +219,6 @@ public class CancellationReportController extends AbstractScreen {
 	}
 
 	/**
-	 * This method is called in order to set pre-info into the GUI components
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	public void loadBefore(Object information) {
-		if (information instanceof Map) {
-			currentChartData = (Map<String, List<XYChart.Data<String, Number>>>) information;
-			populateChart(currentChartData); // Populate your initial chart as needed
-
-		} else {
-			showErrorAlert("An error occurred. Cancellation data is not available.");
-		}
-	}
-
-	/**
-	 * Handles the action of toggling between the bar chart and the line chart. This
-	 * method updates the visibility of the charts and the text of the toggle button
-	 * based on the current state.
-	 * 
-	 * @param event The event that triggered this action.
-	 */
-	@FXML
-	void toggleChartView(ActionEvent event) {
-		if (cancellationBarChart.isVisible()) {
-			// If the bar chart is visible, hide it and show the line chart
-			cancellationBarChart.setVisible(false);
-			cancellationLineChart.setVisible(true);
-			populateLineChart(currentChartData); // Ensure the line chart is populated
-			LineChartBtn.setText("Bar Chart"); // Update the button text
-		} else {
-			// If the line chart is visible, hide it and show the bar chart
-			cancellationLineChart.setVisible(false);
-			cancellationBarChart.setVisible(true);
-			populateChart(currentChartData); // Ensure the bar chart is populated
-			LineChartBtn.setText("Line Chart"); // Update the button text
-		}
-	}
-
-	/**
 	 * Populates the line chart with data. This method creates series for each
 	 * cancellation reason and adds them to the line chart.
 	 * 
@@ -310,11 +272,70 @@ public class CancellationReportController extends AbstractScreen {
 		cancellationLineChart.getData().addAll(seriesCancelledOrders, seriesNoShowVisitors);
 	}
 
+	///////////////////////////////
+	/// ABSTRACT SCREEN METHODS ///
+	///////////////////////////////
+
+	/**
+	 * This method is called by the FXML and JAVAFX and initializes the screen
+	 */
+	@FXML
+	public void initialize() {
+		// initializing the image component of the logo and centering it
+		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+
+		// centering the title label
+		titleLbl.setAlignment(Pos.CENTER);
+		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
+
+		List<String> daysOrder = Arrays.asList("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+				"Saturday");
+		daysAxis.setCategories(FXCollections.observableArrayList(daysOrder));
+
+		// setting the back button image
+		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
+		backImage.setFitHeight(30);
+		backImage.setFitWidth(30);
+		backImage.setPreserveRatio(true);
+		backButton.setGraphic(backImage);
+		backButton.setPadding(new Insets(1, 1, 1, 1));
+
+		// Initially hide the line chart
+		cancellationLineChart.setVisible(false);
+		// Configure Y-axis (NumberAxis) range from 0 to 100
+		amountAxis.setAutoRanging(false);
+		amountAxis.setLowerBound(0); // Set the lower bound to 0
+		amountAxis.setUpperBound(100); // Set the upper bound to 100
+		amountAxis.setTickUnit(10);
+		cancellationBarChart.setVisible(true); // Ensure the bar chart is initially visible
+		cancellationLineChart.setVisible(false); // Ensure the line chart is initially hidden
+		lineChartBtn.setText("Line Chart"); // Set the initial button text
+
+		// setting the application's background
+		setApplicationBackground(pane);
+	}
+
+	/**
+	 * This method is called in order to set pre-info into the GUI components
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public void loadBefore(Object information) {
+		if (information instanceof Map) {
+			currentChartData = (Map<String, List<XYChart.Data<String, Number>>>) information;
+			populateChart(currentChartData); // Populate your initial chart as needed
+
+		} else {
+			showErrorAlert("An error occurred. Cancellation data is not available.");
+		}
+	}
+
 	/**
 	 * This method returns the screen's name
 	 */
 	@Override
 	public String getScreenTitle() {
-		return "Cancellation report";
+		return "Cancellation Report";
 	}
 }

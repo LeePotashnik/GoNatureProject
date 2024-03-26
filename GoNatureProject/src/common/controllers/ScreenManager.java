@@ -135,7 +135,7 @@ public class ScreenManager {
 		System.out.println("screensStack: " + screensStack);
 		System.out.println("screensMap: " + screensMap);
 		// checking if there's a screen to go back to
-		if (screensStack.size() <= 1)
+		if (screensStack.size() < 1)
 			throw new ScreenException("No screens to go back to");
 
 		if (screensMap.containsKey(screensStack.peek())) // removing the current screen from the map

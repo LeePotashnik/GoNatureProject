@@ -23,7 +23,7 @@ public class CancellationScreenController extends AbstractScreen {
 	//////////////////////////////////
 	/// JAVAFX ANF FXML COMPONENTS ///
 	//////////////////////////////////
-	
+
 	@FXML
 	private Label bookingIdLabel, dateLabel, emailLabel, holderLabel, isPaidLabel, parkAddressLabel, parkNameLabel,
 			phoneLabel, priceLabel, timeLabel, visitorsLabel;
@@ -65,6 +65,9 @@ public class CancellationScreenController extends AbstractScreen {
 		// initializing the image component and centering it
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	@Override

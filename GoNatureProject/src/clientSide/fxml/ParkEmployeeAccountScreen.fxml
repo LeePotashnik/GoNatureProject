@@ -10,22 +10,22 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkEmployeeAccountScreenController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkEmployeeAccountScreenController">
  <children>
-      <Label fx:id="Title" alignment="CENTER" layoutX="11.0" layoutY="67.0" prefHeight="38.0" prefWidth="678.0" text="Account Screen">
+      <Label fx:id="titleLbl" alignment="CENTER" layoutX="11.0" layoutY="65.0" prefHeight="38.0" prefWidth="678.0" text="Account Screen">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <Button fx:id="logOutBTN" alignment="CENTER" layoutX="36.0" layoutY="25.0" mnemonicParsing="false" onAction="#logOut" text="Log Out" textAlignment="CENTER">
+      <Button fx:id="logOutBtn" alignment="CENTER" layoutX="36.0" layoutY="25.0" mnemonicParsing="false" onAction="#logOut" text="Log Out" textAlignment="CENTER">
          <font>
             <Font name="Calibri" size="16.0" />
          </font>
       </Button>
-      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />
       <VBox fx:id="controlVbox" layoutX="27.0" layoutY="114.0" prefHeight="330.0" prefWidth="271.0">
          <children>
-            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="60.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
             <Label prefWidth="250.0" text="Park Entry Management:" underline="true">
                <font>
                   <Font name="Calibri Bold" size="18.0" />
@@ -37,7 +37,7 @@
                </font>
             </Label>
             <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
-            <Button fx:id="parkEntryManagementBTN" alignment="CENTER" mnemonicParsing="false" onAction="#GoToParkEntryManagementScreen" prefHeight="30.0" prefWidth="182.0" text="Park Entry Management" textAlignment="CENTER">
+            <Button fx:id="parkEntryManagementBtn" alignment="CENTER" mnemonicParsing="false" onAction="#goToParkEntryManagementScreen" prefHeight="30.0" prefWidth="182.0" text="Park Entry Management" textAlignment="CENTER">
                <font>
                   <Font name="Calibri" size="16.0" />
                </font>
@@ -48,13 +48,13 @@
                   <Font name="Calibri Bold" size="18.0" />
                </font>
             </Label>
-            <Label prefHeight="18.0" prefWidth="294.0" text="Park Reservation- Occasional Customers">
+            <Label prefHeight="18.0" prefWidth="294.0" text="Park Reservation - Occasional Customers">
                <font>
                   <Font name="Calibri" size="16.0" />
                </font>
             </Label>
             <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="5.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
-            <Button fx:id="parkEntryCasualBTN" alignment="CENTER" mnemonicParsing="false" onAction="#GoToParkEntryResevationScreen" prefHeight="30.0" prefWidth="182.0" text="Visitor Reservation" textAlignment="CENTER">
+            <Button fx:id="parkEntryCasualBTN" alignment="CENTER" mnemonicParsing="false" onAction="#goToParkEntryResevationScreen" prefHeight="30.0" prefWidth="182.0" text="Visitor Reservation" textAlignment="CENTER">
                <font>
                   <Font name="Calibri" size="16.0" />
                </font>
@@ -96,7 +96,7 @@
             </HBox>
          </children>
       </VBox>
-      <Label fx:id="NameLable" alignment="CENTER" layoutX="58.0" layoutY="95.0" prefHeight="38.0" prefWidth="599.0" text="Label">
+      <Label fx:id="nameLbl" alignment="CENTER" layoutX="58.0" layoutY="95.0" prefHeight="38.0" prefWidth="599.0" text="Label">
       	<font>
             <Font name="Calibri" size="20.0" />
         </font>
