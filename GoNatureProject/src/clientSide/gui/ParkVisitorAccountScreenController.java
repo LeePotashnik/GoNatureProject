@@ -389,14 +389,12 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 		// Restores the park visitor from the saved state to ensure continuity in user
 		// experience.
 		parkVisitor = (ParkVisitor) userControl.restoreUser();
-		// Saves the current state of the park visitor for potential future use.
-		userControl.saveUser(parkVisitor);
-
 		// Sets greeting text dynamically based on the visitor's information.
 		if (parkVisitor.getVisitorType() == VisitorType.GROUPGUIDE) {
 			nameLbl.setText(getGreeting() + parkVisitor.getFirstName() + " " + parkVisitor.getLastName() + "!");
 			nameLbl.underlineProperty(); // Adds underline to emphasize the name label.
 		} else {
+			parkVisitor.setLoggedIn(true);
 			nameLbl.setText(getGreeting() + "and Welcome!");
 		}
 
