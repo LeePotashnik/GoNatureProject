@@ -145,7 +145,7 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	 */
 	@FXML
 	void returnToPreviousScreen(ActionEvent event) throws ScreenException, StatefulException {
-		ScreenManager.getInstance().goToPreviousScreen(false, false);
+		ScreenManager.getInstance().goToPreviousScreen(true, false);
 
 	}
 
