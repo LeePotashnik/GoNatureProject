@@ -12,33 +12,37 @@
 <Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParametersApprovingScreenConrtroller">
    <children>
       <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="191.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />
-      <Label fx:id="titleLbl" layoutX="191.0" layoutY="63.0" prefHeight="38.0" prefWidth="300.0" text="Parameters Approving">
+      <Label fx:id="titleLbl" layoutX="191.0" layoutY="65.0" prefHeight="38.0" prefWidth="300.0" text="Parameters Approving">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
       <Separator layoutX="26.0" layoutY="149.0" prefHeight="7.0" prefWidth="647.0" />
-      <Separator layoutX="25.0" layoutY="413.0" prefHeight="7.0" prefWidth="647.0" />
-      <TableView fx:id="pendingAdjustmentTable" editable="true" layoutX="25.0" layoutY="166.0" prefHeight="233.0" prefWidth="647.0">
+      <Separator layoutX="25.0" layoutY="433.0" prefHeight="7.0" prefWidth="647.0" />
+      <TableView fx:id="pendingAdjustmentTable" editable="true" layoutX="25.0" layoutY="186.0" prefHeight="233.0" prefWidth="647.0">
         <columns>
-            <TableColumn fx:id="parkNameColumn" prefWidth="122.0" text="ParkName" />
-          <TableColumn fx:id="dayColumn" prefWidth="79.0" sortable="false" text=" Day " />
-            <TableColumn fx:id="timeColumn" minWidth="0.0" prefWidth="60.00001525878906" sortable="false" text=" Time" />
-            <TableColumn fx:id="byColumn" minWidth="0.0" prefWidth="92.0" sortable="false" text=" By" />
-            <TableColumn fx:id="beforeColumn" prefWidth="60.6666259765625" sortable="false" text=" Before" />
-            <TableColumn fx:id="afterColumn" minWidth="0.0" prefWidth="71.33331298828125" sortable="false" text=" After" />
-          <TableColumn fx:id="typeColumn" minWidth="0.0" prefWidth="130.00006103515625" sortable="false" text=" Type" />
+            <TableColumn fx:id="parkNameColumn" editable="false" prefWidth="137.33330726623535" sortable="false" text="Park Name" />
+          <TableColumn fx:id="dayColumn" editable="false" prefWidth="73.3333740234375" text="Date" />
+            <TableColumn fx:id="timeColumn" minWidth="0.0" prefWidth="62.00007629394531" sortable="false" text=" Time" />
+            <TableColumn fx:id="byColumn" editable="false" minWidth="0.0" prefWidth="97.33331298828125" sortable="false" text=" By" />
+            <TableColumn fx:id="beforeColumn" editable="false" prefWidth="57.33331298828125" sortable="false" text=" Before" />
+            <TableColumn fx:id="afterColumn" editable="false" minWidth="0.0" prefWidth="60.666595458984375" sortable="false" text=" After" />
+          <TableColumn fx:id="typeColumn" editable="false" minWidth="0.0" prefWidth="130.00006103515625" sortable="false" text=" Type" />
         </columns>
       </TableView>
-      <Button fx:id="returnToAccountBtn" layoutX="26.0" layoutY="443.0" mnemonicParsing="false" onAction="#returnToAccount" text="Return to Account">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Button>
       <Button fx:id="backButton" layoutX="24.0" layoutY="25.0" mnemonicParsing="false" onAction="#returnToPreviousScreen" prefHeight="38.0" prefWidth="38.0">
          <font>
             <Font name="Calibri" size="14.0" />
          </font>
       </Button>
+      <Label fx:id="infoLbl" layoutX="76.0" layoutY="107.0" prefHeight="21.0" prefWidth="549.0">
+         <font>
+            <Font name="Calibri" size="22.0" />
+         </font></Label>
+      <Label layoutX="162.0" layoutY="160.0" text="Double-click on an adjustment to apporve/disapprove it">
+         <font>
+            <Font name="Calibri" size="16.0" />
+         </font>
+      </Label>
    </children>
 </Pane>

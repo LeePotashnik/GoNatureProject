@@ -81,6 +81,10 @@ public class WaitingListScreenController extends AbstractScreen {
 	 * @param event
 	 */
 	void enterWaitingList(ActionEvent event) {
+		int finalPrice = control.calculateFinalDiscountPrice(booking,
+				booking.getVisitType() == VisitType.GROUP ? true : false, false);
+		booking.setFinalPrice(finalPrice);
+
 		// inserting the user to the waiting list
 		if (control.insertBookingToWaitingList(booking)) {
 			// updating the waiting list table view on the GUI
@@ -186,6 +190,9 @@ public class WaitingListScreenController extends AbstractScreen {
 		backImage.setPreserveRatio(true);
 		backButton.setGraphic(backImage);
 		backButton.setPadding(new Insets(1, 1, 1, 1));
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	@Override

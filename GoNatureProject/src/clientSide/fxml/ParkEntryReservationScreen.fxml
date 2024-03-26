@@ -1,77 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkEntryReservationScreenController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ParkEntryReservationScreenController">
    <children>
-      <TextField fx:id="nameTxt" layoutX="128.0" layoutY="166.0" promptText="Name">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </TextField>
-      <TextField fx:id="lastNameTxt" layoutX="438.0" layoutY="166.0" promptText="Last Name">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </TextField>
-      <Label fx:id="nameLbl" layoutX="36.0" layoutY="167.0" prefHeight="25.0" prefWidth="126.0" text="First Name:" textAlignment="RIGHT">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
-      <Label fx:id="lastNameLbl" layoutX="352.0" layoutY="167.0" prefHeight="25.0" prefWidth="126.0" text="Last name:" textAlignment="RIGHT">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
-      <TextField fx:id="visitorIDTxt" layoutX="128.0" layoutY="215.0" promptText="Traveller ID">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </TextField>
-      <TextField fx:id="visitorsAmountTxt" layoutX="128.0" layoutY="264.0" promptText="1-15">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </TextField>
-      <TextField fx:id="emailTxt" layoutX="128.0" layoutY="313.0" prefHeight="35.0" prefWidth="489.0" promptText="Traveller email address">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </TextField>
-      <Label fx:id="phoneLbl" layoutX="-10.0" layoutY="367.0" prefHeight="25.0" prefWidth="126.0" text="Phone:" textAlignment="RIGHT">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
-      <TextField fx:id="phoneTxt" layoutX="128.0" layoutY="362.0" prefHeight="35.0" prefWidth="489.0" promptText="Traveller phone number">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </TextField>
-      <Label fx:id="emailLbl" layoutX="-10.0" layoutY="318.0" prefHeight="25.0" prefWidth="126.0" text="Email:" textAlignment="RIGHT">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
-      <Label fx:id="visitorsLbl" layoutX="-10.0" layoutY="266.0" prefHeight="25.0" prefWidth="126.0" text="Visitors:" textAlignment="RIGHT">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
-      <Label fx:id="dateLbl" layoutX="-10.0" layoutY="218.0" prefHeight="25.0" prefWidth="126.0" text="ID:" textAlignment="RIGHT">
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Label>
-      <Button fx:id="makeReservationBtn" layoutX="276.0" layoutY="431.0" mnemonicParsing="false" onAction="#makeReservation" text="Make Reservation">
+      <Button fx:id="makeReservationBtn" layoutX="276.0" layoutY="437.0" mnemonicParsing="false" onAction="#makeReservation" text="Make Reservation">
          <font>
             <Font size="16.0" />
          </font>
@@ -87,10 +30,122 @@
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <Label fx:id="bookingLbl" layoutX="311.0" layoutY="121.0" text="Label">
+      <Label fx:id="bookingLbl" layoutX="311.0" layoutY="113.0" text="Label">
          <font>
             <Font name="Calibri" size="18.0" />
          </font>
       </Label>
+      <Separator layoutX="29.0" layoutY="150.0" prefHeight="7.0" prefWidth="647.0" />
+      <Separator layoutX="26.0" layoutY="416.0" prefHeight="7.0" prefWidth="647.0" />
+      <VBox layoutX="24.0" layoutY="163.0" prefHeight="247.0" prefWidth="634.0">
+         <children>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="10.0" stroke="TRANSPARENT" strokeType="INSIDE" width="634.0" />
+            <HBox prefHeight="35.0" prefWidth="634.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="35.0" stroke="TRANSPARENT" strokeType="INSIDE" width="20.0" />
+                  <Label fx:id="nameLbl" prefHeight="35.0" prefWidth="100.0" text="First Name:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="nameTxt" prefWidth="150.0" promptText="enter first name">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="35.0" stroke="TRANSPARENT" strokeType="INSIDE" width="104.0" />
+                  <Label fx:id="lastNameLbl" prefHeight="35.0" prefWidth="90.0" text="Last name:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="lastNameTxt" prefWidth="150.0" promptText="enter last name">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="35.0" stroke="TRANSPARENT" strokeType="INSIDE" width="20.0" />
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="634.0" />
+            <HBox prefHeight="35.0" prefWidth="634.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="35.0" stroke="TRANSPARENT" strokeType="INSIDE" width="20.0" />
+                  <Label fx:id="dateLbl" prefHeight="35.0" prefWidth="100.0" text="Id Number:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="visitorIDTxt" prefWidth="150.0" promptText="enter id number">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="35.0" stroke="TRANSPARENT" strokeType="INSIDE" width="104.0" />
+                  <Label fx:id="visitorsLbl" prefHeight="35.0" prefWidth="90.0" text="Visitors:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="visitorsAmountTxt" prefWidth="150.0" promptText="enter group size">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="35.0" stroke="TRANSPARENT" strokeType="INSIDE" width="20.0" />
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="634.0" />
+            <HBox prefHeight="35.0" prefWidth="634.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="35.0" stroke="TRANSPARENT" strokeType="INSIDE" width="20.0" />
+                  <Label fx:id="emailLbl" prefHeight="35.0" prefWidth="100.0" text="Email:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="emailTxt" prefHeight="35.0" prefWidth="494.0" promptText="enter email address">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="35.0" stroke="TRANSPARENT" strokeType="INSIDE" width="20.0" />
+               </children>
+            </HBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="634.0" />
+            <HBox prefHeight="35.0" prefWidth="634.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="35.0" stroke="TRANSPARENT" strokeType="INSIDE" width="20.0" />
+                  <Label fx:id="phoneLbl" prefHeight="35.0" prefWidth="100.0" text="Phone:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="phoneTxt" prefHeight="35.0" prefWidth="150.0" promptText="enter phone">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                  </TextField>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="35.0" stroke="TRANSPARENT" strokeType="INSIDE" width="104.0" />
+                  <Label fx:id="visitorsLbl1" prefHeight="35.0" prefWidth="60.0" text="Type:" textAlignment="RIGHT">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Label>
+                  <RadioButton fx:id="guidedRadio" mnemonicParsing="false" prefHeight="35.0" text="Guided">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </RadioButton>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="35.0" stroke="TRANSPARENT" strokeType="INSIDE" width="10.0" />
+                  <RadioButton fx:id="individualRadio" mnemonicParsing="false" prefHeight="35.0" text="Individual">
+                     <font>
+                        <Font name="Calibri" size="16.0" />
+                     </font>
+                  </RadioButton>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
    </children>
 </Pane>

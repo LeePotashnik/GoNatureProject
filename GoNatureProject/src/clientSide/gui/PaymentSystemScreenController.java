@@ -1,13 +1,20 @@
 package clientSide.gui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import clientSide.control.BookingController;
+import clientSide.control.GoNatureUsersController;
+import clientSide.control.ParkController;
+import common.communication.Communication;
+import common.communication.Communication.ClientMessageType;
+import common.communication.Communication.CommunicationType;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
 import entities.Booking;
+import entities.SystemUser;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.beans.value.ChangeListener;
@@ -28,19 +35,21 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.stage.WindowEvent;
 import javafx.util.Duration;
+import javafx.util.Pair;
 
 public class PaymentSystemScreenController extends AbstractScreen {
 	private Booking booking;
+	private String bookingMethod;
 	private static final String nameInput = "^[a-zA-Z]+ [a-zA-Z]+$";
 	private static final String fourDigits = "\\d{4}";
 	private static final String digitsOnly = "\\d*";
 
 	// properties for the images animation
-	private final static int IMAGE_VIEW_COUNT = 3; // Display 3 images at a time
-	private final ArrayList<String> imagePaths = new ArrayList<>(); // List to hold all your image paths
-	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT]; // Array for ImageViews
-	private int currentIndex = 0; // Index to track current image set
+	private final static int IMAGE_VIEW_COUNT = 3;
+	private final ImageView[] imageViews = new ImageView[IMAGE_VIEW_COUNT];
+	private int currentIndex = 0;
 
 	//////////////////////////////////
 	/// JAVAFX ANF FXML COMPONENTS ///
@@ -86,7 +95,11 @@ public class PaymentSystemScreenController extends AbstractScreen {
 			pause.setOnFinished(e -> {
 				try {
 					new Thread(() -> {
-						BookingController.getInstance().sendNotification(booking, false);
+						if (bookingMethod.equals("online")) { // send a regular notification
+							BookingController.getInstance().sendNotification(booking, false);
+						} else { // send a notification without a reminder
+							ParkController.getInstance().sendNotification(booking);
+						}
 					}).start();
 
 					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
@@ -261,31 +274,6 @@ public class PaymentSystemScreenController extends AbstractScreen {
 	}
 
 	/**
-	 * This method is used in order to add all parks images paths to the array list
-	 */
-	private void setParksPaths() {
-		if (imagePaths == null || imagePaths.isEmpty()) {
-			imagePaths.add("/acadia.jpg");
-			imagePaths.add("/big_bend.jpg");
-			imagePaths.add("/congaree.jpg");
-			imagePaths.add("/everglades.jpg");
-			imagePaths.add("/gateway_arch.jpg");
-			imagePaths.add("/glacier.jpg");
-			imagePaths.add("/grand_canyon.jpg");
-			imagePaths.add("/great_smoky_mountains.jpg");
-			imagePaths.add("/hawaii_volcanoes.jpg");
-			imagePaths.add("/hot_springs.jpg");
-			imagePaths.add("/mammoth_cave.jpg");
-			imagePaths.add("/olympic.jpg");
-			imagePaths.add("/shenandoah.jpg");
-			imagePaths.add("/theodore_roosevelt.jpg");
-			imagePaths.add("/voyageurs.jpg");
-			imagePaths.add("/yellowstone.jpg");
-			imagePaths.add("/yosemite.jpg");
-		}
-	}
-
-	/**
 	 * Validates that a card number field contains exactly 4 digits.
 	 *
 	 * @param cardField The text field containing the card number to be validated.
@@ -416,9 +404,6 @@ public class PaymentSystemScreenController extends AbstractScreen {
 		imageViews[1] = image2;
 		imageViews[2] = image3;
 
-		// setting the park images paths
-		setParksPaths();
-
 		// setting 3 first images
 		imageViews[0].setImage(new Image(imagePaths.get(0)));
 		imageViews[1].setImage(new Image(imagePaths.get(1)));
@@ -450,6 +435,9 @@ public class PaymentSystemScreenController extends AbstractScreen {
 		waitLabel.setAlignment(Pos.CENTER);
 		waitLabel.layoutXProperty().bind(pane.widthProperty().subtract(waitLabel.widthProperty()).divide(2));
 		waitLabel.setVisible(false);
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	/**
@@ -457,13 +445,54 @@ public class PaymentSystemScreenController extends AbstractScreen {
 	 *
 	 * @param information The booking and visitor information passed to the screen.
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public void loadBefore(Object information) {
-		if (information != null && information instanceof Booking) {
-			booking = (Booking) information;
+		if (information != null && information instanceof Pair) {
+			Pair<Booking, String> pair = (Pair<Booking, String>) information;
+			booking = pair.getKey();
+			bookingMethod = pair.getValue();
 			updateAmountLabel();
 		}
+	}
 
+	@Override
+	public void handleCloseRequest(WindowEvent event) {
+		// if the client is not connected or the user did not log in yet
+		SystemUser user = GoNatureUsersController.getInstance().restoreUser();
+		if (GoNatureClientUI.client == null || user == null || !user.isLoggedIn()) {
+			int decision = showConfirmationAlert("Are you sure you want to leave?", Arrays.asList("Yes", "No"));
+			if (decision == 2) // if the user clicked on "No"
+				event.consume();
+			else { // if the user clicked on "Yes"
+				System.out.println("Client exited the application"); // just exit
+			}
+		} else {
+			int decision = showConfirmationAlert(
+					"Are you sure you want to leave?\nBy pressing Yes, your reservation will be cancelled",
+					Arrays.asList("Yes", "No"));
+			if (decision == 2) // if the user clicked on "No"
+				event.consume();
+			else { // if the user clicked on "Yes"
+					// logging the user out
+				GoNatureUsersController.getInstance().logoutUser();
+
+				// cancelling the reservation
+				BookingController.getInstance().deleteBooking(booking, Communication.activeBookings);
+				if (bookingMethod.equals("casual")) {
+					int newCurrectCapacity = Integer.parseInt((ParkController.getInstance()
+							.checkCurrentCapacity(booking.getParkBooked().getParkName()))[3]);
+					newCurrectCapacity -= booking.getNumberOfVisitors();
+					ParkController.getInstance().updateCurrentCapacity(booking.getParkBooked().getParkName(),
+							newCurrectCapacity);
+				}
+
+				// creating a communication request for disconnecting from the server port
+				Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
+				message.setClientMessageType(ClientMessageType.DISCONNECT);
+				GoNatureClientUI.client.accept(message);
+			}
+		}
 	}
 
 	/**

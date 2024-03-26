@@ -7,14 +7,39 @@
     -fx-alignment: center;
 }
 
-.combo-box-text, .text-field {
+.combo-box, .choice-box, .text-field {
     -fx-font-family: 'Calibri';
-    -fx-font-size: 16px;
+    -fx-font-size: 16.0px;
+    -fx-text-fill: #191313; /* Matched with button's default text fill for consistency */
+    -fx-border-color: #000000; /* Using the button's border color for harmony */
+    -fx-border-width: 1.0; /* Consistent border width with the button */
+    -fx-background-radius: 5.0; /* Rounded edges to match the button */
+    -fx-background-color: #FAFAFA; /* Light background color similar to button's default */
+    -fx-effect: dropshadow(three-pass-box, rgba(0.0,0.0,0.0,0.3), 2.0, 0.0, 0.0, 2.0); /* Subtle shadow on focus for depth */
 }
 
-.combo-box-popup .list-cell:filled:selected, 
+.combo-box:hover, .choice-box:hover, .text-field:hover {
+	-fx-effect: dropshadow(three-pass-box, #195802, 2.0, 0.0, 0.0, 2.0);
+}
+
+.combo-box:focused, .choice-box:focused, .text-field:focused {
+    -fx-effect: dropshadow(three-pass-box, #195802, 2.0, 0.0, 0.0, 2.0);
+}
+
+.combo-box .cell:hover, .combo-box .list-cell:hover, .combo-box-popup .list-cell:filled:selected, 
 .combo-box-popup .list-cell:filled:selected:focused {
-    -fx-background-color: #00cc66; /* Replace with your desired color */
+    -fx-background-color: #195802; /* Hover effect for items within ComboBox */
+    -fx-text-fill: #E0E0E0;
+}
+
+.choice-box .cell:hover, .choice-box .list-cell:hover, .choice-box-popup .list-cell:filled:selected, 
+.choice-box-popup .list-cell:filled:selected:focused {
+    -fx-background-color: #195802; /* Hover effect for items within ComboBox */
+    -fx-text-fill: #E0E0E0;
+}
+
+.text-field:focused {
+    -fx-border-color: #195802; /* Using the button's border color for harmony */
 }
 
 .pane {
@@ -23,6 +48,36 @@
 }
 
 .label-stroke {
-    -fx-effect: dropshadow(gaussian, white, 3, 0, 0, 0)
-                dropshadow(gaussian, white, 3, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, white, 3.0, 0.0, 0.0, 0.0)
+                dropshadow(gaussian, white, 3.0, 0.0, 0.0, 0.0);
+}
+
+.button {
+    -fx-background-color: #E0E0E0;
+    -fx-font-family: 'Calibri';
+    -fx-font-size: 16.0px;
+    -fx-text-fill: #195802;
+    -fx-border-color: #195802;
+    -fx-border-width: 1.0;
+    -fx-border-radius: 10 0 10 0;
+    -fx-background-radius: 10 0 10 0;
+    -fx-min-width: 100.0;
+    -fx-effect: dropshadow(three-pass-box, rgba(0.0,0.0,0.0,0.3), 2.0, 0.0, 0.0, 2.0);
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+}
+
+.button:hover {
+    -fx-background-color: #195802;
+    -fx-text-fill: #E0E0E0;
+    -fx-border-color: #E0E0E0;
+    -fx-border-width: 1.0;
+}
+
+.button:pressed {
+    -fx-background-color: #E3E0E0;
+    -fx-text-fill: #195802;
+    -fx-border-color: #195802;
+    -fx-border-width: 1.0;
+    -fx-effect: dropshadow(three-pass-box, rgba(0.0,0.0,0.0,0.2), 2.0, 0.0, 0.0, 0.0);
 }

@@ -10,6 +10,7 @@ import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
+import entities.SystemUser;
 import javafx.animation.AnimationTimer;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
@@ -18,6 +19,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -70,7 +74,9 @@ public abstract class AbstractScreen {
 	 * @param event the event of clicking on the X of the window
 	 */
 	public void handleCloseRequest(WindowEvent event) {
-		if (GoNatureClientUI.client == null) { // if the client is not connected ( = null)
+		// if the client is not connected or the user did not log in yet
+		SystemUser user = GoNatureUsersController.getInstance().restoreUser();
+		if (GoNatureClientUI.client == null || user == null || !user.isLoggedIn()) {
 			int decision = showConfirmationAlert("Are you sure you want to leave?", Arrays.asList("Yes", "No"));
 			if (decision == 2) // if the user clicked on "No"
 				event.consume();
@@ -83,7 +89,7 @@ public abstract class AbstractScreen {
 			if (decision == 2) // if the user clicked on "No"
 				event.consume();
 			else { // if the user clicked on "Yes"
-				GoNatureUsersController.getInstance().checkLogOut(null, null, null);
+				GoNatureUsersController.getInstance().logoutUser();
 				// creating a communication request for disconnecting from the server port
 				Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
 				message.setClientMessageType(ClientMessageType.DISCONNECT);
@@ -371,5 +377,17 @@ public abstract class AbstractScreen {
 			imagePaths.add("/yellowstone.jpg");
 			imagePaths.add("/yosemite.jpg");
 		}
+	}
+
+	public void setApplicationBackground(Pane pane) {
+		// setting the background
+		ImageView backgroundImage = new ImageView(new Image("/applicationBackground.png"));
+
+		backgroundImage.fitWidthProperty().bind(ScreenManager.getInstance().getStage().widthProperty());
+		backgroundImage.fitHeightProperty().bind(ScreenManager.getInstance().getStage().heightProperty());
+		backgroundImage.setPreserveRatio(false);
+		backgroundImage.setOpacity(0.5);
+
+		pane.getChildren().add(0, backgroundImage);
 	}
 }

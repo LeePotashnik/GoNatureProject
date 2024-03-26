@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import clientSide.control.BookingController;
+import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import common.communication.Communication;
 import common.controllers.AbstractScreen;
@@ -184,7 +185,8 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			// showing the payment screen
 			try {
 				ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
-						"/clientSide/fxml/PaymentSystemScreen.fxml", true, false, booking);
+						"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
+						new Pair<Booking, String>(booking, "online"));
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
@@ -211,7 +213,6 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
 							"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
-//					return;
 				} catch (StatefulException | ScreenException e1) {
 					e1.printStackTrace();
 				}
@@ -281,31 +282,23 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 * @param event
 	 */
 	void returnToPreviousScreen(ActionEvent event) {
-		///// TEMPORARY /////
-		try {
-			ScreenManager.getInstance().goToPreviousScreen(false, false);
-		} catch (ScreenException | StatefulException e) {
-			e.printStackTrace();
+		// if the user is an individual (not a group guide) and entered from the main
+		// screen
+		if (ScreenManager.getInstance().whoIsBefore().equals("MainScreenController")) {
+			// logging him out
+			GoNatureUsersController.getInstance().logoutUser();
+			try {
+				ScreenManager.getInstance().goToPreviousScreen(false, false);
+			} catch (ScreenException | StatefulException e) {
+				e.printStackTrace();
+			}
+		} else { // return to account screen
+			try {
+				ScreenManager.getInstance().goToPreviousScreen(false, false);
+			} catch (ScreenException | StatefulException e) {
+				e.printStackTrace();
+			}
 		}
-
-		///// BELOW IS THE FINAL IMPLEMENTATION /////
-
-		// returning to account screen >>> restoring state
-//		if (userId == null) {
-//			try {
-//				ScreenManager.getInstance().goToPreviousScreen(false, true);
-//			} catch (ScreenException | StatefulException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//		// returning to main screen >>> not restoring state
-//		else {
-//			try {
-//				ScreenManager.getInstance().goToPreviousScreen(false, false);
-//			} catch (ScreenException | StatefulException e) {
-//				e.printStackTrace();
-//			}
-//		}
 	}
 
 	/////////////////////////////////////////////////////
@@ -704,7 +697,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		textField.textProperty().addListener(new ChangeListener<String>() {
 			@Override
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				if (!newValue.matches(digitsOnly)) {
+				if (newValue != null && !newValue.matches(digitsOnly)) {
 					textField.setText(newValue.replaceAll("[^\\d]", ""));
 				}
 			}
@@ -720,7 +713,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		textField.textProperty().addListener(new ChangeListener<String>() {
 			@Override
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-				if (!newValue.matches(lettersInput)) {
+				if (newValue != null && !newValue.matches(lettersInput)) {
 					textField.setText(newValue.replaceAll("[^a-zA-Z ]", ""));
 				}
 			}
@@ -854,6 +847,9 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
 
 		setVisible(true);
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	@Override

@@ -9,7 +9,6 @@ import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
 import common.communication.Communication.ServerMessageType;
-import common.controllers.ScreenManager;
 import ocsf.client.AbstractClient;
 
 public class GoNatureClient extends AbstractClient {
@@ -76,14 +75,6 @@ public class GoNatureClient extends AbstractClient {
 				originalRequest.setQueryResult(serverMessage.getQueryResult());
 			}
 			return;
-		}
-
-		// if this is a conquer message type, then the server side requires conquering
-		// the focus of the current stage
-		if (serverMessage.getServerMessageType() == ServerMessageType.CONQUER) {
-			if (ScreenManager.getInstance().isActive()) {
-				// ScreenManager.getInstance().conquerFocus(serverMessage.getServerMessageContent());
-			}
 		}
 	}
 

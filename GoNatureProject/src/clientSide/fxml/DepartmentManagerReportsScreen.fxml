@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
+
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.DepartmentManagerReportsScreenController">
+   <children>
+      <Label fx:id="titleLbl" layoutX="37.0" layoutY="65.0" prefHeight="46.0" prefWidth="629.0" text="Department" textAlignment="CENTER">
+         <font>
+            <Font name="Cambria" size="30.0" />
+         </font>
+      </Label>
+      <Button fx:id="backButton" layoutX="24.0" layoutY="24.0" mnemonicParsing="false" onAction="#returnToPreviousScreen" prefHeight="38.0" prefWidth="38.0">
+         <font>
+            <Font name="Calibri" size="14.0" />
+         </font>
+      </Button>
+      <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="213.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />
+      <HBox fx:id="hbox" layoutX="31.0" layoutY="152.0" prefHeight="100.0" prefWidth="640.0">
+         <children>
+            <VBox fx:id="vbox1" prefHeight="200.0" prefWidth="150.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="150.0" />
+                  <Label prefHeight="30.0" prefWidth="150.0" text="Choose month:" textAlignment="CENTER" underline="true">
+                     <font>
+                        <Font name="Calibri Light" size="20.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="150.0" />
+                  <ChoiceBox fx:id="choiceBoxMonth" prefWidth="150.0" />
+               </children>
+            </VBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="100.0" stroke="TRANSPARENT" strokeType="INSIDE" width="45.0" />
+            <VBox fx:id="vbox2" prefHeight="200.0" prefWidth="150.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="150.0" />
+                  <Label prefHeight="30.0" prefWidth="150.0" text="Choose year:" textAlignment="CENTER" underline="true">
+                     <font>
+                        <Font name="Calibri Light" size="20.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="150.0" />
+                  <ChoiceBox fx:id="choiceBoxYear" prefWidth="150.0" />
+               </children>
+            </VBox>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="100.0" stroke="TRANSPARENT" strokeType="INSIDE" width="45.0" />
+            <VBox fx:id="vbox3" prefHeight="200.0" prefWidth="250.0">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
+                  <Label prefHeight="30.0" prefWidth="250.0" text="Choose park:" textAlignment="CENTER" underline="true">
+                     <font>
+                        <Font name="Calibri Light" size="20.0" />
+                     </font>
+                  </Label>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="250.0" />
+                  <ChoiceBox fx:id="choiceBoxPark" prefWidth="250.0" />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+      <Separator layoutX="30.0" layoutY="142.0" prefWidth="640.0" />
+      <VBox layoutX="31.0" layoutY="263.0" prefHeight="200.0" prefWidth="300.0">
+         <children>
+            <Label prefHeight="30.0" prefWidth="300.0" text="Choose a report type:" textAlignment="CENTER" underline="true">
+               <font>
+                  <Font name="Calibri Light" size="20.0" />
+               </font>
+            </Label>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="300.0" />
+            <RadioButton fx:id="radioVisit" mnemonicParsing="false" text="Visits Report">
+               <font>
+                  <Font name="Calibri" size="18.0" />
+               </font>
+            </RadioButton>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="300.0" />
+            <RadioButton fx:id="radioUsage" mnemonicParsing="false" text="Usage Report">
+               <font>
+                  <Font name="Calibri" size="18.0" />
+               </font>
+            </RadioButton>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="300.0" />
+            <RadioButton fx:id="radioCancel" mnemonicParsing="false" text="Cancellation Report">
+               <font>
+                  <Font name="Calibri" size="18.0" />
+               </font>
+            </RadioButton>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="300.0" />
+            <RadioButton fx:id="radioTotal" mnemonicParsing="false" text="Total Number of Visitors Report">
+               <font>
+                  <Font name="Calibri" size="18.0" />
+               </font>
+            </RadioButton>
+         </children>
+      </VBox>
+      <Button fx:id="generateButton" layoutX="395.0" layoutY="421.0" mnemonicParsing="false" onAction="#generateButtonClicked" text="Generate Report">
+         <font>
+            <Font name="Calibri" size="18.0" />
+         </font>
+      </Button>
+   </children>
+</Pane>

@@ -542,7 +542,8 @@ public class BookingEditingScreenController extends BookingScreenController {
 			// showing the payment screen
 			try {
 				ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
-						"/clientSide/fxml/PaymentSystemScreen.fxml", true, false, newBooking);
+						"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
+						new Pair<Booking, String>(newBooking, "online"));
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
@@ -682,6 +683,9 @@ public class BookingEditingScreenController extends BookingScreenController {
 				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
 
 		setVisible(true);
+
+		// setting the application's background
+		setApplicationBackground(pane);
 	}
 
 	@Override
