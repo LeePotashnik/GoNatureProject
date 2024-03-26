@@ -136,9 +136,11 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 			if (available - parkEmployee.getWorkingIn().getCurrentCapacity() >= Integer
 					.parseInt(visitorsAmountTxt.getText()))
 				valid = true;
-			else
+			else {
 				showErrorAlert(
 						"Unfortunately, there is no place available in the park for the number of people in the reservation");
+				visitorIDTxt.setStyle(setFieldToError());
+			}
 		}
 
 		if (valid) {
@@ -153,6 +155,8 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 						visitorIDTxt.getText());
 				if (parkVisitor == null) { // there's no group guide with this id number
 					showErrorAlert("The provided Id number is not found connected to an authorized group guide.");
+					visitorIDTxt.setStyle(setFieldToError());
+
 					return;
 				} else {
 					break;
@@ -229,6 +233,8 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 			} else {
 				showErrorAlert(
 						"Unfortunately, there is no space available in the park for the number of people in the reservation");
+				visitorIDTxt.setStyle(setFieldToError());
+
 			}
 		}
 	}
@@ -289,7 +295,8 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 		visitorsAmountTxt.setStyle(setFieldToRegular());
 		phoneTxt.setStyle(setFieldToRegular());
 		emailTxt.setStyle(setFieldToRegular());
-
+		// Radio Button choosing validation
+		RadioButton selected = (RadioButton) group.getSelectedToggle();
 		String error = "";
 
 		// First name validation
@@ -321,6 +328,7 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 		// Visitors amount validation:
 		// Ensuring that the inserted number of visitors falls within the range of 1 to
 		// 15.
+		
 		String amount = visitorsAmountTxt.getText();
 		if (!amount.matches("\\d+")) {
 			error += "You must enter a valid amount number of visits with only digits between 1-15.\n";
@@ -328,7 +336,7 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 			valid = false;
 		} else {
 			int amountInt = Integer.parseInt(amount);
-			if (amountInt > 15 || amountInt < 1) {
+			if (((String) selected.getUserData()).equals("guided") && (amountInt  > 15 || amountInt < 1)) {
 				error += "You must enter a valid amount number of visits with only digits between 1-15.\n";
 				visitorsAmountTxt.setStyle(setFieldToError());
 				valid = false;
@@ -355,8 +363,6 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 			valid = false;
 		}
 
-		// Radio Button choosing validation
-		RadioButton selected = (RadioButton) group.getSelectedToggle();
 		if (selected == null) {
 			error += "Please choose group type\n";
 			valid = false;

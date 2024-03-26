@@ -177,8 +177,14 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		LocalDateTime now = LocalDateTime.now();
 		if (now.isBefore(visitTime)) {
 			// Checking if the visitor did not arrive earlier than his reservation
-			showErrorAlert("The visitor arrived too early.");
-			return;
+			if (!parkControl.checkParkAvailabilityForBooking(booking)) {
+				showErrorAlert("The visitor arrived too early.\nPlease inform the visitor they can't enter now. "
+						+ "\nSuggest they come closer to their reservation time or check back later. ");
+				return;
+			} else {
+				showInformationAlert("The visitor arrived earlier than the scheduled time, but there is space available in"
+						+ " the park! They can enter now and enjoy their visit.!");
+			}
 		}
 
 		updateParkCapacity();
@@ -326,6 +332,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		String insertedID = bookingIDTxt.getText();
 		if (insertedID.length() != 10 || !insertedID.matches("\\d+")) {
 			error = "You must enter a valid booking ID number with exactly 10 digits";
+			bookingIDTxt.setStyle(setFieldToError());
 			valid = false;
 			showErrorAlert(error);
 		}
