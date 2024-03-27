@@ -2,6 +2,7 @@ package serverSide.gui;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.time.LocalTime;
 import java.util.Arrays;
 
@@ -405,11 +406,11 @@ public class ServerConnectionController extends AbstractScreen {
 		// setting the application's background
 		setApplicationBackground(pane);
 
-		// for later use
-//		consoleArea.setEditable(false);
-//		ConsoleOutput consoleOutput = new ConsoleOutput(consoleArea);
-//		System.setOut(new PrintStream(consoleOutput, true));
-//		System.setErr(new PrintStream(consoleOutput, true));
+		// setting the output from the console to the text area
+		consoleArea.setEditable(false);
+		ConsoleOutput consoleOutput = new ConsoleOutput(consoleArea);
+		System.setOut(new PrintStream(consoleOutput, true));
+		System.setErr(new PrintStream(consoleOutput, true));
 	}
 
 	public static class ConsoleOutput extends OutputStream {
