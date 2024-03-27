@@ -58,6 +58,25 @@ public class RegistrationController {
 
 	}
 	
+	
+	public boolean checkGroupGuideExistence(String id) {
+		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			request.setQueryType(QueryType.SELECT);
+			request.setTables(Arrays.asList(Communication.griupGuide));
+			request.setSelectColumns(Arrays.asList("*"));
+			request.setWhereConditions(Arrays.asList("groupGuideId"), Arrays.asList("="), Arrays.asList(id));
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		GoNatureClientUI.client.accept(request);
+		ArrayList<Object[]> result = request.getResultList();
+		if(result.isEmpty())
+			return false;
+		return true;
+
+	}
+	
 	////////////////////////////////////
 	/// DB DELETING TRAVELLER METHOD ///
 	////////////////////////////////////

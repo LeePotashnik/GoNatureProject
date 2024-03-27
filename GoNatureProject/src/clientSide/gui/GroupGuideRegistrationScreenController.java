@@ -65,10 +65,16 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 		} else {
 			ArrayList<Object[]> userDetails = registerController.getUserDetails(id);
 			if (userDetails.isEmpty()) {
-				idTxt.setStyle(setFieldToError());
-				showErrorAlert("This user's id does not exists in our System.");
+				if(RegistrationController.getInstance().checkGroupGuideExistence(id)) {
+					idTxt.setStyle(setFieldToError());
+					showErrorAlert("This ID is already registered as a Group Guide");	
+					}
+				else {
+					idTxt.setStyle(setFieldToError());
+					showErrorAlert("This ID does not exists in our System.");
+				}
 			} else {
-				showInformationAlert("ID exists for a user. Details loaded for conversion.");
+				showInformationAlert("User Details loaded for conversion.");
 				idTxt.setStyle(setFieldToRegular());
 				idTxt.setDisable(true);
 				showAllFieldsAndRegisterButton();
