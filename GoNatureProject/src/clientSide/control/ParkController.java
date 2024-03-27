@@ -544,7 +544,7 @@ public class ParkController {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			request.setQueryType(QueryType.SELECT);
-			request.setTables(Arrays.asList("park"));
+			request.setTables(Arrays.asList(Communication.park));
 			request.setSelectColumns(Arrays.asList("maximumVisitorsCapacity", "maximumOrderAmount", "maximumTimeLimit",
 					"currentCapacity"));
 			request.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="), Arrays.asList(parkName));

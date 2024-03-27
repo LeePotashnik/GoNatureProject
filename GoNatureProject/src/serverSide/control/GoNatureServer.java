@@ -9,8 +9,10 @@ import java.util.concurrent.Semaphore;
 import common.communication.Communication;
 import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
+import common.communication.Communication.QueryType;
 import common.communication.Communication.SecondaryRequest;
 import common.communication.Communication.ServerMessageType;
+import common.communication.CommunicationException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import ocsf.server.AbstractServer;
@@ -218,10 +220,11 @@ public class GoNatureServer extends AbstractServer {
 				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
 						+ ": Communication recieved from client " + client.toString());
 		Communication request = (Communication) msg;
-		
+
 		if (request.isCritical()) { // aquiring the critical section
 			try {
 				semaphore.acquire();
+				System.out.println("Semaphore is aquired");
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -285,8 +288,20 @@ public class GoNatureServer extends AbstractServer {
 							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
 							request.isPaid()));
 					break;
+				case UPDATE_CAPACITY:
+					int visitorsBooking = request.getVisitors();
+					int currentCapacity = (Integer) (request.getResultList().get(0)[3]);
+					try {
+						request.setQueryType(QueryType.UPDATE);
+					} catch (CommunicationException e) {
+						e.printStackTrace();
+					}
+					request.setColumnsAndValues(Arrays.asList("currentCapacity"),
+							Arrays.asList(currentCapacity + visitorsBooking));
+					boolean updateQueryResult = database.executeUpdateQuery(request);
+					response.setQueryResult(updateQueryResult);
 				}
-				
+
 			}
 
 			try {
@@ -319,6 +334,7 @@ public class GoNatureServer extends AbstractServer {
 
 		if (request.isCritical()) { // releaseing the critical section
 			semaphore.release();
+			System.out.println("Semaphore is released");
 		}
 	}
 }
