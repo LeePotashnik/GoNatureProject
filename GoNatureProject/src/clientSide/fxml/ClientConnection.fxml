@@ -12,7 +12,7 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ClientConnectionController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.ClientConnectionController">
    <children>
       <Rectangle fx:id="rectangle" arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="171.0" layoutX="90.0" layoutY="291.0" strokeLineCap="ROUND" strokeLineJoin="ROUND" strokeType="OUTSIDE" width="522.0">
          <stroke>

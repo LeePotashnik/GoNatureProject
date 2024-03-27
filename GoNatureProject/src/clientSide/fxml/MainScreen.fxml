@@ -14,7 +14,7 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneFocus" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.MainScreenController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneFocus" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.MainScreenController">
    <children>
       <Separator fx:id="sep1" layoutX="23.0" layoutY="289.0" prefHeight="14.0" prefWidth="656.0" />
       <VBox fx:id="vbox" layoutX="120.0" layoutY="15.0" prefHeight="198.0" prefWidth="470.0">

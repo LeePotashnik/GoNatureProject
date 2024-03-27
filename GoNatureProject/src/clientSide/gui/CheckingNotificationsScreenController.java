@@ -34,7 +34,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 
-public class CheckingNotoficationsScreenController extends AbstractScreen {
+public class CheckingNotificationsScreenController extends AbstractScreen {
 
 	private ParkController parkControl;
 	ObservableList<Booking> observableBookings = null;
@@ -74,7 +74,7 @@ public class CheckingNotoficationsScreenController extends AbstractScreen {
 	/**
 	 * Constructor, initializes the Park Controller instance
 	 */
-	public CheckingNotoficationsScreenController() {
+	public CheckingNotificationsScreenController() {
 		parkControl = ParkController.getInstance();
 	}
 
