@@ -407,10 +407,10 @@ public class ServerConnectionController extends AbstractScreen {
 		setApplicationBackground(pane);
 
 		// setting the output from the console to the text area
-		consoleArea.setEditable(false);
-		ConsoleOutput consoleOutput = new ConsoleOutput(consoleArea);
-		System.setOut(new PrintStream(consoleOutput, true));
-		System.setErr(new PrintStream(consoleOutput, true));
+//		consoleArea.setEditable(false);
+//		ConsoleOutput consoleOutput = new ConsoleOutput(consoleArea);
+//		System.setOut(new PrintStream(consoleOutput, true));
+//		System.setErr(new PrintStream(consoleOutput, true));
 	}
 
 	public static class ConsoleOutput extends OutputStream {
