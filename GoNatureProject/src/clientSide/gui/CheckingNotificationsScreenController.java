@@ -182,7 +182,7 @@ public class CheckingNotificationsScreenController extends AbstractScreen {
 		if (choise == 2) {
 			// Moving the traveler from the active bookings table to the canceled bookings
 			// table
-			parkControl.removeBookingFromActiveBookings(ParkTable + "_park_active_booking",
+			parkControl.removeBooking(ParkTable + "_park_active_booking",
 					chosenBooking.getBookingId());
 			parkControl.insertBookingToTable(chosenBooking, ParkTable + "_park_cancelled_booking", "canceled");
 		} else {

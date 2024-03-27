@@ -120,7 +120,7 @@ public class ParkController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		requestParks.setTables(Arrays.asList("park"));
+		requestParks.setTables(Arrays.asList(Communication.park));
 		requestParks.setSelectColumns(Arrays.asList("*"));
 		GoNatureClientUI.client.accept(requestParks); // sending to server side
 
@@ -317,7 +317,7 @@ public class ParkController {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			request.setQueryType(QueryType.SELECT);
-			request.setTables(Arrays.asList("park"));
+			request.setTables(Arrays.asList(Communication.park));
 			request.setSelectColumns(Arrays.asList("*")); // returns all the data according to the inserted department
 			request.setWhereConditions(Arrays.asList(field), Arrays.asList("="), Arrays.asList(ID));
 		} catch (CommunicationException e) {
@@ -408,12 +408,14 @@ public class ParkController {
 
 		try {
 			request.setQueryType(QueryType.UPDATE);
-			request.setTables(Arrays.asList("park"));
+			request.setTables(Arrays.asList(Communication.park));
 			request.setColumnsAndValues(Arrays.asList("currentCapacity"), Arrays.asList(amount));
 			request.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="), Arrays.asList(park));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
+		//request.setSecondaryRequest(UPDATE_CAPACITY);
+		request.setVisitors(amount);
 		GoNatureClientUI.client.accept(request);
 		boolean result = request.getQueryResult();
 		if (result) {
@@ -422,6 +424,63 @@ public class ParkController {
 		return false;
 	}
 
+	/**
+	 * Checks if a booking is locked for processing by another park employee.
+	 * This method checks the status of a booking lock in the database.
+	 * A booking lock indicates whether the booking is currently being processed by another employee.
+	 * 
+	 * @param ID The ID of the booking to check.
+	 * @return An integer representing the status of the booking lock.
+	 * 		0 - Indicates that the employee can work on this booking.
+	 * 		1 - Indicates that no one is working on that booking but the process of locking has failed.
+	 * 		2 - Indicates that the booking is open in another screen of another park employee.
+	 */
+	public int checkIfBookingIsLock(String ID) {
+		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
+		request.setCritical(true);
+		try {
+			request.setQueryType(QueryType.SELECT);
+			request.setTables(Arrays.asList("booking_lock"));
+			request.setSelectColumns(Arrays.asList("bookingId")); // returns all the data according to the inserted ID
+			request.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList(ID));
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		//request.setSecondaryRequest(INSERT_);
+		GoNatureClientUI.client.accept(request);
+		ArrayList<Object[]> result = request.getResultList();
+		if (result.isEmpty()) {
+			if (insertBookingToLockBooking(ID))
+				return 0;
+			return 1;
+		}
+		return 2;
+	}
+	
+	/**
+	 * Inserts a booking ID into the booking lock table to lock it for processing.
+	 * 
+	 * @param ID The ID of the booking to insert into the booking lock table.
+	 * @return true if the booking was successfully inserted into the booking lock table, otherwise false.
+	 */
+	private boolean insertBookingToLockBooking(String ID) {
+		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			insertRequest.setQueryType(QueryType.INSERT);
+			insertRequest.setTables(Arrays.asList("booking_lock"));
+			insertRequest.setColumnsAndValues(Arrays.asList("bookingId"),Arrays.asList(ID));
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		//request.setSecondaryRequest(INSERT_);
+		GoNatureClientUI.client.accept(insertRequest);
+		boolean result = insertRequest.getQueryResult();
+		if (result) {
+			return true;
+		}
+		return false;
+	}  
+	
 	/**
 	 * An 'UPDATE' SQL query is generated to access the relevant table in the
 	 * database and change the 'confirmed' field to true (represents by '1'). This
@@ -512,7 +571,7 @@ public class ParkController {
 	 * @return It returns a boolean value indicating whether the update succeeded
 	 *         (true) or not(false).
 	 */
-	public boolean removeBookingFromActiveBookings(String table, String bookingID) {
+	public boolean removeBooking(String table, String bookingID) {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			request.setQueryType(QueryType.DELETE);
