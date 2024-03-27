@@ -34,7 +34,7 @@ public class ClientConnectionController extends AbstractScreen {
 
 	// validation constants
 	private static final String localHost = "localhost";
-	private static final String hostInput = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+	private static final String hostInput = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
 	private static final String digitsOnly = "\\d+";
 
 	//////////////////////////
