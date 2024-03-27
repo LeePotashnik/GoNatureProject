@@ -513,8 +513,8 @@ public class BookingEditingScreenController extends BookingScreenController {
 
 		// calculating the final price for the booking. Sending visitor's type cause the
 		// price defers between regular and guided groups
-		int discountPrice = control.calculateFinalDiscountPrice(booking, isGroupReservation, false);
-		int preOrderPrice = control.calculateFinalDiscountPrice(booking, true, true);
+		int discountPrice = control.calculateFinalDiscountPrice(newBooking, isGroupReservation, false);
+		int preOrderPrice = control.calculateFinalDiscountPrice(newBooking, true, true);
 
 		// creating the pop up message
 		String payMessage = "Woohoo! You're almost set.";

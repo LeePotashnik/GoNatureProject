@@ -220,7 +220,7 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 					try {
 						processBooking(amount);
 						ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
-								"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
+								"/clientSide/fxml/PaymentSystemScreen.fxml", true, true,
 								new Pair<Booking, String>(newBooking, "casual"));
 					} catch (StatefulException | ScreenException e) {
 						e.printStackTrace();
@@ -258,7 +258,7 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 	 */
 	void returnToPreviousScreen(ActionEvent event) {
 		try {
-			ScreenManager.getInstance().goToPreviousScreen(true, false);
+			ScreenManager.getInstance().goToPreviousScreen(false, false);
 		} catch (ScreenException | StatefulException e) {
 			e.printStackTrace();
 		}

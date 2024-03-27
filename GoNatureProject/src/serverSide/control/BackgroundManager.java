@@ -744,7 +744,6 @@ public class BackgroundManager {
 		int timeLimit = park.getTimeLimit();
 		int currentCapacity = getCurrentParkCapacities(park, date, time, timeLimit);
 		int moreCanEnter = park.getMaximumOrders() - currentCapacity;
-
 		// creating a communication for checking the possibility of releasing booking/s
 		// from the waiting list
 		Communication checkWaitingList = new Communication(CommunicationType.SELF);

@@ -7,14 +7,11 @@ import clientSide.control.BookingController;
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import common.communication.Communication;
-import common.communication.Communication.ClientMessageType;
-import common.communication.Communication.CommunicationType;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
 import entities.Booking;
-import entities.SystemUser;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.beans.value.ChangeListener;
@@ -458,39 +455,30 @@ public class PaymentSystemScreenController extends AbstractScreen {
 
 	@Override
 	public void handleCloseRequest(WindowEvent event) {
-		// if the client is not connected or the user did not log in yet
-		SystemUser user = GoNatureUsersController.getInstance().restoreUser();
-		if (GoNatureClientUI.client == null || user == null || !user.isLoggedIn()) {
-			int decision = showConfirmationAlert("Are you sure you want to leave?", Arrays.asList("Yes", "No"));
-			if (decision == 2) // if the user clicked on "No"
-				event.consume();
-			else { // if the user clicked on "Yes"
-				System.out.println("Client exited the application"); // just exit
+		int decision = showConfirmationAlert(
+				"Are you sure you want to leave the payment process?\nBy pressing Yes, your reservation will be cancelled",
+				Arrays.asList("Yes", "No"));
+		if (decision == 2) // if the user clicked on "No"
+			event.consume();
+		else { // if the user clicked on "Yes"
+				// logging the user out
+			GoNatureUsersController.getInstance().logoutUser();
+
+			// cancelling the reservation
+			BookingController.getInstance().deleteBooking(booking, Communication.activeBookings);
+			if (bookingMethod.equals("casual")) {
+				int newCurrectCapacity = Integer.parseInt(
+						(ParkController.getInstance().checkCurrentCapacity(booking.getParkBooked().getParkName()))[3]);
+				newCurrectCapacity -= booking.getNumberOfVisitors();
+				ParkController.getInstance().updateCurrentCapacity(booking.getParkBooked().getParkName(),
+						newCurrectCapacity);
 			}
-		} else {
-			int decision = showConfirmationAlert(
-					"Are you sure you want to leave?\nBy pressing Yes, your reservation will be cancelled",
-					Arrays.asList("Yes", "No"));
-			if (decision == 2) // if the user clicked on "No"
-				event.consume();
-			else { // if the user clicked on "Yes"
-					// logging the user out
-				GoNatureUsersController.getInstance().logoutUser();
 
-				// cancelling the reservation
-				BookingController.getInstance().deleteBooking(booking, Communication.activeBookings);
-				if (bookingMethod.equals("casual")) {
-					int newCurrectCapacity = Integer.parseInt((ParkController.getInstance()
-							.checkCurrentCapacity(booking.getParkBooked().getParkName()))[3]);
-					newCurrectCapacity -= booking.getNumberOfVisitors();
-					ParkController.getInstance().updateCurrentCapacity(booking.getParkBooked().getParkName(),
-							newCurrectCapacity);
-				}
-
-				// creating a communication request for disconnecting from the server port
-				Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
-				message.setClientMessageType(ClientMessageType.DISCONNECT);
-				GoNatureClientUI.client.accept(message);
+			event.consume();
+			try {
+				ScreenManager.getInstance().goToPreviousScreen(true, true);
+			} catch (ScreenException | StatefulException e) {
+				e.printStackTrace();
 			}
 		}
 	}
