@@ -133,8 +133,8 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 					// the park visitor will be redirected to the
 					// 'CheckingNotoficationsScreenScreen'
 					try {
-						ScreenManager.getInstance().showScreen("CheckingNotoficationsScreenConrtroller",
-								"/clientSide/fxml/CheckingNotoficationsScreen.fxml", true, false, null);
+						ScreenManager.getInstance().showScreen("CheckingNotificationsScreenConrtroller",
+								"/clientSide/fxml/CheckingNotificationsScreen.fxml", true, false, null);
 					} catch (ScreenException | StatefulException e) {
 						e.printStackTrace();
 					}
