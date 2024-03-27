@@ -91,6 +91,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		booking = findBookingAcrossTables(bookingIDTxt.getText());
 		if (booking == null) {
 			showErrorAlert("No existing reservations found for the provided booking ID.");
+			bookingIDTxt.setStyle(setFieldToError());
 			return;
 		} else {
 			booking.setParkBooked(parkEmployee.getWorkingIn());
@@ -106,9 +107,9 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 
 		if (booking.getFinalPrice() == -1) { // means the booking is cancelled
 			statusLbl.setText("Cancelled booking");
-			entryTimeBtn.setDisable(false);
-			exitTimeBtn.setDisable(false);
-			invoiceBtn.setDisable(false);
+			entryTimeBtn.setDisable(true);
+			exitTimeBtn.setDisable(true);
+			invoiceBtn.setDisable(true);
 		}
 
 		else { // means the booking is active/done
@@ -335,7 +336,9 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 			bookingIDTxt.setStyle(setFieldToError());
 			valid = false;
 			showErrorAlert(error);
-		}
+		} 
+		else
+			bookingIDTxt.setStyle(setFieldToRegular());
 		return valid;
 	}
 

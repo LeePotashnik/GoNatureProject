@@ -71,7 +71,12 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	private static final String lettersInput = "[a-zA-Z]+( [a-zA-Z]+)?";
 	private static final String emailInput = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
 	private static final String phoneInput = "^(052|054|050)\\d{7}$";
-
+	// checking the phone number
+	if (phoneTxt.getText().isEmpty() || !phoneTxt.getText().matches(phoneInput)) {
+		phoneTxt.setStyle(setFieldToError());
+		error += "• enter a valid phone number\n";
+		valid = false;
+	}
 	/**
 	 * Constructor, initializes the booking controller instance
 	 */

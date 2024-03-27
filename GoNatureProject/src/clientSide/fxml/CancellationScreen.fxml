@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.CancellationScreenController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.CancellationScreenController">
    <children>
       <ImageView fx:id="goNatureLogo" fitHeight="100.0" fitWidth="600.0" layoutX="49.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
       <Label layoutX="148.0" layoutY="114.0" prefHeight="38.0" prefWidth="400.0" text="Your Reservation is Cancelled">

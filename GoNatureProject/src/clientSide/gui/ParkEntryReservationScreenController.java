@@ -59,6 +59,8 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 	private ParkEmployee parkEmployee;
 	private Booking newBooking;
 	private ParkVisitor parkVisitor;
+	private static final String emailInput = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+	private static final String phoneInput = "^(052|054|050)\\d{7}$";
 	Map<String, String> bookingDetails = new HashMap<>();
 
 	/**
@@ -155,8 +157,6 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 						visitorIDTxt.getText());
 				if (parkVisitor == null) { // there's no group guide with this id number
 					showErrorAlert("The provided Id number is not found connected to an authorized group guide.");
-					visitorIDTxt.setStyle(setFieldToError());
-
 					return;
 				} else {
 					break;
@@ -347,7 +347,7 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 		// Verifying if the inserted phone number is valid in terms of length and
 		// consists only of digits.
 		String phoneNum = phoneTxt.getText();
-		if (phoneNum.length() != 10 || !phoneNum.matches("\\d+")) {
+		if (phoneNum.length() != 10 || !phoneNum.matches("\\d+") || !phoneNum.matches(phoneInput)) {
 			error += "You must enter a valid phone number with exactly 10 digits.\n";
 			phoneTxt.setStyle(setFieldToError());
 			valid = false;
@@ -357,7 +357,7 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 		// Checking if the inserted email conforms to the standard email format to
 		// ensure its validity.
 		if (emailTxt.getText().isEmpty()
-				|| !emailTxt.getText().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+				|| !emailTxt.getText().matches(emailInput)) {
 			error += "You must enter a valid email\n";
 			emailTxt.setStyle(setFieldToError());
 			valid = false;
@@ -473,7 +473,6 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 		bookingDetails.put("visitorID", visitorIDTxt.getText());
 		bookingDetails.put("name", nameTxt.getText());
 		bookingDetails.put("lastName", lastNameTxt.getText());
-
 		parkControl.setBookingDetails(bookingDetails);
 	}
 
