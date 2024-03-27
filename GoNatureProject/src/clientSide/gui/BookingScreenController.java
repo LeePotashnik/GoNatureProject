@@ -185,7 +185,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			// showing the payment screen
 			try {
 				ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
-						"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
+						"/clientSide/fxml/PaymentSystemScreen.fxml", true, true,
 						new Pair<Booking, String>(booking, "online"));
 			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
@@ -567,23 +567,24 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		}
 
 		// checking the first name
-		if (!firstNameTxt.isDisabled()
-				&& (firstNameTxt.getText() == null || firstNameTxt.getText().isEmpty() || !firstNameTxt.getText().matches(lettersInput))) {
+		if (!firstNameTxt.isDisabled() && (firstNameTxt.getText() == null || firstNameTxt.getText().isEmpty()
+				|| !firstNameTxt.getText().matches(lettersInput))) {
 			firstNameTxt.setStyle(setFieldToError());
 			error += "• enter a valid first name\n";
 			valid = false;
 		}
 
 		// checking the last name
-		if (!lastNameTxt.isDisabled()
-				&& (lastNameTxt.getText() == null || lastNameTxt.getText().isEmpty() || !lastNameTxt.getText().matches(lettersInput))) {
+		if (!lastNameTxt.isDisabled() && (lastNameTxt.getText() == null || lastNameTxt.getText().isEmpty()
+				|| !lastNameTxt.getText().matches(lettersInput))) {
 			lastNameTxt.setStyle(setFieldToError());
 			error += "• enter a valid last name\n";
 			valid = false;
 		}
 
 		// checking the visitors number
-		if (visitorsTxt.getText() == null || visitorsTxt.getText().isEmpty() || !visitorsTxt.getText().matches(digitsOnly)) {
+		if (visitorsTxt.getText() == null || visitorsTxt.getText().isEmpty()
+				|| !visitorsTxt.getText().matches(digitsOnly)) {
 			visitorsTxt.setStyle(setFieldToError());
 			error += "• enter a digit-only number of visitors\n";
 			valid = false;
@@ -774,8 +775,10 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		phoneTxt.setText(booking.getPhoneNumber());
 		firstNameTxt.setText(booking.getFirstName());
 		lastNameTxt.setText(booking.getLastName());
-		firstNameTxt.setDisable(true);
-		lastNameTxt.setDisable(true);
+		if (booking.getVisitType() == VisitType.GROUP) {
+			firstNameTxt.setDisable(true);
+			lastNameTxt.setDisable(true);
+		}
 		isGroupReservation = booking.getVisitType() == VisitType.GROUP ? true : false;
 		typeLbl.setText((isGroupReservation == true ? "Guided Group | Your Id: " : "Regular Group | Your Id: ")
 				+ booking.getIdNumber());

@@ -419,7 +419,7 @@ public class RescheduleScreenController extends AbstractScreen {
 			return row;
 		});
 
-		availableTable.setDisable(true);
+		availableTable.setVisible(false);
 		instructionsLbl.setVisible(false);
 		progressIndicator.setVisible(false);
 		waitLabel.setVisible(false);

@@ -106,7 +106,7 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 	@FXML
 	void goTOVisitBookingScreen(ActionEvent event) {
 		try {
-			ScreenManager.getInstance().showScreen("BookingScreenConrtroller", "/clientSide/fxml/BookingScreen.fxml",
+			ScreenManager.getInstance().showScreen("BookingScreenController", "/clientSide/fxml/BookingScreen.fxml",
 					false, false, parkVisitor);
 		} catch (ScreenException | StatefulException e) {
 			e.printStackTrace();

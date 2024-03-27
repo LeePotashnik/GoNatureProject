@@ -90,7 +90,7 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen {
 	void goToParkEntryResevationScreen(ActionEvent event) {
 		try {
 			ScreenManager.getInstance().showScreen("ParkEntryReservationScreenController",
-					"/clientSide/fxml/ParkEntryReservationScreen.fxml", true, false, null);
+					"/clientSide/fxml/ParkEntryReservationScreen.fxml", false, false, null);
 		} catch (StatefulException | ScreenException e) {
 			e.printStackTrace();
 		}

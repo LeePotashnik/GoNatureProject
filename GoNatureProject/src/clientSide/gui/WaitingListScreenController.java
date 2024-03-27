@@ -110,8 +110,13 @@ public class WaitingListScreenController extends AbstractScreen {
 	 * @param event
 	 */
 	void returnToAccount(ActionEvent event) {
-		// returning to the acount screen
-	}
+		ScreenManager.getInstance().resetScreensStack();
+		try {
+			ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController",
+					"/clientSide/fxml/ParkVisitorAccountScreen.fxml", false, false, null);
+		} catch (StatefulException | ScreenException e) {
+			e.printStackTrace();
+		}	}
 
 	@FXML
 	/**
