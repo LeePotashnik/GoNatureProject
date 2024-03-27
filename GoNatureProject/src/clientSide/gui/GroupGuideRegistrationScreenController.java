@@ -223,7 +223,7 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	 */
 	@Override
 	public void initialize() {
-		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNature.png")));
+		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		// setting the back button image
 		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
 		backImage.setFitHeight(30);

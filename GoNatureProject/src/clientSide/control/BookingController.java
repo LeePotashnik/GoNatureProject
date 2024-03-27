@@ -237,6 +237,7 @@ public class BookingController {
 		availabilityRequest.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit"),
 				Arrays.asList("=", "AND", ">", "AND", "<"),
 				Arrays.asList(date, time.minusHours(timeLimit), time.plusHours(timeLimit)));
+		availabilityRequest.setCritical(true);
 
 		// sending the request to the server side
 		GoNatureClientUI.client.accept(availabilityRequest);

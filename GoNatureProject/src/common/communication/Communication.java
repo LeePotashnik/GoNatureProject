@@ -154,7 +154,7 @@ public class Communication implements Serializable {
 	////////////////////////////////////////////////////
 
 	public enum SecondaryRequest {
-		SEND_CONFIRMATION, SEND_CANCELLATION, UPDATE_WAITING_LIST, SEND_CONFIRMATION_WITHOUT_REMINDER;
+		SEND_CONFIRMATION, SEND_CANCELLATION, UPDATE_WAITING_LIST, SEND_CONFIRMATION_WITHOUT_REMINDER, UPDATE_CAPACITY;
 	}
 
 	private SecondaryRequest secondaryRequest;
