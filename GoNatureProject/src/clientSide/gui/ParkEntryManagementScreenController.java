@@ -17,7 +17,6 @@ import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
 import entities.Booking;
 import entities.ParkEmployee;
-import entities.SystemUser;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -206,8 +205,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		// updates park's current capacity
 		if (parkControl.updateCurrentCapacity(parkEmployee.getWorkingIn().getParkName(), booking.getNumberOfVisitors()))
 			if (!booking.isPaid()) {// needs to update DB: "paid" ?
-				if (parkControl.payForBooking(parkTable)) //
-					System.out.println("Payment successful.");
+				parkControl.payForBooking(parkTable); //
 				int decision = showConfirmationAlert(
 						"Please charge the customer:\nFinal reservation's price is: " + booking.getFinalPrice() + "$",
 						Arrays.asList("By Cash", "By Credit Card", "return"));
@@ -323,7 +321,6 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 				Booking booking = parkControl.checkIfBookingExists(table, "bookingId", bookingId).get(0);
 				return booking;
 			} catch (NullPointerException e) {
-				System.out.println("not exist in " + table);
 			}
 		}
 		return null;
