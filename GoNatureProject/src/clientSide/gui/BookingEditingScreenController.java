@@ -95,7 +95,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 	 */
 	void cancelReservation(ActionEvent event) {
 		int choise = showConfirmationAlert(
-				"You are about to cancel your " + booking.getParkBooked().getParkName() + "Park reservation for "
+				"You are about to cancel your " + booking.getParkBooked().getParkName() + " Park reservation for "
 						+ booking.getDayOfVisit() + ", " + booking.getTimeOfVisit() + ".\nThis action can't be undone.",
 				Arrays.asList("Don't Cancel", "Continue and Cancel"));
 
@@ -187,36 +187,63 @@ public class BookingEditingScreenController extends BookingScreenController {
 		if (!checkIfChanged()) {
 			showInformationAlert("You need to change one/more of the details in order to check park availability");
 			return;
-		}
 
-		// making sure the user wants to replace his old booking with the new one
-		int choise = showConfirmationAlert(
-				"You are about to update your " + booking.getParkBooked().getParkName() + " Park reservation for "
-						+ booking.getDayOfVisit() + ", " + booking.getTimeOfVisit() + ".\nThis action can't be undone.",
-				Arrays.asList("Don't Update", "Ok, Continue"));
-
-		switch (choise) {
-		case 1: // chose not to update
-			event.consume();
-			return;
-
-		case 2: // chose to update
+		} else { // if changed any of the details
 			if (!validateDetails()) { // if details are not valid
 				return;
 			} else { // if details are valid
-				Booking newBooking = booking.cloneBooking();
+				Booking clone = booking.cloneBooking();
 				Park parkDesired = parksList.get(parkComboBox.getSelectionModel().getSelectedIndex());
-				newBooking.setParkBooked(parkDesired);
-				newBooking.setDayOfVisit(datePicker.getValue());
-				newBooking.setTimeOfVisit(hourCombobox.getValue());
-				newBooking.setNumberOfVisitors(Integer.parseInt(visitorsTxt.getText()));
-				boolean isAvailable = control.checkParkAvailabilityForExistingBooking(booking, newBooking);
+				clone.setParkBooked(parkDesired);
+				clone.setDayOfVisit(datePicker.getValue());
+				clone.setTimeOfVisit(hourCombobox.getValue());
+				clone.setNumberOfVisitors(Integer.parseInt(visitorsTxt.getText()));
 
-				if (!isAvailable) { // if the entered date and time are not available
-					dateIsNotAvailable(newBooking);
-				} else { // if the date and time are available
-					dateIsAvailable(newBooking);
-				}
+				setVisible(false);
+
+				AtomicBoolean isAvailable = new AtomicBoolean(false);
+				// moving the data fetching operation to a background thread
+				new Thread(() -> {
+					// checking the park availability for the chosen date and time
+					boolean availability = control.checkParkAvailabilityForExistingBooking(booking, clone);
+					isAvailable.set(availability);
+
+					// once fetching is complete, updating the UI on the JavaFX Application Thread
+					Platform.runLater(() -> {
+						setVisible(true);
+						if (!isAvailable.get()) { // if the entered date and time are not available
+							// making sure the user wants to replace his old booking with the new one
+							int choise = showConfirmationAlert(
+									"You are about to update your reservation."
+											+ "\nCurrently, the time frame you chose is not available." + "\nATTENTION: "
+											+ "By continuing, your old reservation will be cancelled!!!",
+									Arrays.asList("Don't Update", "Ok, Continue"));
+							switch (choise) {
+							case 1: // chose not to do anything
+								event.consume();
+								return;
+							case 2: // chose to update
+								control.deleteBooking(clone, Communication.activeBookings);
+								dateIsNotAvailable(clone);
+							}
+						}
+
+						else { // if the date and time are available
+							int choise = showConfirmationAlert(
+									"You are about to update your reservation."
+											+ "\nFor now, the time frame you chose is available." + "\nATTENTION:"
+											+ "By continuing, your old reservation will be cancelled!!!",
+									Arrays.asList("Don't Update", "Ok, Continue"));
+							switch (choise) {
+							case 1: // chose not to do anything
+								event.consume();
+								return;
+							case 2: // chose to update
+								dateIsAvailable(clone);
+							}
+						}
+					});
+				}).start();
 			}
 		}
 	}
@@ -517,7 +544,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 		int preOrderPrice = control.calculateFinalDiscountPrice(newBooking, true, true);
 
 		// creating the pop up message
-		String payMessage = "Woohoo! You're almost set.";
+		String payMessage = "Woohoo! Your reservation is now set!";
 		if (isGroupReservation) {
 			payMessage += "\nPay now and get a special discount for paying ahead:";
 			payMessage += "\n        Your reservation's final price: " + discountPrice + "$";
@@ -556,6 +583,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 			newBooking.setFinalPrice(discountPrice);
 			// updating the payment columns in the database
 			control.updateBookingPayment(newBooking);
+			control.sendNotification(newBooking, false);
 			// showing the confirmation screen
 			try {
 				ScreenManager.getInstance().showScreen("ConfirmationScreenController",

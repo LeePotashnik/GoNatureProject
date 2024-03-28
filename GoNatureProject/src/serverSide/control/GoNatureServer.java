@@ -28,7 +28,8 @@ public class GoNatureServer extends AbstractServer {
 	public static final ObservableList<ConnectedClient> connectedToGUI = FXCollections.observableArrayList();
 	private NotificationsController notifications = NotificationsController.getInstance();
 	private StaffController staffController;
-	private Semaphore semaphore = new Semaphore(1, true); // for park capacities critical section updates
+	private static final int parkAmount = 17;
+	private ArrayList<Semaphore> parksSemaphores = new ArrayList<>(); // for park capacities critical section control
 
 	/**
 	 * The constructor creates a new server on the given port, and also creates an
@@ -38,6 +39,7 @@ public class GoNatureServer extends AbstractServer {
 	 */
 	public GoNatureServer(int port) {
 		super(port);
+		initializeSemaphores();
 	}
 
 	/**
@@ -208,6 +210,16 @@ public class GoNatureServer extends AbstractServer {
 		return staffController.importUsers();
 	}
 
+	/**
+	 * This method initializes the semaphores array list for the critical sections
+	 * control
+	 */
+	private void initializeSemaphores() {
+		for (int i = 0; i < parkAmount; i++) {
+			parksSemaphores.add(new Semaphore(1, true));
+		}
+	}
+
 	@Override
 	/**
 	 * This method gets a message from client-side and handles it
@@ -216,33 +228,51 @@ public class GoNatureServer extends AbstractServer {
 	 * @param client the ConnectionToClient who sent this request
 	 */
 	protected void handleMessageFromClient(Object msg, ConnectionToClient client) {
+		// announcing the request from the client side has arrived
 		System.out.println(
 				LocalTime.of(LocalTime.now().getHour(), LocalTime.now().getMinute(), LocalTime.now().getSecond())
 						+ ": Communication recieved from client " + client.toString());
-		Communication request = (Communication) msg;
 
-		if (request.isCritical()) { // aquiring the critical section
+		Communication request = (Communication) msg;
+		Communication response; // will be sent over to the client side
+
+		// first checking if the request requires a critical section for this specific
+		// park.
+		// if so: acquires the semaphore, or waiting for it to be released if already
+		// acquired
+		int isRequestCritical = request.isCritical(); // returns -1 if not requires a critical section
+		if (isRequestCritical != -1) { // aquiring the critical section
 			try {
-				semaphore.acquire();
-				System.out.println("Semaphore is aquired");
+				parksSemaphores.get(isRequestCritical).acquire();
+				System.out.println("Semaphore is aquired for park #" + isRequestCritical);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
 
-		// if this is a regular, single query request
-		if (request.getCommunicationType() == CommunicationType.QUERY_REQUEST) {
-			Communication response = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
+		// getting the communication type
+		CommunicationType type = request.getCommunicationType();
+
+		switch (type) {
+		/////////////////////
+		/// QUERY REQUEST ///
+		/////////////////////
+		case QUERY_REQUEST: // if this is a query request
+		{
+			// creating a communication response to be sent later to the client side
+			response = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
 			response.setServerMessageType(ServerMessageType.RESPONSE);
 			// making the request and the response communication with the same unique id
+			// this is done for later identification in the client side
 			response.setUniqueId(request.getUniqueId());
 
-			// checking which type of query is request
+			// checking which type of query is requested
 			switch (request.getQueryType()) {
 			case SELECT:
 				ArrayList<Object[]> resultList = database.executeSelectQuery(request);
 				if (resultList != null)
 					response.setResultList(resultList);
+				response.setQueryResult(true);
 				break;
 			case UPDATE:
 				boolean updateQueryResult = database.executeUpdateQuery(request);
@@ -260,36 +290,23 @@ public class GoNatureServer extends AbstractServer {
 				break;
 			}
 
+			// some requests may contain a secondary request, which is a second request from
+			// the server side to be executed at the same time
 			SecondaryRequest secondaryRequest = request.getSecondaryRequest();
 			if (secondaryRequest != null) {
-				// if the original request is an active booking cancellation
-				// there's a need to check the park's waiting list and possibly release some
-				// bookings and transfer them to the active booking table
 				switch (secondaryRequest) {
-				case UPDATE_WAITING_LIST:
-					backgroundManager.checkWaitingListReleasePossibility(request.getParkId(), request.getDate(),
-							request.getTime());
+				case UPDATE_WAITING_LIST: {
+					// if the original request is an active booking cancellation
+					// there's a need to check the park's waiting list and possibly release some
+					// bookings and transfer them to the active booking table
+					backgroundManager.checkWaitingListReleasePossibility(request.getParkId(), request.getDayOfVisit(),
+							request.getTimeOfVisit());
+					if (request.getQueryType() == QueryType.NONE)
+						response.setQueryResult(true);
 					break;
-				case SEND_CONFIRMATION:
-					notifications.sendConfirmationEmailNotification(Arrays.asList(request.getEmail(),
-							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
-							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
-							request.isPaid()));
-					break;
-				case SEND_CANCELLATION:
-					notifications.sendCancellationEmailNotification(Arrays.asList(request.getEmail(),
-							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
-							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
-							request.isPaid()), "Visitor chose to cancel.");
-					break;
-				case SEND_CONFIRMATION_WITHOUT_REMINDER:
-					notifications.sendConfirmationWithoudReminderEmailNotification(Arrays.asList(request.getEmail(),
-							request.getPhone(), request.getParkName(), request.getDate(), request.getTime(),
-							request.getFullName(), request.getParkLocation(), request.getVisitors(), request.getPrice(),
-							request.isPaid()));
-					break;
-				case UPDATE_CAPACITY:
-					int visitorsBooking = request.getVisitors();
+				}
+				case UPDATE_CAPACITY: {
+					int visitorsBooking = request.getNumberOfVisitors();
 					int currentCapacity = (Integer) (request.getResultList().get(0)[3]);
 					try {
 						request.setQueryType(QueryType.UPDATE);
@@ -300,41 +317,128 @@ public class GoNatureServer extends AbstractServer {
 							Arrays.asList(currentCapacity + visitorsBooking));
 					boolean updateQueryResult = database.executeUpdateQuery(request);
 					response.setQueryResult(updateQueryResult);
+					break;
 				}
+				case INSERT_BOOKING_AFTER_CHECKING_CAPACITIES: {
+					int maximumCapacity = request.getParkCapacities();
+					int bookingVisitors = request.getNumberOfVisitors();
+					try {
+						request.setQueryType(QueryType.INSERT);
+					} catch (CommunicationException e) {
+						e.printStackTrace();
+					}
+					
+					// if the returned value is null/empty, it means the selection returned no rows
+					// thus, the booking can be inserted to the active bookings table of the park
+					// as long as it does not exceed from the park limits
+					ArrayList<Object[]> result = response.getResultList();
+					if (result == null || result.isEmpty()) {
+						if (maximumCapacity >= bookingVisitors) { // inserting
+							boolean insertQueryResult = database.executeInsertQuery(request);
+							response.setQueryResult(insertQueryResult);
+						} else {
+							response.setQueryResult(false); // insertion is not possible
+						}
+					} else { // otherwise, checking the current orders capacity with the maximum
+						// calculating the current number of visitors
+						int sumOfVisitors = 0;
+						for (Object[] row : result) {
+							sumOfVisitors += (Integer)row[0];
+						}
 
+						if (maximumCapacity - sumOfVisitors - bookingVisitors >= 0) { // inserting
+							boolean insertQueryResult = database.executeInsertQuery(request);
+							response.setQueryResult(insertQueryResult);
+						} else { // insertion is not possible
+							response.setQueryResult(false);
+						}
+					}
+					break;
+				}
+				}
 			}
-
+			// sending the response to the client side
 			try {
 				client.sendToClient(response);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+
+			break;
 		}
 
-		// if this is a combined query (transaction) request
-		if (request.getCommunicationType() == CommunicationType.TRANSACTION) {
-			Communication response = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
+		/////////////////////////////
+		/// CLIENT SERVER MESSAGE ///
+		/////////////////////////////
+		case CLIENT_SERVER_MESSAGE: {
+			// disconnecting the client from the server
+			if (request.getClientMessageType() == ClientMessageType.DISCONNECT) {
+				clientDisconnected(client);
+			}
+			break;
+		}
+
+		///////////////////
+		/// TRANSACTION ///
+		///////////////////
+		case TRANSACTION: // if this is a combined query (transaction) request
+		{
+			response = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
 			response.setServerMessageType(ServerMessageType.RESPONSE);
 			response.setUniqueId(request.getUniqueId());
 			boolean transactionResult = database.executeTransaction(request);
 			response.setQueryResult(transactionResult);
 
+			// sending the response to the client side
 			try {
 				client.sendToClient(response);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			break;
 		}
 
-		if (request.getCommunicationType() == CommunicationType.CLIENT_SERVER_MESSAGE) {
-			if (request.getClientMessageType() == ClientMessageType.DISCONNECT) {
-				clientDisconnected(client);
+		////////////////////
+		/// NOTIFICATION ///
+		////////////////////
+		case NOTIFICATION: // if this is a notification sending request
+		{
+			switch (request.getNotificationType()) {
+			case SEND_CONFIRMATION: // sending confirmation
+				notifications.sendConfirmationEmailNotification(Arrays.asList(request.getEmailAddress(),
+						request.getPhoneNumber(), request.getParkName(), request.getDayOfVisit(),
+						request.getTimeOfVisit(), request.getFirstName(), request.getParkLocation(),
+						request.getNumberOfVisitors(), request.getFinalPrice(), request.isPaid()));
+				break;
+			case SEND_CANCELLATION: // sending cancellation
+				notifications
+						.sendCancellationEmailNotification(
+								Arrays.asList(request.getEmailAddress(), request.getPhoneNumber(),
+										request.getParkName(), request.getDayOfVisit(), request.getTimeOfVisit(),
+										request.getFirstName(), request.getParkLocation(),
+										request.getNumberOfVisitors(), request.getFinalPrice(), request.isPaid()),
+								"Visitor chose to cancel.");
+				break;
+			case SEND_CONFIRMATION_WITHOUT_REMINDER: // sending confirmation without the need of reminder
+				notifications.sendConfirmationWithoudReminderEmailNotification(
+						Arrays.asList(request.getEmailAddress(), request.getPhoneNumber(), request.getParkName(),
+								request.getDayOfVisit(), request.getTimeOfVisit(),
+								request.getFirstName() + " " + request.getLastName(), request.getParkLocation(),
+								request.getNumberOfVisitors(), request.getFinalPrice(), request.isPaid()));
+				break;
+			case NONE:
+				return;
 			}
+			break;
 		}
 
-		if (request.isCritical()) { // releaseing the critical section
-			semaphore.release();
-			System.out.println("Semaphore is released");
+		default: // server-client or self communciations are not handled here
+			return;
+		}
+
+		if (isRequestCritical != -1) { // releaseing the critical section of the park
+			parksSemaphores.get(isRequestCritical).release();
+			System.out.println("Semaphore is released for park #" + isRequestCritical);
 		}
 	}
 }

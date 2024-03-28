@@ -13,6 +13,7 @@ import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
 import entities.Booking;
 import entities.Booking.VisitType;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -34,6 +35,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.util.Duration;
 import javafx.util.Pair;
 
 public class RescheduleScreenController extends AbstractScreen {
@@ -214,7 +216,7 @@ public class RescheduleScreenController extends AbstractScreen {
 
 				// first inserting the new booking to the database to update capacities and save
 				// the visitor's spot
-				control.insertNewBookingToActiveTable(booking);
+				control.checkAndInsertNewBooking(booking);
 
 				int discountPrice = control.calculateFinalDiscountPrice(booking, isGroupReservation, false);
 				int preOrderPrice = control.calculateFinalDiscountPrice(booking, true, true);
@@ -256,16 +258,26 @@ public class RescheduleScreenController extends AbstractScreen {
 				case 2: {
 					booking.setPaid(false);
 					booking.setFinalPrice(discountPrice);
-					// updating the payment columns in the database
-					control.updateBookingPayment(booking);
-					// showing the confirmation screen
-					try {
-						ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-								"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
-					} catch (StatefulException | ScreenException e) {
-						e.printStackTrace();
-					}
-					return;
+					
+					PauseTransition pause = new PauseTransition(Duration.seconds(2));
+					pause.setOnFinished(e -> {
+						try {
+							new Thread(() -> {
+								// updating the payment columns in the database
+								control.updateBookingPayment(booking);
+								// sending a notification
+								control.sendNotification(booking, false);
+							}).start();
+
+							// showing the confirmation screen
+							ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+									"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
+						} catch (StatefulException | ScreenException e1) {
+							e1.printStackTrace();
+						}
+					});
+					pause.play();
+					break;
 				}
 
 				// chose to cancel reservation

@@ -79,7 +79,7 @@ public class LoginController {
 			e.printStackTrace();
 		}
 
-		requestForGroupGuide.setTables(Arrays.asList(Communication.griupGuide));
+		requestForGroupGuide.setTables(Arrays.asList(Communication.groupGuide));
 		requestForGroupGuide.setSelectColumns(Arrays.asList("*"));
 		requestForGroupGuide.setWhereConditions(Arrays.asList("userName", "password"), Arrays.asList("=", "AND", "="),
 				Arrays.asList(username, password));
@@ -325,7 +325,7 @@ public class LoginController {
 			request.setWhereConditions(Arrays.asList("travellerId"), Arrays.asList("="), Arrays.asList(id));
 		} else if (user instanceof ParkVisitor && ((ParkVisitor) user).getVisitorType() == VisitorType.GROUPGUIDE) {
 			// it is a group guide
-			request.setTables(Arrays.asList(Communication.griupGuide));
+			request.setTables(Arrays.asList(Communication.groupGuide));
 			request.setWhereConditions(Arrays.asList("groupGuideId"), Arrays.asList("="), Arrays.asList(id));
 		} else if (user instanceof ParkManager) {
 			// it is a park manager
@@ -461,7 +461,7 @@ public class LoginController {
 			e.printStackTrace();
 		}
 
-		requestForGroupGuide.setTables(Arrays.asList(Communication.griupGuide));
+		requestForGroupGuide.setTables(Arrays.asList(Communication.groupGuide));
 		requestForGroupGuide.setSelectColumns(Arrays.asList("groupGuideId"));
 		requestForGroupGuide.setWhereConditions(Arrays.asList("groupGuideId"), Arrays.asList("="), Arrays.asList(id));
 		GoNatureClientUI.client.accept(requestForGroupGuide); // sending the query to the server side
