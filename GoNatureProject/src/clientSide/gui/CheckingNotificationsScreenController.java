@@ -177,18 +177,24 @@ public class CheckingNotificationsScreenController extends AbstractScreen {
 		String ParkTable = parkControl.nameOfTable(chosenBooking.getParkBooked());
 		int choise = showConfirmationAlert(
 				"Confirm booking to " + chosenBooking.getParkBooked().getParkName() + " park for "
-						+ chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit(),
-				Arrays.asList("Confirm", "Cancelled"));
-		if (choise == 2) {
-			// Moving the traveler from the active bookings table to the canceled bookings
-			// table
-			parkControl.removeBooking(ParkTable + "_park_active_booking",
+						+ chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit() + 
+						"\nBy confirming, you won't be able to edit or cancel your reservation.",
+				Arrays.asList("Confirm", "Cancelled", "return"));
+		switch(choise) {
+			case 1: 
+				// Updating that the user confirmed their arrival
+				chosenBooking.setConfirmed(true);
+				parkControl.updateConfirmed(ParkTable, chosenBooking.getBookingId());
+				break;
+			case 2:
+				// Moving the traveler from the active bookings table to the canceled bookings table
+				parkControl.removeBooking(ParkTable + "_park_active_booking",
 					chosenBooking.getBookingId());
-			parkControl.insertBookingToTable(chosenBooking, ParkTable + "_park_cancelled_booking", "canceled");
-		} else {
-			// Updating that the user confirmed their arrival
-			chosenBooking.setConfirmed(true);
-			parkControl.updateConfirmed(ParkTable, chosenBooking.getBookingId());
+				parkControl.insertBookingToTable(chosenBooking, ParkTable, "cancelled");
+				break;
+			default:
+				//visitor chose to return
+				break;
 		}
 		// Remove the chosen booking from the observable list after a user decision has
 		// been made

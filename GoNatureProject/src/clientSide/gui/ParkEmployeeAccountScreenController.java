@@ -4,6 +4,7 @@ import java.time.LocalTime;
 import java.util.Arrays;
 
 import clientSide.control.GoNatureUsersController;
+import clientSide.control.ParkController;
 import common.communication.CommunicationException;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
@@ -272,7 +273,7 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen {
 	public void initialize() {
 		// Restore the ParkEmployee user from the session state.
 		parkEmployee = (ParkEmployee) userControl.restoreUser();
-
+		ParkController.getInstance().savePark(parkEmployee.getWorkingIn());
 		// Sets the greeting text with the department manager's name to personalize the
 		// UI.
 		nameLbl.setText(getGreeting() + parkEmployee.getFirstName() + " " + parkEmployee.getLastName() + "!");

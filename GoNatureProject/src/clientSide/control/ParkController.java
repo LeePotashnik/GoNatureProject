@@ -12,6 +12,7 @@ import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.CommunicationException;
 import common.communication.Communication.CommunicationType;
+import common.communication.Communication.NotificationType;
 import common.communication.Communication.QueryType;
 import common.communication.Communication.SecondaryRequest;
 import entities.Park;
@@ -172,7 +173,7 @@ public class ParkController {
 		if (!result.isEmpty()) {
 			Object[] row = result.get(0); // Get the first and only row
 			// Adjust the instantiation to match the ParkVisitor constructor
-			if (table.equals(Communication.griupGuide)) {
+			if (table.equals(Communication.groupGuide)) {
 				ParkVisitor visitor = new ParkVisitor(row[0].toString(), // idNumber
 						row[1].toString(), // firstName
 						row[2].toString(), // lastName
@@ -404,7 +405,7 @@ public class ParkController {
 	 */
 	public boolean updateCurrentCapacity(String park, int amount) {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
-		request.setCritical(true);
+		request.setCritical(true,this.park.getParkId()-1);
 
 		try {
 			request.setQueryType(QueryType.UPDATE);
@@ -414,8 +415,8 @@ public class ParkController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		//request.setSecondaryRequest(UPDATE_CAPACITY);
-		request.setVisitors(amount);
+		request.setSecondaryRequest(SecondaryRequest.UPDATE_CAPACITY);
+		request.setNumberOfVisitors(amount);
 		GoNatureClientUI.client.accept(request);
 		boolean result = request.getQueryResult();
 		if (result) {
@@ -437,16 +438,17 @@ public class ParkController {
 	 */
 	public int checkIfBookingIsLock(String ID) {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
-		request.setCritical(true);
+		request.setCritical(true,park.getParkId()-1);
 		try {
 			request.setQueryType(QueryType.SELECT);
+			//request.setTables(Arrays.asList(Communication.booking_lock));
 			request.setTables(Arrays.asList("booking_lock"));
 			request.setSelectColumns(Arrays.asList("bookingId")); // returns all the data according to the inserted ID
 			request.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList(ID));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		//request.setSecondaryRequest(INSERT_);
+		//request.setSecondaryRequest(SecondaryRequest.UPDATE_CAPACITY);
 		GoNatureClientUI.client.accept(request);
 		ArrayList<Object[]> result = request.getResultList();
 		if (result.isEmpty()) {
@@ -467,12 +469,12 @@ public class ParkController {
 		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			insertRequest.setQueryType(QueryType.INSERT);
+			//request.setTables(Arrays.asList(Communication.booking_lock));
 			insertRequest.setTables(Arrays.asList("booking_lock"));
 			insertRequest.setColumnsAndValues(Arrays.asList("bookingId"),Arrays.asList(ID));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		//request.setSecondaryRequest(INSERT_);
 		GoNatureClientUI.client.accept(insertRequest);
 		boolean result = insertRequest.getQueryResult();
 		if (result) {
@@ -494,7 +496,7 @@ public class ParkController {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			request.setQueryType(QueryType.UPDATE);
-			request.setTables(Arrays.asList(table + "_park_active_booking"));
+			request.setTables(Arrays.asList(table + Communication.activeBookings));
 			request.setColumnsAndValues(Arrays.asList("confirmed"), Arrays.asList('1'));
 			request.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList(bookingID));
 		} catch (CommunicationException e) {
@@ -645,7 +647,7 @@ public class ParkController {
 	 * @return true if the insert operation is successful and the booking is
 	 *         correctly added to the database; false otherwise.
 	 */
-	public boolean insertBookingToTable(Booking newBooking, String relevantTable, String type) {
+	public boolean insertBookingToTable(Booking newBooking, String table, String type) {
 		// creating the request for the new booking insert
 
 		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
@@ -654,9 +656,9 @@ public class ParkController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		insertRequest.setTables(Arrays.asList(relevantTable));
 		switch (type) {
 		case "done":
+			insertRequest.setTables(Arrays.asList(table + Communication.doneBookings));
 			insertRequest.setColumnsAndValues(
 					Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType",
 							"numberOfVisitors", "idNumber", "firstName", "lastName", "emailAddress", "phoneNumber",
@@ -668,7 +670,8 @@ public class ParkController {
 							newBooking.getLastName(), newBooking.getEmailAddress(), newBooking.getPhoneNumber(),
 							newBooking.getFinalPrice(), newBooking.getEntryParkTime(), LocalTime.now()));
 			break;
-		case "canceled":
+		case "cancelled":
+			insertRequest.setTables(Arrays.asList(table + Communication.cancelledBookings));
 			insertRequest.setColumnsAndValues(
 					Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType",
 							"numberOfVisitors", "idNumber", "firstName", "lastName", "emailAddress", "phoneNumber",
@@ -682,6 +685,7 @@ public class ParkController {
 			BookingController.getInstance().sendNotification(newBooking, true);
 			break;
 		default: // active
+			insertRequest.setTables(Arrays.asList(table + Communication.activeBookings));
 			insertRequest.setColumnsAndValues(
 					Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType",
 							"numberOfVisitors", "idNumber", "firstName", "lastName", "emailAddress", "phoneNumber",
@@ -706,26 +710,28 @@ public class ParkController {
 	}
 
 	/**
-	 * This method is called in order to send a confirmation to the booker
+	 * This method is called in order to send a confirmation or cancellation to the
+	 * booker
 	 * 
 	 * @param notify   the booking to notify its holder
+	 * @param isCancel true if a cancellation notification is needed to be sent,
+	 *                 false if confirmation notification is needed to be sent
 	 */
-	public void sendNotification(Booking notify) {
-		Communication notifyBooking = new Communication(CommunicationType.QUERY_REQUEST);
-		try {
-			notifyBooking.setQueryType(QueryType.NONE);
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-		notifyBooking.setSecondaryRequest(SecondaryRequest.SEND_CONFIRMATION_WITHOUT_REMINDER);
-		notifyBooking.setFullName(notify.getFirstName() + " " + notify.getLastName());
-		notifyBooking.setEmail(notify.getEmailAddress());
-		notifyBooking.setPhone(notify.getPhoneNumber());
-		notifyBooking.setPrice(notify.getFinalPrice());
+	public void sendNotification(Booking notify, boolean isCancel) {
+		Communication notifyBooking = new Communication(CommunicationType.NOTIFICATION);
+
+		notifyBooking.setNotificationType(
+				isCancel ? NotificationType.SEND_CANCELLATION : NotificationType.SEND_CONFIRMATION);
+
+		notifyBooking.setFirstName(notify.getFirstName());
+		notifyBooking.setLastName(notify.getLastName());
+		notifyBooking.setEmailAddress(notify.getEmailAddress());
+		notifyBooking.setPhoneNumber(notify.getPhoneNumber());
+		notifyBooking.setFinalPrice(notify.getFinalPrice());
 		notifyBooking.setPaid(notify.isPaid());
-		notifyBooking.setVisitors(notify.getNumberOfVisitors());
-		notifyBooking.setDate(notify.getDayOfVisit());
-		notifyBooking.setTime(notify.getTimeOfVisit());
+		notifyBooking.setNumberOfVisitors(notify.getNumberOfVisitors());
+		notifyBooking.setDayOfVisit(notify.getDayOfVisit());
+		notifyBooking.setTimeOfVisit(notify.getTimeOfVisit());
 		notifyBooking.setParkName(notify.getParkBooked().getParkName() + " Park");
 		notifyBooking
 				.setParkLocation(notify.getParkBooked().getParkCity() + ", " + notify.getParkBooked().getParkState());

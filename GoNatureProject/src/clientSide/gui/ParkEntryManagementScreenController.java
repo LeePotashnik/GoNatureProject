@@ -269,7 +269,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		// remove the booking from active park table
 		parkControl.removeBooking(parkTable + Communication.activeBookings, booking.getBookingId());
 		// insert the booking to done park table
-		parkControl.insertBookingToTable(booking, parkTable + Communication.doneBookings, "done");
+		parkControl.insertBookingToTable(booking, parkTable, "done");
 		exitTimeBtn.setDisable(true);
 		leavingLbl.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
 		statusLbl.setText("Done booking");
