@@ -1,5 +1,9 @@
 package clientSide.gui;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
+import clientSide.control.BookingController;
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
 import common.controllers.AbstractScreen;
@@ -117,10 +121,20 @@ public class ConfirmationScreenController extends AbstractScreen {
 			timeLabel.setText("Time of Visit: " + booking.getTimeOfVisit() + "");
 			visitorsLabel.setText("Group Size: " + booking.getNumberOfVisitors() + "");
 			priceLabel.setText("Final Price: " + booking.getFinalPrice() + "$");
-			if (booking.isPaid()) {
-				isPaidLabel.setText("Your reservation is fully paid.");
+			
+			// checking if the booking is for less than 24 hours from now
+			LocalDateTime bookingTime = LocalDateTime.of(booking.getDayOfVisit(), booking.getTimeOfVisit());
+			LocalDateTime now = LocalDateTime.now();
+			String reminder = "";
+			if (Math.abs(Duration.between(bookingTime, now).toHours()) <= BookingController.getInstance().reminderSendingTime) {
+				reminder += " Your reservation is confirmed.";
 			} else {
-				isPaidLabel.setText("Your reservation is not paid. You will need to pay at the park entrance.");
+				reminder += " 24 hours before arrival, you'll get a reminder.";
+			}
+			if (booking.isPaid()) {
+				isPaidLabel.setText("Your reservation is fully paid." + reminder);
+			} else {
+				isPaidLabel.setText("Your reservation is not paid." + reminder);
 			}
 
 			String parkImagePath = "/" + ParkController.getInstance().nameOfTable(booking.getParkBooked()) + ".jpg";

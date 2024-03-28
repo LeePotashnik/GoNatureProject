@@ -2,7 +2,9 @@ package clientSide.control;
 
 import java.sql.Date;
 import java.sql.Time;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -202,6 +204,8 @@ public class BookingController {
 	 *         available
 	 */
 	public boolean checkAndInsertNewBooking(Booking newBooking) {
+		System.out.println(newBooking);
+		System.out.println(newBooking.getParkBooked());
 		Pair<Integer, Integer> pair = getParkUpdatedParameters(newBooking.getParkBooked());
 		int timeLimit = pair.getValue();
 
@@ -222,6 +226,21 @@ public class BookingController {
 				Arrays.asList("=", "AND", ">", "AND", "<"),
 				Arrays.asList(newBooking.getDayOfVisit(), newBooking.getTimeOfVisit().minusHours(timeLimit),
 						newBooking.getTimeOfVisit().plusHours(timeLimit)));
+
+		// checking if the reservation occurs in less than 24 hours
+		// in this case: no reminder will be sent and the reservation is automatically
+		// confirmed
+		LocalDateTime bookingTime = LocalDateTime.of(newBooking.getDayOfVisit(), newBooking.getTimeOfVisit());
+		LocalDateTime now = LocalDateTime.now();
+		if (Math.abs(Duration.between(bookingTime, now).toHours()) <= reminderSendingTime) {
+			newBooking.setConfirmed(true);
+			newBooking.setRecievedReminder(true);
+			newBooking.setReminderArrivalTime(LocalTime.now());
+		} else {
+			newBooking.setConfirmed(false);
+			newBooking.setRecievedReminder(false);
+			newBooking.setReminderArrivalTime(null);
+		}
 
 		// secondary request
 		// if the selection will return a value determining the booking can be inserted
@@ -329,45 +348,6 @@ public class BookingController {
 	}
 
 	/**
-	 * This method gets a new booking details and inserts the booking into the park
-	 * booked active bookings table
-	 * 
-	 * @param newBooking the booking to insert
-	 * @return true if the insert query succeed, false if not
-	 */
-	public boolean insertNewBookingToActiveTable(Booking newBooking) {
-		// creating the request for the new booking insert
-		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
-		try {
-			insertRequest.setQueryType(QueryType.INSERT);
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-		@SuppressWarnings("static-access")
-		String parkTableName = parkControl.nameOfTable(newBooking.getParkBooked()) + insertRequest.activeBookings;
-		insertRequest.setTables(Arrays.asList(parkTableName));
-		insertRequest.setColumnsAndValues(
-				Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType", "numberOfVisitors",
-						"idNumber", "firstName", "lastName", "emailAddress", "phoneNumber", "finalPrice", "paid",
-						"confirmed", "entryParkTime", "exitParkTime", "isRecievedReminder", "reminderArrivalTime"),
-				Arrays.asList(newBooking.getBookingId(), newBooking.getDayOfVisit(), newBooking.getTimeOfVisit(),
-						newBooking.getDayOfBooking(),
-						newBooking.getVisitType() == VisitType.GROUP ? "group" : "individual",
-						newBooking.getNumberOfVisitors(), newBooking.getIdNumber(), newBooking.getFirstName(),
-						newBooking.getLastName(), newBooking.getEmailAddress(), newBooking.getPhoneNumber(),
-						newBooking.getFinalPrice(), newBooking.isPaid() == false ? 0 : 1,
-						newBooking.isConfirmed() == false ? 0 : 1, newBooking.getEntryParkTime(),
-						newBooking.getExitParkTime(), newBooking.isRecievedReminder() == false ? 0 : 1,
-						newBooking.getReminderArrivalTime()));
-
-		// sending the request to the server side
-		GoNatureClientUI.client.accept(insertRequest);
-
-		// getting the result from the database
-		return insertRequest.getQueryResult();
-	}
-
-	/**
 	 * This method is called in order to send a confirmation or cancellation to the
 	 * booker
 	 * 
@@ -387,6 +367,31 @@ public class BookingController {
 		notifyBooking.setPhoneNumber(notify.getPhoneNumber());
 		notifyBooking.setFinalPrice(notify.getFinalPrice());
 		notifyBooking.setPaid(notify.isPaid());
+		notifyBooking.setNumberOfVisitors(notify.getNumberOfVisitors());
+		notifyBooking.setDayOfVisit(notify.getDayOfVisit());
+		notifyBooking.setTimeOfVisit(notify.getTimeOfVisit());
+		notifyBooking.setParkName(notify.getParkBooked().getParkName() + " Park");
+		notifyBooking
+				.setParkLocation(notify.getParkBooked().getParkCity() + ", " + notify.getParkBooked().getParkState());
+
+		GoNatureClientUI.client.accept(notifyBooking);
+	}
+
+	/**
+	 * This method is called in order to send a notification for the user about
+	 * entering the park's waiting list
+	 * 
+	 * @param notify the booking to notify its holder
+	 */
+	public void sendWaitingListEntranceNotification(Booking notify) {
+		Communication notifyBooking = new Communication(CommunicationType.NOTIFICATION);
+
+		notifyBooking.setNotificationType(NotificationType.SEND_WAITING_LIST_ENTRANCE);
+		notifyBooking.setFirstName(notify.getFirstName());
+		notifyBooking.setLastName(notify.getLastName());
+		notifyBooking.setEmailAddress(notify.getEmailAddress());
+		notifyBooking.setPhoneNumber(notify.getPhoneNumber());
+		notifyBooking.setFinalPrice(notify.getFinalPrice());
 		notifyBooking.setNumberOfVisitors(notify.getNumberOfVisitors());
 		notifyBooking.setDayOfVisit(notify.getDayOfVisit());
 		notifyBooking.setTimeOfVisit(notify.getTimeOfVisit());
@@ -662,6 +667,11 @@ public class BookingController {
 		if (!transaction.getQueryResult()) {
 			return false;
 		} else {
+			// if the update succeed, means the old booking was deleted and the new one was
+			// inserted instead of it, trying to release waiting list bookings, if possible
+			// this is done by a secondary reqeust of a query request
+			// done in the background manager class of the server side
+
 			Communication updateWaitingList = new Communication(CommunicationType.QUERY_REQUEST);
 			try {
 				updateWaitingList.setQueryType(QueryType.NONE);
@@ -679,72 +689,6 @@ public class BookingController {
 		}
 	}
 
-	/**
-	 * This method gets a park, a date and a time and updates the waiting list for
-	 * this time range by deleting reservations that have place now after a booking
-	 * is cancelled
-	 * 
-	 * @param park
-	 * @param date
-	 * @param time
-	 */
-	public void updateWaitingList(Park park, LocalDate date, LocalTime time) {
-		// the pair holds the maximum orders amount, and maximum time limit parameters
-		Pair<Integer, Integer> pair = getParkUpdatedParameters(park);
-
-		// getting current capacities and time limit
-		int currentCapacity = getCurrentParkCapacities(park, date, time, pair.getValue());
-		int moreCanEnter = pair.getKey() - currentCapacity;
-		int timeLimit = pair.getValue();
-
-		// getting all the relevant bookings from the waiting list table
-		Communication getWaiting = new Communication(CommunicationType.QUERY_REQUEST);
-		try {
-			getWaiting.setQueryType(QueryType.SELECT);
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-		getWaiting.setTables((Arrays.asList(parkControl.nameOfTable(park))));
-		getWaiting.setSelectColumns(Arrays.asList("bookingId"));
-		getWaiting.setWhereConditions(Arrays.asList("dayOfVisit", "timeOfVisit", "timeOfVisit", "numberOfVisitors"),
-				Arrays.asList("=", "AND", ">", "AND", "<", "AND", "<="),
-				Arrays.asList(date, time.minusHours(timeLimit), time.plusHours(timeLimit), moreCanEnter));
-
-		// sending the requests list to the server side
-		GoNatureClientUI.client.accept(getWaiting);
-
-		// getting the results from the database
-		ArrayList<Booking> waitingResults = new ArrayList<>();
-		for (Object[] row : getWaiting.getResultList()) {
-			Booking add = new Booking((String) row[0], ((Date) row[1]).toLocalDate(), ((Time) row[2]).toLocalTime(),
-					((Date) row[3]).toLocalDate(),
-					((String) row[5]).equals("group") ? VisitType.GROUP : VisitType.INDIVIDUAL, (Integer) row[6],
-					(String) row[7], (String) row[8], (String) row[9], (String) row[10], (String) row[11], -1, false,
-					false, null, null, false, null, park);
-			add.setWaitingListPriority((Integer) row[4]);
-			add.setFinalPrice(calculateFinalDiscountPrice(add, add.getVisitType() == VisitType.GROUP, false));
-		}
-
-		// waitingResults holds all the bookings that CAN be entered in terms of their
-		// group size
-		waitingResults.sort(Booking.waitingListComparator); // sorting these bookings
-
-		ArrayList<Booking> transferBookings = new ArrayList<>();
-		int decreasePriority = 0;
-		for (Booking currectBooking : waitingResults) {
-			int currentBookingSize = currectBooking.getNumberOfVisitors();
-			if (currentBookingSize <= moreCanEnter) {
-				moreCanEnter -= currentBookingSize;
-				decreasePriority++;
-
-				transferBookings.add(currectBooking);
-				waitingResults.remove(currectBooking);
-			} else {
-				currectBooking.setWaitingListPriority(currectBooking.getWaitingListPriority() - decreasePriority);
-			}
-		}
-	}
-
 	////////////////////////////////////////////////////
 	////////////////////////////////////////////////////
 	///// METHODS FOR CONTROLLED RESCHEDULE SCREEN /////
@@ -759,7 +703,6 @@ public class BookingController {
 	 * @param fromDate   starts from
 	 * @param toDate     ends in
 	 */
-	@SuppressWarnings("unused")
 	public ArrayList<AvailableSlot> getParkAvailabilitySlots(Booking newBooking, LocalDate fromDate, LocalDate toDate) {
 		// setting the data structure
 		ArrayList<AvailableSlot> available = new ArrayList<>();
@@ -872,6 +815,9 @@ public class BookingController {
 						newBooking.getNumberOfVisitors(), newBooking.getIdNumber(), newBooking.getFirstName(),
 						newBooking.getLastName(), newBooking.getEmailAddress(), newBooking.getPhoneNumber(),
 						newBooking.getFinalPrice()));
+		
+		// this action is a critical section process
+		insertRequest.setCritical(true, newBooking.getParkBooked().getParkId() - 1);
 
 		// sending the request to the server side
 		GoNatureClientUI.client.accept(insertRequest);

@@ -38,8 +38,8 @@ public class NotificationsController {
 	 * becomes active. Tailors the message based on the time until the scheduled
 	 * visit.
 	 *
-	 * @param ArrayList that contains The booking details for which the notification
-	 *                  is sent.
+	 * @param List that contains The booking details for which the notification is
+	 *             sent.
 	 */
 	public void sendWaitingListEmailNotification(List<Object> details) {
 		String emailAddress = (String) details.get(0);
@@ -87,10 +87,44 @@ public class NotificationsController {
 	}
 
 	/**
+	 * Sends an email notification to a user about successfully entering the waiting
+	 * list.
+	 *
+	 * @param List that contains The booking details for which the notification is
+	 *             sent.
+	 */
+	public void sendWaitingListEnteranceEmailNotification(List<Object> details) {
+		String emailAddress = (String) details.get(0);
+// 		String phoneNumber = (String)details.get(1);
+		String parkName = (String) details.get(2);
+		LocalDate dayofvisit = (LocalDate) details.get(3);
+		LocalTime timeOfVisit = (LocalTime) details.get(4);
+		String fullName = (String) details.get(5);
+		String parkLocation = (String) details.get(6);
+		Integer numberOfVisitors = (int) details.get(7);
+		Integer finalPrice = (int) details.get(8);
+
+		String message = "Hello, " + fullName + "!";
+		message += "\n\nWe are happy to inform you are now on the waiting list of " + parkName + "!";
+		message += "\nWe will work super hard to find you a spot, as soon as possible!";
+		message += "\nOnce a spot will be found, you will get a notification about it.";
+
+		message += "\n\nBest Regards, GoNature";
+		message += "\n\nYOUR BOOKING DETAILS:";
+		message += "\nPark: " + parkName + " in " + parkLocation;
+		message += "\nDate: " + dayofvisit;
+		message += "\nTime: " + timeOfVisit;
+		message += "\nNumber of Visitors: " + numberOfVisitors;
+		message += "\nFinal Price: " + finalPrice + "$";
+
+		sendEmail(emailAddress, "GoNature - Waiting List", message);
+	}
+
+	/**
 	 * Sends a booking confirmation email notification to a user.
 	 *
-	 * @param ArrayList that contains The booking details for which the confirmation
-	 *                  is sent.
+	 * @param List that contains The booking details for which the confirmation is
+	 *             sent.
 	 */
 	public void sendConfirmationEmailNotification(List<Object> details) {
 		String emailAddress = (String) details.get(0);
@@ -104,17 +138,18 @@ public class NotificationsController {
 		Integer finalPrice = (Integer) details.get(8);
 		boolean isPaid = (Boolean) details.get(9);
 		String message = "Hello, " + fullName + "!";
-		message += "\n\nWe are pleased to confirm your reservation to " + parkName + "!";
 
-		// if the booking occurs in less than 24 hours
+		// if the booking occurs in less than 24 hours: sending a confirmation without
+		// the reminder part, since this reservation is automatically confirmed
 		if (Math.abs(Duration.between(LocalDateTime.of(dayofvisit, timeOfVisit), LocalDateTime.now())
 				.toHours()) <= BackgroundManager.reminderSendBeforeTime) {
-			message += "\nSoon you will get a reminder of your booking.";
-		} else {
-			message += "\nYou will get a reminder " + BackgroundManager.reminderSendBeforeTime
-					+ " hours before the day of your booking.";
+			sendConfirmationWithoudReminderEmailNotification(details);
+			return;
 		}
 
+		message += "\n\nWe are pleased to confirm your reservation to " + parkName + "!";
+		message += "\nYou will get a reminder " + BackgroundManager.reminderSendBeforeTime
+				+ " hours before the day of your booking.";
 		message += "\nThis reminder will have to be confirmed in the GoNature app within "
 				+ BackgroundManager.reminderCancellationTime + " hours in order to save your booking.";
 		message += "\n\nIf you will not confirm, your booking will automatically be cancelled.";
@@ -131,13 +166,13 @@ public class NotificationsController {
 
 		sendEmail(emailAddress, "GoNature - Confirmation", message);
 	}
-	
+
 	/**
-	 * Sends a booking confirmation email notification to a user, without a reminder.
-	 * Used in the park entrance for sending invoices.
+	 * Sends a booking confirmation email notification to a user, without a
+	 * reminder. Used in the park entrance for sending invoices.
 	 *
-	 * @param ArrayList that contains The booking details for which the confirmation
-	 *                  is sent.
+	 * @param List that contains The booking details for which the confirmation is
+	 *             sent.
 	 */
 	public void sendConfirmationWithoudReminderEmailNotification(List<Object> details) {
 		String emailAddress = (String) details.get(0);
@@ -170,9 +205,9 @@ public class NotificationsController {
 	/**
 	 * Sends a booking confirmation email notification to a user.
 	 *
-	 * @param ArrayList that contains The booking details for which the confirmation
-	 *                  is sent.
-	 * @param reason    the reason for the cancellation
+	 * @param List   that contains The booking details for which the confirmation is
+	 *               sent.
+	 * @param reason the reason for the cancellation
 	 */
 	public void sendCancellationEmailNotification(List<Object> details, String reason) {
 		String emailAddress = (String) details.get(0);
@@ -204,8 +239,7 @@ public class NotificationsController {
 	/**
 	 * Sends a reminder email notification to a user about their upcoming booking.
 	 *
-	 * @param ArrayList that contains The booking details for which the reminder is
-	 *                  sent.
+	 * @param List that contains The booking details for which the reminder is sent.
 	 */
 	public void sendReminderEmailNotification(List<Object> details) {
 		String emailAddress = (String) details.get(0);

@@ -1,6 +1,8 @@
 package clientSide.gui;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +45,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.util.Duration;
 import javafx.util.Pair;
 
 /**
@@ -123,21 +124,44 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 		// creating a booking object with the entered details
 		makeBookingObject();
-		setVisible(false);
 
+		// checking if the booking is for less than 24 hours from now
+		// in this case: making the visitor understand that editing won't be allowed
+		// and the booking will be automatically confirmed
+		LocalDateTime bookingTime = LocalDateTime.of(booking.getDayOfVisit(), booking.getTimeOfVisit());
+		LocalDateTime now = LocalDateTime.now();
+		if (Math.abs(Duration.between(bookingTime, now).toHours()) <= control.reminderSendingTime) {
+			int choise = showConfirmationAlert(
+					"Your reservation occurs in less than " + control.reminderSendingTime + " hours."
+							+ "\nIf we find place for your reservation, it will be"
+							+ "\nautomatically confirmed and won't be able to be"
+							+ "\nedited or cancelled.",
+					Arrays.asList("Cancel", "Ok, Continue"));
+			switch (choise) {
+			case 1: // chose to cancel
+				event.consume();
+				return;
+
+			case 2: // chose to continue
+				break;
+			}
+		}
+
+		// starting the booking process
+		setVisible(false); // showing the progress indicator
 		AtomicBoolean isAvailable = new AtomicBoolean(false);
+
 		// moving the data fetching operation to a background thread
 		new Thread(() -> {
 			// checking the park availability for the chosen date and time
 			// if the date is available for this booking
 			// the new booking is INSERTED to the table in order to save its spot
 			boolean availability = control.checkAndInsertNewBooking(booking);
-			System.out.println(availability);
 			isAvailable.set(availability);
 
 			// once fetching is complete, updating the UI on the JavaFX Application Thread
 			Platform.runLater(() -> {
-				setVisible(true);
+				setVisible(true); // hiding the progress indicator
 				if (!isAvailable.get()) { // if the entered date and time are not available
 					dateIsNotAvailable();
 				} else { // if the date and time are available
@@ -168,24 +192,35 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		}
 
 		int choise = showConfirmationAlert(payMessage,
-				Arrays.asList("Pay Now", "Pay Upon Arrival", "Cancel Reservation"));
+				Arrays.asList("Pay Now", "Pay Upon Arrival", "Drop Reservation"));
 
 		switch (choise) {
 		// chose to pay now
 		case 1: {
 			booking.setPaid(true);
 			booking.setFinalPrice(isGroupReservation ? preOrderPrice : discountPrice);
-			// updating the payment columns in the database
-			control.updateBookingPayment(booking);
-			// showing the payment screen
-			try {
-				ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
-						"/clientSide/fxml/PaymentSystemScreen.fxml", true, true,
-						new Pair<Booking, String>(booking, "online"));
-			} catch (StatefulException | ScreenException e) {
-				e.printStackTrace();
-			}
-			return;
+
+			waitLabel.setText("Opening the Payment System");
+			setVisible(false);
+
+			PauseTransition pause = new PauseTransition(javafx.util.Duration.seconds(2));
+			pause.setOnFinished(e -> {
+				try {
+					new Thread(() -> {
+						// updating the payment columns in the database
+						control.updateBookingPayment(booking);
+					}).start();
+
+					// showing the payment screen
+					ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
+							"/clientSide/fxml/PaymentSystemScreen.fxml", true, true,
+							new Pair<Booking, String>(booking, "online"));
+				} catch (StatefulException | ScreenException e1) {
+					e1.printStackTrace();
+				}
+			});
+			pause.play();
+			break;
 		}
 
 		// chose to pay upon arrival
@@ -196,7 +231,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			waitLabel.setText("Processing Your Reservation");
 			setVisible(false);
 
-			PauseTransition pause = new PauseTransition(Duration.seconds(2));
+			PauseTransition pause = new PauseTransition(javafx.util.Duration.seconds(2));
 			pause.setOnFinished(e -> {
 				try {
 					new Thread(() -> {
@@ -205,7 +240,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 						// sending a notification
 						control.sendNotification(booking, false);
 					}).start();
-					
+
 					// showing the confirmation screen
 					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
 							"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
@@ -217,7 +252,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			break;
 		}
 
-		// chose to cancel reservation
+		// chose to drop reservation
 		case 3: {
 			// deleting the new booking from the database cause it wat inserted in order to
 			// save the spot for the visitor, and returning to acount screen

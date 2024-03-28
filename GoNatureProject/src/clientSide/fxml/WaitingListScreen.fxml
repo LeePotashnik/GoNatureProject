@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -9,7 +10,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.WaitingListScreenController">
+<Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.WaitingListScreenController">
    <children>
       <Button fx:id="enterWaitingBtn" layoutX="357.0" layoutY="432.0" mnemonicParsing="false" onAction="#enterWaitingList" text="Enter Waiting List">
          <font>
@@ -49,5 +50,11 @@
             <Font name="Calibri" size="14.0" />
          </font>
       </Button>
+      <ProgressIndicator fx:id="progressIndicator" layoutX="335.0" layoutY="236.0" prefHeight="100.0" prefWidth="100.0" progress="0.0" />
+      <Label fx:id="waitLabel" layoutX="26.0" layoutY="343.0" prefHeight="75.0" prefWidth="656.0" text="Booking Managing">
+         <font>
+            <Font name="Cambria" size="20.0" />
+         </font>
+      </Label>
    </children>
 </Pane>

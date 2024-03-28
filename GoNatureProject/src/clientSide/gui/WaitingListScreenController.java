@@ -2,6 +2,7 @@ package clientSide.gui;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import clientSide.control.BookingController;
 import clientSide.control.ParkController;
@@ -11,6 +12,7 @@ import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
 import entities.Booking;
 import entities.Booking.VisitType;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -19,6 +21,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -54,7 +57,7 @@ public class WaitingListScreenController extends AbstractScreen {
 	@FXML
 	private Pane pane;
 	@FXML
-	private Label titleLbl, yourOrderLabel;
+	private Label titleLbl, yourOrderLabel, waitLabel;
 	@FXML
 	private TableView<Booking> waitingListTable;
 	@FXML
@@ -69,6 +72,8 @@ public class WaitingListScreenController extends AbstractScreen {
 	private TableColumn<Booking, VisitType> visitTypeColumn;
 	@FXML
 	private TableColumn<Booking, Integer> groupSizeColumn;
+	@FXML
+	private ProgressIndicator progressIndicator;
 
 	//////////////////////////////
 	/// EVENT HANDLING METHODS ///
@@ -85,22 +90,39 @@ public class WaitingListScreenController extends AbstractScreen {
 				booking.getVisitType() == VisitType.GROUP ? true : false, false);
 		booking.setFinalPrice(finalPrice);
 
-		// inserting the user to the waiting list
-		if (control.insertBookingToWaitingList(booking)) {
-			// updating the waiting list table view on the GUI
-			waitingListTable.setItems(control.getWaitingListForPark(booking));
+		AtomicBoolean success = new AtomicBoolean();
+		setVisible(true);
+		enterWaitingBtn.setDisable(true);
+		backButton.setDisable(true);
 
-			event.consume();
-			showInformationAlert("Your reservation entered the waiting list of " + booking.getParkBooked().getParkName()
-					+ " park successfully");
-			enterWaitingBtn.setDisable(true);
-			backButton.setDisable(true);
+		// moving the operations to a background thread
+		new Thread(() -> {
+			boolean result = control.insertBookingToWaitingList(booking);
+			if (result) {
+				new Thread(() -> {
+					control.sendWaitingListEntranceNotification(booking);
+				}).start();
+			}
+			success.set(result);
 
-		} else {
-			showErrorAlert("An error occured while trying to enter you to the waiting list. Please try again later.");
-			event.consume();
-			// here: returning to account screen
-		}
+			Platform.runLater(() -> {
+				if (success.get()) {
+					setVisible(false);
+					backButton.setDisable(true);
+					enterWaitingBtn.setDisable(true);
+					booking.setWaitingListPriority(waitingList.size() + 1);
+					waitingList.add(booking);
+					showInformationAlert("Your reservation entered the waiting list of "
+							+ booking.getParkBooked().getParkName() + " park successfully");
+					event.consume();
+				} else {
+					showErrorAlert(
+							"An error occured while trying to enter you to the waiting list. Please try again later.");
+					enterWaitingBtn.setDisable(true);
+					event.consume();
+				}
+			});
+		}).start();
 	}
 
 	@FXML
@@ -116,7 +138,8 @@ public class WaitingListScreenController extends AbstractScreen {
 					"/clientSide/fxml/ParkVisitorAccountScreen.fxml", false, false, null);
 		} catch (StatefulException | ScreenException e) {
 			e.printStackTrace();
-		}	}
+		}
+	}
 
 	@FXML
 	/**
@@ -163,6 +186,19 @@ public class WaitingListScreenController extends AbstractScreen {
 
 		waitingListTable.setItems(waitingList);
 		waitingListTable.getSortOrder().add(waitingOrderColumn);
+		waitingListTable.setPlaceholder(new Label("You are the first to enter the waiting list"));
+	}
+
+	/**
+	 * Shows/hides the progress indicator and its label
+	 * 
+	 * @param visible
+	 */
+	private void setVisible(boolean visible) {
+		progressIndicator.setVisible(visible);
+		waitLabel.setVisible(visible);
+		waitingListTable.setVisible(!visible);
+		returnToAccountBtn.setDisable(visible);
 	}
 
 	///////////////////////////////
@@ -198,6 +234,17 @@ public class WaitingListScreenController extends AbstractScreen {
 
 		// setting the application's background
 		setApplicationBackground(pane);
+
+		// setting the labels
+		waitLabel.setAlignment(Pos.CENTER);
+		waitLabel.layoutXProperty().bind(pane.widthProperty().subtract(waitLabel.widthProperty()).divide(2));
+		waitLabel.setText("Entering You to the Waiting List...");
+		waitLabel.setStyle("-fx-text-alignment: center;");
+		// setting the progress indicator
+		progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+		progressIndicator.layoutXProperty()
+				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
+		setVisible(false);
 	}
 
 	@Override
