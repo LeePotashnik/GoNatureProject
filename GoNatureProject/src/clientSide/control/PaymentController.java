@@ -8,7 +8,7 @@ import common.communication.Communication;
 import common.communication.CommunicationException;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
-import entities.Booking;
+import common.entities.Booking;
 
 public class PaymentController {
 	private int individualFullPrice,individualDiscount, groupFullPrice, groupPreorderDiscount, groupPrepaidDiscount; 

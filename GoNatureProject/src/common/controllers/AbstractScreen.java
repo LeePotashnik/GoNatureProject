@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Optional;
 
 import clientSide.control.GoNatureUsersController;
+import clientSide.entities.SystemUser;
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
-import entities.SystemUser;
 import javafx.animation.AnimationTimer;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;

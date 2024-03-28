@@ -3,20 +3,20 @@ package clientSide.control;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import clientSide.entities.DepartmentManager;
+import clientSide.entities.ParkEmployee;
+import clientSide.entities.ParkManager;
+import clientSide.entities.ParkVisitor;
+import clientSide.entities.Representative;
+import clientSide.entities.SystemUser;
+import clientSide.entities.ParkVisitor.VisitorType;
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.CommunicationException;
 import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
-import entities.Booking;
-import entities.DepartmentManager;
-import entities.ParkEmployee;
-import entities.ParkManager;
-import entities.ParkVisitor;
-import entities.ParkVisitor.VisitorType;
-import entities.Representative;
-import entities.SystemUser;
+import common.entities.Booking;
 
 /**
  * Manages user sessions and interactions within the GoNature application. Utilizing the Singleton design pattern,

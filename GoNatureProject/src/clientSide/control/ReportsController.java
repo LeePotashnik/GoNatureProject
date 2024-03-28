@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.Communication.CommunicationType;
+import common.entities.Park;
 import common.communication.CommunicationException;
-import entities.Park;
 import javafx.scene.chart.XYChart;
 import javafx.util.Pair;
 

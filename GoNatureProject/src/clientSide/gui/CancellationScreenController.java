@@ -5,7 +5,7 @@ import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
-import entities.Booking;
+import common.entities.Booking;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -47,6 +47,8 @@ public class CancellationScreenController extends AbstractScreen {
 	 */
 	void returnToAccount(ActionEvent event) {
 		ScreenManager.getInstance().resetScreensStack();
+		showInformationAlert(
+				"Please check your SMS and email inboxes, we have sent you confirmation about your cancellation.");
 		try {
 			ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController",
 					"/clientSide/fxml/ParkVisitorAccountScreen.fxml", false, false, null);

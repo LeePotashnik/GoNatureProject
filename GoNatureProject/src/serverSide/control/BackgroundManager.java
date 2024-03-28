@@ -17,10 +17,10 @@ import clientSide.control.ParkController;
 import common.communication.Communication;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
+import common.entities.Booking;
+import common.entities.Park;
+import common.entities.Booking.VisitType;
 import common.communication.CommunicationException;
-import entities.Booking;
-import entities.Booking.VisitType;
-import entities.Park;
 import serverSide.jdbc.DatabaseController;
 import serverSide.jdbc.DatabaseException;
 

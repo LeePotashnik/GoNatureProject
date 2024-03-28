@@ -8,6 +8,7 @@ import java.util.Arrays;
 
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
+import clientSide.entities.ParkEmployee;
 import common.communication.Communication;
 import common.communication.Communication.ClientMessageType;
 import common.communication.Communication.CommunicationType;
@@ -15,8 +16,7 @@ import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
-import entities.Booking;
-import entities.ParkEmployee;
+import common.entities.Booking;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;

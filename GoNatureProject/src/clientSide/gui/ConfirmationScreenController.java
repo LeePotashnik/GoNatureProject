@@ -6,14 +6,14 @@ import java.time.LocalDateTime;
 import clientSide.control.BookingController;
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
+import clientSide.entities.ParkEmployee;
+import clientSide.entities.ParkVisitor;
+import clientSide.entities.SystemUser;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
-import entities.Booking;
-import entities.ParkEmployee;
-import entities.ParkVisitor;
-import entities.SystemUser;
+import common.entities.Booking;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -56,6 +56,8 @@ public class ConfirmationScreenController extends AbstractScreen {
 	void returnToAccount(ActionEvent event) {
 		SystemUser user = GoNatureUsersController.getInstance().restoreUser();
 		if (user instanceof ParkVisitor) {
+			showInformationAlert(
+					"Please check your SMS and email inboxes, we have sent you confirmation about your reservation.");
 			ScreenManager.getInstance().resetScreensStack();
 			try {
 				ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController",
@@ -118,15 +120,17 @@ public class ConfirmationScreenController extends AbstractScreen {
 			emailLabel.setText("Email: " + booking.getEmailAddress());
 			phoneLabel.setText("Phone: " + booking.getPhoneNumber());
 			dateLabel.setText("Date of Visit: " + booking.getDayOfVisit() + "");
-			timeLabel.setText("Time of Visit: " + booking.getTimeOfVisit() + "");
+			timeLabel.setText("Time of Visit: " + booking.getTimeOfVisit() + "-"
+					+ booking.getTimeOfVisit().plusHours(booking.getParkBooked().getTimeLimit()));
 			visitorsLabel.setText("Group Size: " + booking.getNumberOfVisitors() + "");
 			priceLabel.setText("Final Price: " + booking.getFinalPrice() + "$");
-			
+
 			// checking if the booking is for less than 24 hours from now
 			LocalDateTime bookingTime = LocalDateTime.of(booking.getDayOfVisit(), booking.getTimeOfVisit());
 			LocalDateTime now = LocalDateTime.now();
 			String reminder = "";
-			if (Math.abs(Duration.between(bookingTime, now).toHours()) <= BookingController.getInstance().reminderSendingTime) {
+			if (Math.abs(Duration.between(bookingTime, now).toHours()) <= BookingController
+					.getInstance().reminderSendingTime) {
 				reminder += " Your reservation is confirmed.";
 			} else {
 				reminder += " 24 hours before arrival, you'll get a reminder.";

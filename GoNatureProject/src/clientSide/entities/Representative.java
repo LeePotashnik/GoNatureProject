@@ -1,4 +1,4 @@
-package entities;
+package clientSide.entities;
 
 public class Representative extends SystemUser {
 	public Representative(String representativeId, String firstName, String lastName, String emailAddress,

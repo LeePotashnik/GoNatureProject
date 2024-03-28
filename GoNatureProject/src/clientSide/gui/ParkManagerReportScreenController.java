@@ -8,11 +8,11 @@ import java.util.TreeMap;
 
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ReportsController;
+import clientSide.entities.ParkManager;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
-import entities.ParkManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;

@@ -6,13 +6,13 @@ import java.util.Arrays;
 
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParkController;
+import clientSide.entities.DepartmentManager;
 import common.communication.CommunicationException;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
-import entities.DepartmentManager;
-import entities.Park;
+import common.entities.Park;
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
