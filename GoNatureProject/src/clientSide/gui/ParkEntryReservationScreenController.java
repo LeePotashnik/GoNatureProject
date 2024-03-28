@@ -153,7 +153,7 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 			RadioButton selected = (RadioButton) group.getSelectedToggle();
 			switch ((String) selected.getUserData()) {
 			case "guided":
-				parkVisitor = (ParkVisitor) parkControl.checkIfVisitorExists(Communication.griupGuide, "groupGuideId",
+				parkVisitor = (ParkVisitor) parkControl.checkIfVisitorExists(Communication.groupGuide, "groupGuideId",
 						visitorIDTxt.getText());
 				if (parkVisitor == null) { // there's no group guide with this id number
 					showErrorAlert("The provided Id number is not found connected to an authorized group guide.");
