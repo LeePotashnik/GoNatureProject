@@ -8,6 +8,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+import clientSide.entities.ParkVisitor;
+import clientSide.entities.ParkVisitor.VisitorType;
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.CommunicationException;
@@ -15,11 +17,9 @@ import common.communication.Communication.CommunicationType;
 import common.communication.Communication.NotificationType;
 import common.communication.Communication.QueryType;
 import common.communication.Communication.SecondaryRequest;
-import entities.Park;
-import entities.ParkVisitor;
-import entities.ParkVisitor.VisitorType;
-import entities.Booking.VisitType;
-import entities.Booking;
+import common.entities.Booking;
+import common.entities.Park;
+import common.entities.Booking.VisitType;
 
 /**
  * The ParkController class serves as a controller for managing park-related

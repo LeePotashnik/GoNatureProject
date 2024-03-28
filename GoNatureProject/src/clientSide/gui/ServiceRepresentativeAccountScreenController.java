@@ -4,11 +4,11 @@ import java.time.LocalTime;
 import java.util.Arrays;
 
 import clientSide.control.GoNatureUsersController;
+import clientSide.entities.Representative;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
-import entities.Representative;
 import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

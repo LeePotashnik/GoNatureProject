@@ -1,6 +1,8 @@
-package entities;
+package clientSide.entities;
 
 import java.util.ArrayList;
+
+import common.entities.Park;
 
 public class DepartmentManager extends ParkEmployee {
 	private ArrayList<Park> responsible;

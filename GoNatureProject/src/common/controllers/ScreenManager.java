@@ -186,7 +186,7 @@ public class ScreenManager {
 	 */
 	private void addRootAndStart(Parent root, AbstractScreen controller) throws StatefulException {
 		Scene scene = new Scene(root);
-		scene.getStylesheets().add(getClass().getResource("/clientSide/fxml/Styles.css").toExternalForm()); // setting
+		scene.getStylesheets().add(getClass().getResource("/common/styles/Styles.css").toExternalForm()); // setting
 																											// styles
 		stage.setScene(scene); // setting the scene
 		stage.setTitle("GoNature - " + controller.getScreenTitle());

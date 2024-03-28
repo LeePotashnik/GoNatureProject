@@ -8,15 +8,15 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import clientSide.control.BookingController;
+import clientSide.entities.ParkVisitor;
 import common.communication.Communication;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.Stateful;
 import common.controllers.StatefulException;
-import entities.Booking;
-import entities.Park;
-import entities.ParkVisitor;
+import common.entities.Booking;
+import common.entities.Park;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ObservableList;

@@ -8,14 +8,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+import clientSide.entities.DepartmentManager;
+import clientSide.entities.ParkManager;
+import clientSide.entities.PendingAdjustment;
 import clientSide.gui.GoNatureClientUI;
 import common.communication.Communication;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.QueryType;
 import common.communication.CommunicationException;
-import entities.DepartmentManager;
-import entities.ParkManager;
-import entities.PendingAdjustment;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
