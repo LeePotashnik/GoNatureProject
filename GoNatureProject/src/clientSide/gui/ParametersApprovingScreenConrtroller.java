@@ -6,12 +6,12 @@ import java.util.Arrays;
 
 import clientSide.control.GoNatureUsersController;
 import clientSide.control.ParametersController;
+import clientSide.entities.DepartmentManager;
+import clientSide.entities.PendingAdjustment;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
-import entities.DepartmentManager;
-import entities.PendingAdjustment;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

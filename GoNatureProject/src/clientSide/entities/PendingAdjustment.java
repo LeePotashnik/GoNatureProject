@@ -1,4 +1,4 @@
-package entities;
+package clientSide.entities;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

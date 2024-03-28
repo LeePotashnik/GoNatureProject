@@ -1,4 +1,6 @@
-package entities;
+package clientSide.entities;
+
+import common.entities.Park;
 
 public class ParkEmployee extends SystemUser {
 	private Park workingIn;
