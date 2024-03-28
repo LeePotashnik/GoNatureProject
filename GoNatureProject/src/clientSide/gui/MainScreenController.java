@@ -133,6 +133,7 @@ public class MainScreenController extends AbstractScreen {
 							} catch (StatefulException | ScreenException e) {
 								e.printStackTrace();
 							}
+							return;
 						}
 					} else { // there is a traveller exists with this id number
 								// now checking if this user is already logged in on another device
@@ -146,6 +147,7 @@ public class MainScreenController extends AbstractScreen {
 							user.setLoggedIn(true);
 							if (hasBookings.get()) { // if has bookings
 								openRelevantScreen(user);
+								return;
 							} else { // if does not have bookings
 								try {
 									ScreenManager.getInstance().showScreen("BookingScreenController",
@@ -153,6 +155,7 @@ public class MainScreenController extends AbstractScreen {
 								} catch (StatefulException | ScreenException e) {
 									e.printStackTrace();
 								}
+								return;
 							}
 						}
 					}

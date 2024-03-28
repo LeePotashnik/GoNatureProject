@@ -71,7 +71,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	private static final String lettersInput = "[a-zA-Z]+( [a-zA-Z]+)?";
 	private static final String emailInput = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
 	private static final String phoneInput = "^(052|054|050)\\d{7}$";
-	
+
 	/**
 	 * Constructor, initializes the booking controller instance
 	 */
@@ -129,19 +129,18 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		// moving the data fetching operation to a background thread
 		new Thread(() -> {
 			// checking the park availability for the chosen date and time
-			boolean availability = control.checkParkAvailabilityForNewBooking(booking);
+			// if the date is available for this booking
+			// the new booking is INSERTED to the table in order to save its spot
+			boolean availability = control.checkAndInsertNewBooking(booking);
+			System.out.println(availability);
 			isAvailable.set(availability);
 
 			// once fetching is complete, updating the UI on the JavaFX Application Thread
 			Platform.runLater(() -> {
 				setVisible(true);
 				if (!isAvailable.get()) { // if the entered date and time are not available
-
 					dateIsNotAvailable();
-				}
-
-				else { // if the date and time are available
-
+				} else { // if the date and time are available
 					dateIsAvailable();
 				}
 			});
@@ -153,17 +152,13 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 * chosen park
 	 */
 	private void dateIsAvailable() {
-		// first inserting the new booking to the database to update capacities and save
-		// the visitor's spot
-		control.insertNewBookingToActiveTable(booking);
-
 		// calculating the final price for the booking. Sending visitor's type cause the
 		// price defers between regular and guided groups
 		int discountPrice = control.calculateFinalDiscountPrice(booking, isGroupReservation, false);
 		int preOrderPrice = control.calculateFinalDiscountPrice(booking, true, true);
 
 		// creating the pop up message
-		String payMessage = "Woohoo! You're almost set.";
+		String payMessage = "Woohoo! Your reservation is now set!";
 		if (isGroupReservation) {
 			payMessage += "\nPay now and get a special discount for paying ahead:";
 			payMessage += "\n        Your reservation's final price: " + discountPrice + "$";
@@ -207,10 +202,11 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 					new Thread(() -> {
 						// updating the payment columns in the database
 						control.updateBookingPayment(booking);
-						// showing the confirmation screen
+						// sending a notification
 						control.sendNotification(booking, false);
 					}).start();
-
+					
+					// showing the confirmation screen
 					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
 							"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
 				} catch (StatefulException | ScreenException e1) {

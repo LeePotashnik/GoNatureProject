@@ -3,6 +3,7 @@ package clientSide.gui;
 import java.util.ArrayList;
 
 import clientSide.control.RegistrationController;
+import common.communication.Communication;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
@@ -65,10 +66,16 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 		} else {
 			ArrayList<Object[]> userDetails = registerController.getUserDetails(id);
 			if (userDetails.isEmpty()) {
-				idTxt.setStyle(setFieldToError());
-				showErrorAlert("This user's id does not exists in our System.");
+				if(RegistrationController.getInstance().checkGroupGuideExistence(id)) {
+					idTxt.setStyle(setFieldToError());
+					showErrorAlert("This ID is already registered as a Group Guide");	
+					}
+				else {
+					idTxt.setStyle(setFieldToError());
+					showErrorAlert("This ID does not exists in our System.");
+				}
 			} else {
-				showInformationAlert("ID exists for a user. Details loaded for conversion.");
+				showInformationAlert("User Details loaded for conversion.");
 				idTxt.setStyle(setFieldToRegular());
 				idTxt.setDisable(true);
 				showAllFieldsAndRegisterButton();
@@ -85,8 +92,7 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 
 	/**
 	 * Handles the registration action. Validates form data and interacts with the
-	 * RegistrationController to register a new group guide or convert an existing
-	 * traveler to a group guide.
+	 * RegistrationController to convert an existing system user to a group guide.
 	 *
 	 * @param event the action event triggering this method.
 	 */
@@ -100,16 +106,20 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 		String phone = phoneTxt.getText().trim();
 		String password = passwordTxt.getText();
 
-		if (DetailsValidation(firstName, lastName, email, phone, username, password)) { // if the the details are valid
-																						// in the aspect of not empty
-			boolean deleteSuccess = registerController.userDeleteFromTable(id); // if the fields with correct format we
-																				// want to delete this user with this id
-																				// from the 'system_user' table and
-																				// insert him to the 'group_guide' table
-			if (!deleteSuccess) { // delete from 'system_users'
+		if (DetailsValidation(firstName, lastName, email, phone, username, password)) { 					
+			registerController.checkIdExistenceAndDeleteFromTravellerTable(id);
+
+																												// if the the details are valid
+																												// in the aspect of not empty
+			boolean deleteUserSuccess = registerController.userDeleteFromTable(id,Communication.systemUser); 	// if the fields with correct format we
+																												// want to delete this user with this id
+																												// from the 'system_user' table and
+																												// insert him to the 'group_guide' table
+			if (!deleteUserSuccess) { // delete from 'system_users'	
 				showErrorAlert("Failed to register the group guide.");
 				return;
 			}
+			
 			boolean insertSuccess = registerController.groupGuideInsertToDB(id, firstName, lastName, email, phone,
 					username, password);
 			if (insertSuccess) { // insert to 'group_guide'

@@ -4,6 +4,7 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -195,8 +196,22 @@ public class ReportsController {
 	 *         already exists or if an error occurs during the operation.
 	 */
 	public boolean saveUsageReport(String selectedMonth, String selectedYear, Park park) {
+		// Get the current date
+		LocalDate currentDate = LocalDate.now();
+		// Parse the selected year and month
+		int selectedMonthInt = Integer.parseInt(selectedMonth);
+		int selectedYearInt = Integer.parseInt(selectedYear);
+		YearMonth selectedYearMonth = YearMonth.of(selectedYearInt, selectedMonthInt);
+		// Get the last day of the selected month
+		LocalDate lastDayOfSelectedMonth = selectedYearMonth.atEndOfMonth();
 
-		String date = selectedYear + "-" + selectedMonth + "-30";
+		// Check if the selected month is the current month and if it has not ended
+		if (!currentDate.isAfter(lastDayOfSelectedMonth)) {
+			// The report for the future date cannot be saved
+			return false;
+		}
+		// Create a date string for the last day of the selected month
+		String date = selectedYear + "-" + selectedMonth + "-" + lastDayOfSelectedMonth.getDayOfMonth();
 		String parkTableName = ParkController.getInstance().nameOfTable(park);
 
 		// Set the type of the query
@@ -335,10 +350,25 @@ public class ReportsController {
 	 *         already exists or if an error occurs during the operation.
 	 */
 	public boolean saveTotalNumberOfVisitorsReport(String selectedMonth, String selectedYear, Park park) {
+		// Get the current date
+		LocalDate currentDate = LocalDate.now();
+		// Parse the selected year and month
+		int selectedMonthInt = Integer.parseInt(selectedMonth);
+		int selectedYearInt = Integer.parseInt(selectedYear);
+		YearMonth selectedYearMonth = YearMonth.of(selectedYearInt, selectedMonthInt);
+		// Get the last day of the selected month
+		LocalDate lastDayOfSelectedMonth = selectedYearMonth.atEndOfMonth();
 
-		String tableName = Communication.totalReport;
-		String date = selectedYear + "-" + selectedMonth + "-30";
+		// Check if the selected month is the current month and if it has not ended
+		if (!currentDate.isAfter(lastDayOfSelectedMonth)) {
+			// The report for the future date cannot be saved
+			return false;
+		}
+		// Create a date string for the last day of the selected month
+		String date = selectedYear + "-" + selectedMonth + "-" + lastDayOfSelectedMonth.getDayOfMonth();
 		String parkTableName = ParkController.getInstance().nameOfTable(park);
+		String tableName = Communication.totalReport;
+
 		// Set the type of the query
 		try {
 			Communication select = new Communication(Communication.CommunicationType.QUERY_REQUEST);
@@ -531,7 +561,8 @@ public class ReportsController {
 
 			String dayName = dayOfVisit.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
-			if (Communication.userCancelled.equals(cancellationReason) || Communication.userDidNotConfirm.equals(cancellationReason)) {
+			if (Communication.userCancelled.equals(cancellationReason)
+					|| Communication.userDidNotConfirm.equals(cancellationReason)) {
 				cancelledOrdersStats.get(dayName).add(numberOfVisitors);
 			} else if (Communication.userDidNotArrive.equals(cancellationReason)) {
 				noShowVisitorsStats.get(dayName).add(numberOfVisitors);
