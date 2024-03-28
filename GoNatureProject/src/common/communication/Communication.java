@@ -151,7 +151,7 @@ public class Communication implements Serializable {
 
 	// determines the type of notification to be sent to the user
 	public enum NotificationType {
-		SEND_CONFIRMATION, SEND_CANCELLATION, SEND_CONFIRMATION_WITHOUT_REMINDER, NONE
+		SEND_CONFIRMATION, SEND_CANCELLATION, SEND_CONFIRMATION_WITHOUT_REMINDER, SEND_WAITING_LIST_ENTRANCE, NONE
 	}
 
 	private NotificationType notificationType;

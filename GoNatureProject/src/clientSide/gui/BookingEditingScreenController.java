@@ -14,6 +14,7 @@ import common.controllers.StatefulException;
 import entities.Booking;
 import entities.Booking.VisitType;
 import entities.Park;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -107,21 +108,48 @@ public class BookingEditingScreenController extends BookingScreenController {
 		case 2: // chose to cancel
 			setVisible(false);
 			waitLabel.setText("Cancelling Your Reservation");
-			if (control.deleteBooking(booking, Communication.activeBookings)) {
-				if (control.insertBookingToCancelledTable(booking, Communication.userCancelled)) {
-					new Thread(() -> {
-						control.sendNotification(booking, true);
-					}).start();
-					// showing the cancellation screen
-					try {
-						ScreenManager.getInstance().showScreen("CancellationScreenController",
-								"/clientSide/fxml/CancellationScreen.fxml", true, false, booking);
-					} catch (StatefulException | ScreenException e) {
-						e.printStackTrace();
+
+			AtomicBoolean cancelResult = new AtomicBoolean(false);
+			// moving the data fetching operation to a background thread
+			new Thread(() -> {
+				// performing the cancelling:
+				// deleting from active bookings, inserting to cancelled bookings
+				boolean result = control.deleteBooking(booking, Communication.activeBookings)
+						&& control.insertBookingToCancelledTable(booking, Communication.userCancelled);
+				cancelResult.set(result);
+
+				// once fetching is complete, updating the UI on the JavaFX Application Thread
+				Platform.runLater(() -> {
+					setVisible(true);
+					if (cancelResult.get()) { // if the cancellation succeed
+						// sending a notification, on a background thread
+						new Thread(() -> {
+							control.sendNotification(booking, true);
+						}).start();
+
+						// after the sending task is done
+						Platform.runLater(() -> {
+							// showing the cancellation screen
+							try {
+								ScreenManager.getInstance().showScreen("CancellationScreenController",
+										"/clientSide/fxml/CancellationScreen.fxml", true, false, booking);
+							} catch (StatefulException | ScreenException e) {
+								e.printStackTrace();
+							}
+						});
+					} else { // if the cancellation failed
+						showErrorAlert("There was an error cancelling your reservation.\nPlease try again later.");
+						// opening the account screen
+						ScreenManager.getInstance().resetScreensStack();
+						try {
+							ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController",
+									"/clientSide/fxml/ParkVisitorAccountScreen.fxml", false, false, null);
+						} catch (StatefulException | ScreenException e) {
+							e.printStackTrace();
+						}
 					}
-				}
-			}
-			event.consume();
+				});
+			}).start();
 		}
 	}
 
@@ -136,44 +164,48 @@ public class BookingEditingScreenController extends BookingScreenController {
 		// first checking if the user changed any detail before sending a query request
 		if (!checkIfChanged()) {
 			showInformationAlert("You need to change one/more of the details in order to update your booking");
-		} else { // if changed any of the details
-			if (!validateDetails()) { // if details are not valid
-				return;
-			} else { // if details are valid
-				Booking clone = booking.cloneBooking();
-				Park parkDesired = parksList.get(parkComboBox.getSelectionModel().getSelectedIndex());
-				clone.setParkBooked(parkDesired);
-				clone.setDayOfVisit(datePicker.getValue());
-				clone.setTimeOfVisit(hourCombobox.getValue());
-				clone.setNumberOfVisitors(Integer.parseInt(visitorsTxt.getText()));
-
-				setVisible(false);
-
-				AtomicBoolean isAvailable = new AtomicBoolean(false);
-				// moving the data fetching operation to a background thread
-				new Thread(() -> {
-					// checking the park availability for the chosen date and time
-					boolean availability = control.checkParkAvailabilityForExistingBooking(booking, clone);
-					isAvailable.set(availability);
-
-					// once fetching is complete, updating the UI on the JavaFX Application Thread
-					Platform.runLater(() -> {
-						setVisible(true);
-						if (!isAvailable.get()) { // if the entered date and time are not available
-							showInformationAlert("Unfortunately, " + parkDesired.getParkName()
-									+ " Park is not available for " + clone.getNumberOfVisitors() + " visitors on "
-									+ clone.getDayOfVisit() + ", " + clone.getTimeOfVisit());
-						}
-
-						else { // if the date and time are available
-							showInformationAlert(
-									parkDesired.getParkName() + " Park is available for " + clone.getNumberOfVisitors()
-											+ " visitors on " + clone.getDayOfVisit() + ", " + clone.getTimeOfVisit());
-						}
-					});
-				}).start();
-			}
+			return;
 		}
+
+		// if changed any of the details
+		if (!validateDetails()) { // if details are not valid
+			return;
+		}
+
+		// if details are valid
+		Booking clone = booking.cloneBooking();
+		Park parkDesired = parksList.get(parkComboBox.getSelectionModel().getSelectedIndex());
+		clone.setParkBooked(parkDesired);
+		clone.setDayOfVisit(datePicker.getValue());
+		clone.setTimeOfVisit(hourCombobox.getValue());
+		clone.setNumberOfVisitors(Integer.parseInt(visitorsTxt.getText()));
+
+		setVisible(false);
+		waitLabel.setText("Checking park availability...");
+
+		AtomicBoolean isAvailable = new AtomicBoolean(false);
+		// moving the data fetching operation to a background thread
+		new Thread(() -> {
+			// checking the park availability for the chosen date and time
+			boolean availability = control.checkParkAvailabilityForExistingBooking(booking, clone);
+			isAvailable.set(availability);
+
+			// once fetching is complete, updating the UI on the JavaFX Application Thread
+			Platform.runLater(() -> {
+				setVisible(true);
+				if (!isAvailable.get()) { // if the entered date and time are not available
+					showInformationAlert("Unfortunately, " + parkDesired.getParkName() + " Park is not available for "
+							+ clone.getNumberOfVisitors() + " visitors on " + clone.getDayOfVisit() + ", "
+							+ clone.getTimeOfVisit());
+				}
+
+				else { // if the date and time are available
+					showInformationAlert(
+							parkDesired.getParkName() + " Park is available for " + clone.getNumberOfVisitors()
+									+ " visitors on " + clone.getDayOfVisit() + ", " + clone.getTimeOfVisit());
+				}
+			});
+		}).start();
 	}
 
 	@FXML
@@ -187,65 +219,89 @@ public class BookingEditingScreenController extends BookingScreenController {
 		if (!checkIfChanged()) {
 			showInformationAlert("You need to change one/more of the details in order to check park availability");
 			return;
-
-		} else { // if changed any of the details
-			if (!validateDetails()) { // if details are not valid
-				return;
-			} else { // if details are valid
-				Booking clone = booking.cloneBooking();
-				Park parkDesired = parksList.get(parkComboBox.getSelectionModel().getSelectedIndex());
-				clone.setParkBooked(parkDesired);
-				clone.setDayOfVisit(datePicker.getValue());
-				clone.setTimeOfVisit(hourCombobox.getValue());
-				clone.setNumberOfVisitors(Integer.parseInt(visitorsTxt.getText()));
-
-				setVisible(false);
-
-				AtomicBoolean isAvailable = new AtomicBoolean(false);
-				// moving the data fetching operation to a background thread
-				new Thread(() -> {
-					// checking the park availability for the chosen date and time
-					boolean availability = control.checkParkAvailabilityForExistingBooking(booking, clone);
-					isAvailable.set(availability);
-
-					// once fetching is complete, updating the UI on the JavaFX Application Thread
-					Platform.runLater(() -> {
-						setVisible(true);
-						if (!isAvailable.get()) { // if the entered date and time are not available
-							// making sure the user wants to replace his old booking with the new one
-							int choise = showConfirmationAlert(
-									"You are about to update your reservation."
-											+ "\nCurrently, the time frame you chose is not available." + "\nATTENTION: "
-											+ "By continuing, your old reservation will be cancelled!!!",
-									Arrays.asList("Don't Update", "Ok, Continue"));
-							switch (choise) {
-							case 1: // chose not to do anything
-								event.consume();
-								return;
-							case 2: // chose to update
-								control.deleteBooking(clone, Communication.activeBookings);
-								dateIsNotAvailable(clone);
-							}
-						}
-
-						else { // if the date and time are available
-							int choise = showConfirmationAlert(
-									"You are about to update your reservation."
-											+ "\nFor now, the time frame you chose is available." + "\nATTENTION:"
-											+ "By continuing, your old reservation will be cancelled!!!",
-									Arrays.asList("Don't Update", "Ok, Continue"));
-							switch (choise) {
-							case 1: // chose not to do anything
-								event.consume();
-								return;
-							case 2: // chose to update
-								dateIsAvailable(clone);
-							}
-						}
-					});
-				}).start();
-			}
 		}
+		// if changed any of the details
+		if (!validateDetails()) { // if details are not valid
+			return;
+		}
+
+		// if details are valid, cloning the booking
+		// this is done cause the "new" booking is basically an updated version of the
+		// existing booking. the booking id and all other details that have not been
+		// changed, remain the same as before.
+		Booking clone = booking.cloneBooking();
+		Park parkDesired = parksList.get(parkComboBox.getSelectionModel().getSelectedIndex());
+		clone.setParkBooked(parkDesired);
+		clone.setDayOfVisit(datePicker.getValue());
+		clone.setTimeOfVisit(hourCombobox.getValue());
+		clone.setNumberOfVisitors(Integer.parseInt(visitorsTxt.getText()));
+
+		setVisible(false); // showing the progress indicator
+
+		AtomicBoolean isAvailable = new AtomicBoolean(false);
+		// moving the data fetching operation to a background thread
+		new Thread(() -> {
+			// checking the park availability for the chosen date and time
+			boolean availability = control.checkParkAvailabilityForExistingBooking(booking, clone);
+			isAvailable.set(availability);
+
+			// once fetching is complete, updating the UI on the JavaFX Application Thread
+			Platform.runLater(() -> {
+				setVisible(true);
+				if (!isAvailable.get()) { // if the entered date and time are not available
+					// making sure the user wants to replace his old booking with the new one
+					int choise = showConfirmationAlert(
+							"Currently, the time frame you chose is not available."
+									+ "\nBy continuing, we will remove your old booking."
+									+ "\nYou can enter the waiting list, or change details."
+									+ "\nATTENTION: This action can't be undone!",
+							Arrays.asList("Don't Update", "Ok, Continue"));
+					switch (choise) {
+					case 1: // chose not to do anything
+						event.consume();
+						return;
+					case 2: // chose to update
+						setVisible(false);
+						waitLabel.setText("Updating...");
+						booking = clone;
+
+						// moving the operation to a background thread
+						new Thread(() -> {
+							boolean deleteResult = control.deleteBooking(booking, Communication.activeBookings);
+							isAvailable.set(deleteResult);
+
+							// once completed, updating the UI on the JavaFX Application Thread
+							Platform.runLater(() -> {
+								setVisible(true); // hiding the progress indicator
+								if (!isAvailable.get()) { // if the deletion failed
+									showErrorAlert(
+											"An error occured while trying to update your reservation.\nPlease try again later.");
+									return;
+								} else { // if the date and time are available
+									dateIsNotAvailable(booking);
+									return;
+								}
+							});
+						}).start();
+					}
+				}
+
+				else { // if the date and time are available
+					int choise = showConfirmationAlert(
+							"You are about to update your reservation."
+									+ "\nFor now, the time frame you chose is available." + "\nATTENTION: "
+									+ "This action can't be undone!" + "\nYour old booking will be removed.",
+							Arrays.asList("Don't Update", "Ok, Continue"));
+					switch (choise) {
+					case 1: // chose not to do anything
+						event.consume();
+						return;
+					case 2: // chose to update
+						dateIsAvailable(clone);
+					}
+				}
+			});
+		}).start();
 	}
 
 	@FXML
@@ -370,7 +426,7 @@ public class BookingEditingScreenController extends BookingScreenController {
 	 * This method is used to hide/show all elements but the progress indicator and
 	 * its label
 	 * 
-	 * @param visible
+	 * @param visible false to show the progress indicator, true to hide it
 	 */
 	private void setVisible(boolean visible) {
 		progressIndicator.setVisible(!visible);
@@ -531,79 +587,107 @@ public class BookingEditingScreenController extends BookingScreenController {
 	 */
 	private void dateIsAvailable(Booking newBooking) {
 		// first inserting the new booking to the database to update capacities and save
-		// the visitor's spot
-		boolean result = control.updateBooking(booking, newBooking);
-		if (!result) {
-			showErrorAlert("There was an issue with updating your reservation. Please try again later");
-			return;
-		}
+		// the visitor's spot. This is done on a background thread.
+		AtomicBoolean updateResult = new AtomicBoolean();
+		new Thread(() -> {
+			// checking again if the time frame is available or has been taken by now
+			boolean result = control.checkParkAvailabilityForExistingBooking(booking, newBooking);
+			if (result) // if available
+				result = control.updateBooking(booking, newBooking);
+			updateResult.set(result);
 
-		// calculating the final price for the booking. Sending visitor's type cause the
-		// price defers between regular and guided groups
-		int discountPrice = control.calculateFinalDiscountPrice(newBooking, isGroupReservation, false);
-		int preOrderPrice = control.calculateFinalDiscountPrice(newBooking, true, true);
+			Platform.runLater(() -> {
+				if (!updateResult.get()) {
+					showErrorAlert("There was an issue with updating your reservation. Please try again later");
+					return;
+				}
 
-		// creating the pop up message
-		String payMessage = "Woohoo! Your reservation is now set!";
-		if (isGroupReservation) {
-			payMessage += "\nPay now and get a special discount for paying ahead:";
-			payMessage += "\n        Your reservation's final price: " + discountPrice + "$";
-			payMessage += "\n        Your reservetion's price after paying ahead discount: " + preOrderPrice + "$";
-		} else {
-			payMessage += "\nYour reservation's final price (after pre-order discount) is: " + discountPrice + "$";
-		}
+				// if the update succeed:
 
-		if (booking.isPaid()) {
-			payMessage += "\nYour old booking was paid. This payment will be refunded.";
-		}
+				// calculating the final price for the booking. Sending visitor's type cause the
+				// price defers between regular and guided groups
+				int discountPrice = control.calculateFinalDiscountPrice(newBooking, isGroupReservation, false);
+				int preOrderPrice = control.calculateFinalDiscountPrice(newBooking, true, true);
 
-		int choise = showConfirmationAlert(payMessage,
-				Arrays.asList("Pay Now", "Pay Upon Arrival", "Cancel Reservation"));
+				// creating the pop up message
+				String payMessage = "Woohoo! Your reservation is now set!";
+				String payNow;
+				String payLater;
+				if (booking.isPaid()) { // if the old booking was paid, refunding
+					payMessage += "\nYour old booking was refunded.";
+				}
 
-		switch (choise) {
-		// chose to pay now
-		case 1: {
-			newBooking.setPaid(true);
-			newBooking.setFinalPrice(isGroupReservation ? preOrderPrice : discountPrice);
-			control.updateBookingPayment(newBooking);
-			// showing the payment screen
-			try {
-				ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
-						"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
-						new Pair<Booking, String>(newBooking, "online"));
-			} catch (StatefulException | ScreenException e) {
-				e.printStackTrace();
-			}
-			return;
-		}
+				if (isGroupReservation) { // if the booking is for a guided group
+					payNow = "Pay Now (" + preOrderPrice + "$)";
+					payLater = "Pay Later (" + discountPrice + "$)";
+				} else { // for a regular group
+					payMessage += "\nFinal price (after discount): " + discountPrice + "$";
+					payNow = "Pay Now";
+					payLater = "Pay Upon Arrival";
+				}
 
-		// chose to pay upon arrival
-		case 2: {
-			newBooking.setPaid(false);
-			newBooking.setFinalPrice(discountPrice);
-			// updating the payment columns in the database
-			control.updateBookingPayment(newBooking);
-			control.sendNotification(newBooking, false);
-			// showing the confirmation screen
-			try {
-				ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-						"/clientSide/fxml/ConfirmationScreen.fxml", true, false, newBooking);
-			} catch (StatefulException | ScreenException e) {
-				e.printStackTrace();
-			}
-			return;
-		}
+				int choise = showConfirmationAlert(payMessage, Arrays.asList(payNow, payLater));
 
-		// chose to cancel reservation
-		case 3: {
-			// deleting the new booking from the database cause it wat inserted in order to
-			// save the spot for the visitor, and returning to acount screen
-			control.deleteBooking(newBooking, Communication.activeBookings);
-			/// SHOULD BE RETURNING TO ACCOUNT SCREEN ///
-			returnToPreviousScreen(null);
-			return;
-		}
-		}
+				switch (choise) {
+				// chose to pay now
+				case 1: {
+					newBooking.setPaid(true);
+					newBooking.setFinalPrice(isGroupReservation ? preOrderPrice : discountPrice);
+
+					waitLabel.setText("Opening the Payment System");
+					setVisible(false);
+
+					PauseTransition pause = new PauseTransition(javafx.util.Duration.seconds(2));
+					pause.setOnFinished(e -> {
+						try {
+							new Thread(() -> {
+								// updating the payment columns in the database
+								control.updateBookingPayment(booking);
+							}).start();
+
+							// showing the payment screen
+							ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
+									"/clientSide/fxml/PaymentSystemScreen.fxml", true, true,
+									new Pair<Booking, String>(newBooking, "online"));
+						} catch (StatefulException | ScreenException e1) {
+							e1.printStackTrace();
+						}
+					});
+					pause.play();
+					break;
+				}
+
+				// chose to pay upon arrival
+				case 2: {
+					newBooking.setPaid(false);
+					newBooking.setFinalPrice(discountPrice);
+
+					waitLabel.setText("Processing Your Reservation");
+					setVisible(false);
+
+					PauseTransition pause = new PauseTransition(javafx.util.Duration.seconds(2));
+					pause.setOnFinished(e -> {
+						try {
+							new Thread(() -> {
+								// updating the payment columns in the database
+								control.updateBookingPayment(newBooking);
+								// sending a notification
+								control.sendNotification(newBooking, false);
+							}).start();
+
+							// showing the confirmation screen
+							ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+									"/clientSide/fxml/ConfirmationScreen.fxml", true, false, newBooking);
+						} catch (StatefulException | ScreenException e1) {
+							e1.printStackTrace();
+						}
+					});
+					pause.play();
+					break;
+				}
+				}
+			});
+		}).start();
 	}
 
 	/**
@@ -617,11 +701,17 @@ public class BookingEditingScreenController extends BookingScreenController {
 		int choise = showConfirmationAlert(
 				"We care for your experience in " + newBooking.getParkBooked().getParkName()
 						+ " Park, so we limit the volume of visitors in the park."
-						+ "\nUnfortunately, the date and time you chose are not available at this moment.",
+						+ "\nUnfortunately, the date and time you chose are not available at this moment."
+						+ (newBooking.isPaid() ? "\nYour old booking was paid and we refunded it." : ""),
 				Arrays.asList("Exit", "See Available Dates and Times", "Have a Peek on the Waiting List"));
 		switch (choise) {
 		// chose to exit
 		case 1: {
+			// inserting the booking to the cancelled bookings table
+			new Thread(() -> {
+				control.insertBookingToCancelledTable(newBooking, Communication.userCancelled);
+			}).start();
+
 			returnToPreviousScreen(null);
 			break;
 		}

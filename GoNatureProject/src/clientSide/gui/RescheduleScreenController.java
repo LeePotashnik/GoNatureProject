@@ -1,8 +1,10 @@
 package clientSide.gui;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import clientSide.control.BookingController;
 import clientSide.control.ParkController;
@@ -35,7 +37,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.util.Duration;
+import java.time.Duration;
 import javafx.util.Pair;
 
 public class RescheduleScreenController extends AbstractScreen {
@@ -110,22 +112,16 @@ public class RescheduleScreenController extends AbstractScreen {
 	private TableColumn<AvailableSlot, LocalDate> dateColumn;
 	@FXML
 	private TableColumn<AvailableSlot, LocalTime> arrivalColumn;
-
 	@FXML
 	private Button backButton, showBtn;
-
 	@FXML
 	private ImageView goNatureLogo;
-
 	@FXML
 	private Pane pane;
-
 	@FXML
 	private Label titleLbl, typeLbl, bookingLbl, waitLabel, instructionsLbl;
-
 	@FXML
 	private DatePicker fromDate, toDate;
-
 	@FXML
 	private ProgressIndicator progressIndicator;
 
@@ -134,6 +130,12 @@ public class RescheduleScreenController extends AbstractScreen {
 	//////////////////////////////
 
 	@FXML
+	/**
+	 * This method shows all available slots on the selected time frame, in the
+	 * table view for the user to choose
+	 * 
+	 * @param event
+	 */
 	void showClicked(ActionEvent event) {
 		if (!validate()) {
 			event.consume();
@@ -196,101 +198,150 @@ public class RescheduleScreenController extends AbstractScreen {
 	public void slotClicked(AvailableSlot chosenSlot) {
 		if (chosenSlot == null) {
 			showErrorAlert("Please choose a row from the table in order to proceed");
-		} else {
-			LocalDate newDate = chosenSlot.getDate();
-			LocalTime newTime = chosenSlot.getTime();
-			int choise = showConfirmationAlert(
-					"You're about to change your reservation dates:\n" + "From: " + booking.getDayOfVisit() + ", "
-							+ booking.getTimeOfVisit() + ", To: " + newDate + ", " + newTime,
-					Arrays.asList("Cancel", "Confirm"));
+			return;
+		}
 
-			switch (choise) { // chose to cancel the operation
-			case 1: {
+		// first making sure the user is aware of the fact he is about to change his
+		// reservation time
+		LocalDate newDate = chosenSlot.getDate();
+		LocalTime newTime = chosenSlot.getTime();
+		int choise = showConfirmationAlert(
+				"You're about to change your reservation dates:\n" + "From: " + booking.getDayOfVisit() + ", "
+						+ booking.getTimeOfVisit() + ", To: " + newDate + ", " + newTime,
+				Arrays.asList("Cancel", "Confirm"));
+
+		if (choise == 1) { // chose to cancel
+			return;
+		}
+
+		// confirmed the editing
+		// setting the new date and time
+		booking.setDayOfVisit(chosenSlot.getDate());
+		booking.setTimeOfVisit(chosenSlot.getTime());
+
+		// checking if the time chosen is less than 24 hours from now
+		LocalDateTime bookingTime = LocalDateTime.of(booking.getDayOfVisit(), booking.getTimeOfVisit());
+		LocalDateTime now = LocalDateTime.now();
+		if (Math.abs(Duration.between(bookingTime, now).toHours()) <= control.reminderSendingTime) {
+			choise = showConfirmationAlert(
+					"Your reservation occurs in less than " + control.reminderSendingTime + " hours."
+							+ "\nIf we find place for your reservation, it will be"
+							+ "\nautomatically confirmed and won't be able to be" + "\nedited or cancelled.",
+					Arrays.asList("Cancel", "Ok, Continue"));
+
+			if (choise == 1) { // chose to cancel
 				return;
 			}
-
-			case 2: { // confirmed the editing
-				booking.setDayOfVisit(chosenSlot.getDate());
-				booking.setTimeOfVisit(chosenSlot.getTime());
-			}
-
-				// first inserting the new booking to the database to update capacities and save
-				// the visitor's spot
-				control.checkAndInsertNewBooking(booking);
-
-				int discountPrice = control.calculateFinalDiscountPrice(booking, isGroupReservation, false);
-				int preOrderPrice = control.calculateFinalDiscountPrice(booking, true, true);
-
-				// creating the pop up message
-				String payMessage = "Woohoo! You're almost set.";
-				if (isGroupReservation) {
-					payMessage += "\nPay now and get a special discount for paying ahead:";
-					payMessage += "\n        Your reservation's final price: " + discountPrice + "$";
-					payMessage += "\n        Your reservetion's price after paying ahead discount: " + preOrderPrice
-							+ "$";
-				} else {
-					payMessage += "\nYour reservation's final price (after pre-order discount) is: " + discountPrice
-							+ "$";
-				}
-
-				int payChoise = showConfirmationAlert(payMessage,
-						Arrays.asList("Pay Now", "Pay Upon Arrival", "Cancel Reservation"));
-
-				switch (payChoise) {
-				// chose to pay now
-				case 1: {
-					booking.setPaid(true);
-					booking.setFinalPrice(isGroupReservation ? preOrderPrice : discountPrice);
-					// updating the payment columns in the database
-					control.updateBookingPayment(booking);
-					// showing the payment screen
-					try {
-						ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
-								"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
-								new Pair<Booking, String>(booking, "online"));
-					} catch (StatefulException | ScreenException e) {
-						e.printStackTrace();
-					}
-					return;
-				}
-
-				// chose to pay upon arrival
-				case 2: {
-					booking.setPaid(false);
-					booking.setFinalPrice(discountPrice);
-					
-					PauseTransition pause = new PauseTransition(Duration.seconds(2));
-					pause.setOnFinished(e -> {
-						try {
-							new Thread(() -> {
-								// updating the payment columns in the database
-								control.updateBookingPayment(booking);
-								// sending a notification
-								control.sendNotification(booking, false);
-							}).start();
-
-							// showing the confirmation screen
-							ScreenManager.getInstance().showScreen("ConfirmationScreenController",
-									"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
-						} catch (StatefulException | ScreenException e1) {
-							e1.printStackTrace();
-						}
-					});
-					pause.play();
-					break;
-				}
-
-				// chose to cancel reservation
-				case 3: {
-					// deleting the new booking from the database cause it wat inserted in order to
-					// save the spot for the visitor, and returning to acount screen
-					control.deleteBooking(booking, Communication.activeBookings);
-					returnToPreviousScreen(null);
-					return;
-				}
-				}
-			}
 		}
+
+		// starting the booking process
+		setVisible(false); // showing the progress indicator
+		AtomicBoolean isAvailable = new AtomicBoolean(false);
+
+		// moving the data fetching operation to a background thread
+		new Thread(() -> {
+			// checking the park availability for the chosen date and time
+			// if the date is available for this booking
+			// the new booking is INSERTED to the table in order to save its spot
+			boolean availability = control.checkAndInsertNewBooking(booking);
+			isAvailable.set(availability);
+
+			// once fetching is complete, updating the UI on the JavaFX Application Thread
+			Platform.runLater(() -> {
+				setVisible(true); // hiding the progress indicator
+				if (!isAvailable.get()) { // if the entered date and time are not available
+					showErrorAlert("Unfortunately, this time frame is no longer available.\nPlease pick a new one");
+					showClicked(null); // updating the slots
+					return;
+				} else { // if the date and time are available
+					int discountPrice = control.calculateFinalDiscountPrice(booking, isGroupReservation, false);
+					int preOrderPrice = control.calculateFinalDiscountPrice(booking, true, true);
+
+					// creating the pop up message
+					String payMessage = "Woohoo! You're almost set.";
+					if (isGroupReservation) {
+						payMessage += "\nPay now and get a special discount for paying ahead:";
+						payMessage += "\n        Your reservation's final price: " + discountPrice + "$";
+						payMessage += "\n        Your reservetion's price after paying ahead discount: " + preOrderPrice
+								+ "$";
+					} else {
+						payMessage += "\nYour reservation's final price (after pre-order discount) is: " + discountPrice
+								+ "$";
+					}
+
+					int payChoise = showConfirmationAlert(payMessage,
+							Arrays.asList("Pay Now", "Pay Upon Arrival", "Drop Reservation"));
+
+					switch (payChoise) {
+					// chose to pay now
+					case 1: {
+						booking.setPaid(true);
+						booking.setFinalPrice(isGroupReservation ? preOrderPrice : discountPrice);
+
+						waitLabel.setText("Opening the Payment System");
+						setVisible(false);
+
+						PauseTransition pause = new PauseTransition(javafx.util.Duration.seconds(2));
+						pause.setOnFinished(e -> {
+							try {
+								new Thread(() -> {
+									// updating the payment columns in the database
+									control.updateBookingPayment(booking);
+								}).start();
+
+								// showing the payment screen
+								ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
+										"/clientSide/fxml/PaymentSystemScreen.fxml", true, true,
+										new Pair<Booking, String>(booking, "online"));
+							} catch (StatefulException | ScreenException e1) {
+								e1.printStackTrace();
+							}
+						});
+						pause.play();
+						break;
+					}
+
+					// chose to pay upon arrival
+					case 2: {
+						booking.setPaid(false);
+						booking.setFinalPrice(discountPrice);
+
+						waitLabel.setText("Processing Your Reservation");
+						setVisible(false);
+
+						PauseTransition pause = new PauseTransition(javafx.util.Duration.seconds(2));
+						pause.setOnFinished(e -> {
+							try {
+								new Thread(() -> {
+									// updating the payment columns in the database
+									control.updateBookingPayment(booking);
+									// sending a notification
+									control.sendNotification(booking, false);
+								}).start();
+
+								// showing the confirmation screen
+								ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+										"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
+							} catch (StatefulException | ScreenException e1) {
+								e1.printStackTrace();
+							}
+						});
+						pause.play();
+						break;
+					}
+
+					// chose to drop reservation
+					case 3: {
+						// deleting the new booking from the database cause it wat inserted in order to
+						// save the spot for the visitor, and returning to acount screen
+						control.deleteBooking(booking, Communication.activeBookings);
+						returnToPreviousScreen(null);
+						return;
+					}
+					}
+				}
+			});
+		}).start();
 	}
 
 	////////////////////////

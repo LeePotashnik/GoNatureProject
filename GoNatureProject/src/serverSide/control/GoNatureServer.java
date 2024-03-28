@@ -426,6 +426,13 @@ public class GoNatureServer extends AbstractServer {
 								request.getFirstName() + " " + request.getLastName(), request.getParkLocation(),
 								request.getNumberOfVisitors(), request.getFinalPrice(), request.isPaid()));
 				break;
+			case SEND_WAITING_LIST_ENTRANCE: // sending a waiting list entrance approval
+				notifications.sendWaitingListEnteranceEmailNotification(
+						Arrays.asList(request.getEmailAddress(), request.getPhoneNumber(), request.getParkName(),
+								request.getDayOfVisit(), request.getTimeOfVisit(),
+								request.getFirstName() + " " + request.getLastName(), request.getParkLocation(),
+								request.getNumberOfVisitors(), request.getFinalPrice()));
+				break;
 			case NONE:
 				return;
 			}

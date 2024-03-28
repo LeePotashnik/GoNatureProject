@@ -95,7 +95,7 @@ public class PaymentSystemScreenController extends AbstractScreen {
 						if (bookingMethod.equals("online")) { // send a regular notification
 							BookingController.getInstance().sendNotification(booking, false);
 						} else { // send a notification without a reminder
-							ParkController.getInstance().sendNotification(booking);
+							ParkController.getInstance().sendNotification(booking, false);
 						}
 					}).start();
 

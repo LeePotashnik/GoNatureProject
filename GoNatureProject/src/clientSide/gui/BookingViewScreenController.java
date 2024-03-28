@@ -1,8 +1,11 @@
 package clientSide.gui;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import clientSide.control.BookingController;
 import common.communication.Communication;
@@ -159,6 +162,17 @@ public class BookingViewScreenController extends AbstractScreen implements State
 		// first checking if the chosen booking is an active booking (which can be
 		// edited) or a waiting list booking (which can only be cancelled)
 		if (chosenBooking.getStatus().equals("Active")) { // IF ACTIVE
+			// first checking if the booking occurs in less than 24 hours from now
+			// if it is: can't be edited or deleted since it is confirmed
+			LocalDateTime bookingTime = LocalDateTime.of(chosenBooking.getDayOfVisit(), chosenBooking.getTimeOfVisit());
+			LocalDateTime now = LocalDateTime.now();
+			if (Math.abs(Duration.between(bookingTime, now).toHours()) <= control.reminderSendingTime) {
+				showErrorAlert("Confirmed booking that occurs in less than " + control.reminderSendingTime
+						+ " hours from now, can't be edited or cancelled.");
+				return;
+			}
+
+			// otherwise, if the booking occurs in more than 24 hours from now
 			// creating a pop up message for the user to choose what to do next
 			int choise = showConfirmationAlert(
 					"Edit booking to " + chosenBooking.getParkBooked().getParkName() + " park for "
@@ -217,7 +231,7 @@ public class BookingViewScreenController extends AbstractScreen implements State
 		} else { // IF WAITING LIST
 			int choise = showConfirmationAlert("Cancel waiting list spot to "
 					+ chosenBooking.getParkBooked().getParkName() + " park for " + chosenBooking.getDayOfVisit() + ", "
-					+ chosenBooking.getTimeOfVisit() + "\nThis action can't be undone",
+					+ chosenBooking.getTimeOfVisit() + "?\nThis action can't be undone",
 					Arrays.asList("Return", "Cancel"));
 			switch (choise) {
 			// chose to return
@@ -226,15 +240,30 @@ public class BookingViewScreenController extends AbstractScreen implements State
 			}
 			// chose to cancel
 			case 2: {
-				if (!control.deleteBookingFromWaitingList(chosenBooking)) {
-					showErrorAlert("We were unable to cancel your waiting list spot.\nPlease try again later.");
-					return;
-				} else {
-					showInformationAlert("Your waiting list booking to " + chosenBooking.getParkBooked().getParkName()
-							+ " Park for " + chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit()
-							+ " was cancelled successfully");
-					futureTable.getItems().remove(chosenBooking);
-				}
+				setVisible(false); // showing the progress indicator
+				waitLabel.setText("Updating...");
+				AtomicBoolean isAvailable = new AtomicBoolean(false);
+				// moving the data fetching operation to a background thread
+				new Thread(() -> {
+					// deleting the waiting list spot
+					boolean deleteResult = control.deleteBookingFromWaitingList(chosenBooking);
+					isAvailable.set(deleteResult);
+
+					// once complete, updating the UI on the JavaFX Application Thread
+					Platform.runLater(() -> {
+						setVisible(true); // hiding the progress indicator
+						if (!isAvailable.get()) { // if the entered date and time are not available
+							showErrorAlert("We were unable to cancel your waiting list spot.\nPlease try again later.");
+							return;
+						} else { // if the date and time are available
+							showInformationAlert(
+									"Your waiting list booking to " + chosenBooking.getParkBooked().getParkName()
+											+ " Park for " + chosenBooking.getDayOfVisit() + ", "
+											+ chosenBooking.getTimeOfVisit() + " was cancelled successfully");
+							futureTable.getItems().remove(chosenBooking);
+						}
+					});
+				}).start();
 			}
 			}
 		}
