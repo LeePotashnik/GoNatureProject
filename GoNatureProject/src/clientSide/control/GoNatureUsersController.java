@@ -145,5 +145,4 @@ public class GoNatureUsersController {
 		message.setClientMessageType(ClientMessageType.DISCONNECT);
 		GoNatureClientUI.client.accept(message);
     }
-    
 }

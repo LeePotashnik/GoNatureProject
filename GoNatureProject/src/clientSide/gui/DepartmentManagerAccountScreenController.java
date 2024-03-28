@@ -319,7 +319,7 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen {
 			departmentManager.setResponsible(parks); // Sets the list of parks the department manager is responsible
 														// for.
 		} catch (NullPointerException e) {
-			System.out.println("cannot fetch parks list"); // Handles the case where no parks list could be fetched.
+			// Handles the case where no parks list could be fetched.
 		}
 
 		// Sets the GoNature logo on the screen.

@@ -38,6 +38,7 @@ public class Communication implements Serializable {
 	public static final String pendingAdjustment = "pending_adjustment";
 	public static final String viewedAdjustment = "viewed_adjustment";
 	public static final String pricing = "pricing";
+	public static final String bookingLock = "booking_lock";
 	// reports tables
 	public static final String totalReport = "total_number_of_visitors_report";
 	public static final String usageReport = "usage_report";

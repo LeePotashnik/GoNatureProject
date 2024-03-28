@@ -441,8 +441,7 @@ public class ParkController {
 		request.setCritical(true,park.getParkId()-1);
 		try {
 			request.setQueryType(QueryType.SELECT);
-			//request.setTables(Arrays.asList(Communication.booking_lock));
-			request.setTables(Arrays.asList("booking_lock"));
+			request.setTables(Arrays.asList(Communication.bookingLock));
 			request.setSelectColumns(Arrays.asList("bookingId")); // returns all the data according to the inserted ID
 			request.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList(ID));
 		} catch (CommunicationException e) {
@@ -469,8 +468,7 @@ public class ParkController {
 		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			insertRequest.setQueryType(QueryType.INSERT);
-			//request.setTables(Arrays.asList(Communication.booking_lock));
-			insertRequest.setTables(Arrays.asList("booking_lock"));
+			insertRequest.setTables(Arrays.asList(Communication.bookingLock));
 			insertRequest.setColumnsAndValues(Arrays.asList("bookingId"),Arrays.asList(ID));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
