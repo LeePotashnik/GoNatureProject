@@ -64,7 +64,7 @@ public class GoNatureClient extends AbstractClient {
 			if (originalRequest.getCommunicationType() == CommunicationType.QUERY_REQUEST) {
 				if (originalRequest.getQueryType() == QueryType.SELECT) {
 					originalRequest.setResultList(serverMessage.getResultList());
-					originalRequest.setQueryResult(true);
+					originalRequest.setQueryResult(serverMessage.getQueryResult());
 				} else {
 					originalRequest.setQueryResult(serverMessage.getQueryResult());
 				}

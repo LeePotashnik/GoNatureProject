@@ -29,7 +29,7 @@ public class Communication implements Serializable {
 	public static final String departmentManager = "department_manager";
 	public static final String parkManager = "park_manager";
 	public static final String traveller = "traveller";
-	public static final String griupGuide = "group_guide";
+	public static final String groupGuide = "group_guide";
 	public static final String representative = "representative";
 	public static final String systemUser = "system_users";
 	// tables in context of management
@@ -47,11 +47,14 @@ public class Communication implements Serializable {
 	public static final String userDidNotArrive = "Did not arrive";
 	public static final String userDidNotConfirm = "Did not confirm";
 
-	// the communication type
 	/**
+	 * The communication type of this communication instance
+	 * 
 	 * QUERY_REQUEST: a client-server message for executing a single query
 	 * 
 	 * TRANSACTION: a client-server message for multiple queries
+	 * 
+	 * NOTIFICATION: a client-server message request for sending a notification
 	 * 
 	 * CLIENT_SERVER_MESSAGE: a client-server message that is not a query
 	 * 
@@ -60,7 +63,7 @@ public class Communication implements Serializable {
 	 * SELF: an inner-server query request
 	 */
 	public enum CommunicationType {
-		QUERY_REQUEST, TRANSACTION, CLIENT_SERVER_MESSAGE, SERVER_CLIENT_MESSAGE, SELF;
+		QUERY_REQUEST, TRANSACTION, NOTIFICATION, CLIENT_SERVER_MESSAGE, SERVER_CLIENT_MESSAGE, SELF;
 	}
 
 	private CommunicationType communicationType; // the communication type
@@ -70,26 +73,40 @@ public class Communication implements Serializable {
 	 * 
 	 * @param communicationType the type of the communication
 	 */
-	public Communication(CommunicationType communicationType) { // Constructor
+	public Communication(CommunicationType communicationType) {
+		// creating a unique id for the communication
 		uniqueId = UUID.randomUUID().toString();
 		this.communicationType = communicationType;
-		if (communicationType == CommunicationType.QUERY_REQUEST
-				|| communicationType == CommunicationType.TRANSACTION) { // if it's a query request
-			clientMessageType = ClientMessageType.NONE;
-			setServerMessageType(ServerMessageType.NONE);
 
-		} else if (communicationType == CommunicationType.CLIENT_SERVER_MESSAGE) { // if it's a client-server message
+		switch (communicationType) {
+		case QUERY_REQUEST: // if this is a query request
+		case TRANSACTION: // or a transaction request
+			clientMessageType = ClientMessageType.NONE;
+			serverMessageType = ServerMessageType.NONE;
+			notificationType = NotificationType.NONE;
+			break;
+
+		case NOTIFICATION: // if this is a notification request
 			queryType = QueryType.NONE;
-			setServerMessageType(ServerMessageType.NONE);
-
-		} else if (communicationType == CommunicationType.SERVER_CLIENT_MESSAGE) { // if it's a message from server-side
-																					// to client-side
 			clientMessageType = ClientMessageType.NONE;
+			serverMessageType = ServerMessageType.NONE;
+			break;
+
+		case CLIENT_SERVER_MESSAGE: // if this is a client-server message
 			queryType = QueryType.NONE;
+			notificationType = NotificationType.NONE;
+			serverMessageType = ServerMessageType.NONE;
+			break;
 
-		} else { // if this is a self-server message
+		case SERVER_CLIENT_MESSAGE: // if this is a server-client message
+			queryType = QueryType.NONE;
+			notificationType = NotificationType.NONE;
 			clientMessageType = ClientMessageType.NONE;
-			setServerMessageType(ServerMessageType.NONE);
+
+		case SELF: // if this is a self-server action
+			clientMessageType = ClientMessageType.NONE;
+			serverMessageType = ServerMessageType.NONE;
+			notificationType = NotificationType.NONE;
 		}
 	}
 
@@ -97,7 +114,9 @@ public class Communication implements Serializable {
 	/// SQL QUERY AND TRANSACTION COMMUNICATION REQUESTS - PROPERTIES ///
 	/////////////////////////////////////////////////////////////////////
 
-	// determines the type of the SQL requested query
+	/**
+	 * Determines the type of the SQL requested query
+	 */
 	public enum QueryType {
 		SELECT, UPDATE, INSERT, DELETE, NONE;
 	}
@@ -124,6 +143,18 @@ public class Communication implements Serializable {
 
 	// set to true if the query is done in a critical section
 	private boolean isCritical; // for critical sections park capacities updates
+	private int semaphoreIndex; // for telling which semaphore is relevant for this query
+
+	///////////////////////////////////////////
+	/// NOTIFICATIONS REQUESTS - PROPERTIES ///
+	///////////////////////////////////////////
+
+	// determines the type of notification to be sent to the user
+	public enum NotificationType {
+		SEND_CONFIRMATION, SEND_CANCELLATION, SEND_CONFIRMATION_WITHOUT_REMINDER, NONE
+	}
+
+	private NotificationType notificationType;
 
 	/////////////////////////////////////////////////////////
 	/// CLIENT-SERVER MESSAGES COMMUNICATION - PROPERTIES ///
@@ -140,12 +171,11 @@ public class Communication implements Serializable {
 	/////////////////////////////////////////////////////////
 
 	public enum ServerMessageType {
-		RESPONSE, CONQUER, NONE;
+		RESPONSE, NONE;
 	}
 
 	private ServerMessageType serverMessageType;
 
-	private String serverMessageContent;
 	private ArrayList<Object[]> resultList; // a container for the result set from the database, as ArrayList
 	private boolean queryResult; // holds the result of update/insert/delete queries
 
@@ -154,16 +184,28 @@ public class Communication implements Serializable {
 	////////////////////////////////////////////////////
 
 	public enum SecondaryRequest {
-		SEND_CONFIRMATION, SEND_CANCELLATION, UPDATE_WAITING_LIST, SEND_CONFIRMATION_WITHOUT_REMINDER, UPDATE_CAPACITY;
+		UPDATE_WAITING_LIST, UPDATE_CAPACITY, INSERT_BOOKING_AFTER_CHECKING_CAPACITIES;
 	}
 
 	private SecondaryRequest secondaryRequest;
+
+	// properties for the booking insertion in the server side
 	private int parkId;
-	private LocalDate date;
-	private LocalTime time;
-	private String parkName, email, phone, fullName, parkLocation;
-	private int visitors, price;
+	private String bookingId;
+	private LocalDate dayOfVisit;
+	private LocalTime timeOfVisit;
+	private LocalDate dayOfBooking;
+	private String visitType;
+	private int numberOfVisitors;
+	private String idNumber;
+	private String firstName;
+	private String lastName;
+	private String emailAddress;
+	private String phoneNumber;
+	private int finalPrice;
 	private boolean paid;
+	private String parkName, parkLocation;
+	private int parkCapacities;
 
 	///////////////////////
 	/// GENERAL METHODS ///
@@ -219,111 +261,170 @@ public class Communication implements Serializable {
 	}
 
 	/**
-	 * This method returns the secondery request's park id
+	 * This method returns if this query is in a critical section
 	 * 
-	 * @return the park id
+	 * @return an index in range (0-amount of parks) if it is a critical section
+	 *         query, or -1 if not
+	 */
+	public int isCritical() {
+		if (isCritical) {
+			return semaphoreIndex;
+		} else {
+			return -1;
+		}
+	}
+
+	/**
+	 * Gets the unique ID of the park.
+	 *
+	 * @return The park ID.
 	 */
 	public int getParkId() {
 		return parkId;
 	}
 
 	/**
-	 * This method returns the secondery request's date
-	 * 
-	 * @return the date
+	 * Gets the booking ID.
+	 *
+	 * @return The booking ID.
 	 */
-	public LocalDate getDate() {
-		return date;
+	public String getBookingId() {
+		return bookingId;
 	}
 
 	/**
-	 * This method returns the secondery request's time
-	 * 
-	 * @return the time
+	 * Gets the date of the visit.
+	 *
+	 * @return The date of visit.
 	 */
-	public LocalTime getTime() {
-		return time;
+	public LocalDate getDayOfVisit() {
+		return dayOfVisit;
 	}
 
 	/**
-	 * This method returns the secondary request's park name
-	 * 
-	 * @return the park name
+	 * Gets the time of the visit.
+	 *
+	 * @return The time of visit.
 	 */
-	public String getParkName() {
-		return parkName;
+	public LocalTime getTimeOfVisit() {
+		return timeOfVisit;
 	}
 
 	/**
-	 * This method returns the secondery request's email address
-	 * 
-	 * @return the email address
+	 * Gets the date when the booking was made.
+	 *
+	 * @return The booking date.
 	 */
-	public String getEmail() {
-		return email;
+	public LocalDate getDayOfBooking() {
+		return dayOfBooking;
 	}
 
 	/**
-	 * This method returns the secondery request's phone number
-	 * 
-	 * @return the phone number
+	 * Gets the type of visit.
+	 *
+	 * @return The visit type.
 	 */
-	public String getPhone() {
-		return phone;
+	public String getVisitType() {
+		return visitType;
 	}
 
 	/**
-	 * This method returns the secondery request's full name
-	 * 
-	 * @return the full name
+	 * Gets the number of visitors for the booking.
+	 *
+	 * @return The number of visitors.
 	 */
-	public String getFullName() {
-		return fullName;
+	public int getNumberOfVisitors() {
+		return numberOfVisitors;
 	}
 
 	/**
-	 * This method returns the secondery request's visitors number
-	 * 
-	 * @return the visitors number
+	 * Gets the identification number of the person making the booking.
+	 *
+	 * @return The ID number.
 	 */
-	public int getVisitors() {
-		return visitors;
+	public String getIdNumber() {
+		return idNumber;
 	}
 
 	/**
-	 * This method returns the secondery request's final price
-	 * 
-	 * @return the final price
+	 * Gets the first name of the person making the booking.
+	 *
+	 * @return The first name.
 	 */
-	public int getPrice() {
-		return price;
+	public String getFirstName() {
+		return firstName;
 	}
 
 	/**
-	 * This method returns the secondery request's paid property
-	 * 
-	 * @return true if paid, false if not
+	 * Gets the last name of the person making the booking.
+	 *
+	 * @return The last name.
+	 */
+	public String getLastName() {
+		return lastName;
+	}
+
+	/**
+	 * Gets the email address of the person making the booking.
+	 *
+	 * @return The email address.
+	 */
+	public String getEmailAddress() {
+		return emailAddress;
+	}
+
+	/**
+	 * Gets the phone number of the person making the booking.
+	 *
+	 * @return The phone number.
+	 */
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	/**
+	 * Gets the final price of the booking.
+	 *
+	 * @return The final price.
+	 */
+	public int getFinalPrice() {
+		return finalPrice;
+	}
+
+	/**
+	 * Returns whether the booking has been paid for.
+	 *
+	 * @return True if paid, false otherwise.
 	 */
 	public boolean isPaid() {
 		return paid;
 	}
 
 	/**
-	 * This method returns the secondery request's park location
-	 * 
-	 * @return parkLocation
+	 * Gets the name of the park.
+	 *
+	 * @return The park name.
+	 */
+	public String getParkName() {
+		return parkName;
+	}
+
+	/**
+	 * Gets the location of the park.
+	 *
+	 * @return The park location.
 	 */
 	public String getParkLocation() {
 		return parkLocation;
 	}
 
 	/**
-	 * This method returns if this query is in a critical section
-	 * 
-	 * @return the isCritical property
+	 * Gets the capacities of the park.
+	 *
+	 * @return The park capacities.
 	 */
-	public boolean isCritical() {
-		return isCritical;
+	public int getParkCapacities() {
+		return parkCapacities;
 	}
 
 	///////////////
@@ -402,111 +503,169 @@ public class Communication implements Serializable {
 	}
 
 	/**
-	 * This method sets the secondary request's park id
+	 * This method sets the critical section property, and the semaphore index
+	 * determinig which park has to locked
 	 * 
-	 * @param parkId
+	 * @param isCritical
+	 * @param semaphoreIndex the index of the requested semaphore (this is the
+	 *                       park's index in range 0-amountOfParks)
+	 */
+	public void setCritical(boolean isCritical, int semaphoreIndex) {
+		this.isCritical = isCritical;
+		this.semaphoreIndex = semaphoreIndex;
+	}
+
+	/**
+	 * Sets the unique ID of the park.
+	 *
+	 * @param parkId The park ID.
 	 */
 	public void setParkId(int parkId) {
 		this.parkId = parkId;
 	}
 
 	/**
-	 * This method sets the secondary request's date
-	 * 
-	 * @param date
+	 * Sets the booking ID.
+	 *
+	 * @param bookingId The booking ID.
 	 */
-	public void setDate(LocalDate date) {
-		this.date = date;
+	public void setBookingId(String bookingId) {
+		this.bookingId = bookingId;
 	}
 
 	/**
-	 * This method sets the secondary request's time
-	 * 
-	 * @param time
+	 * Sets the date of the visit.
+	 *
+	 * @param dayOfVisit The date of visit.
 	 */
-	public void setTime(LocalTime time) {
-		this.time = time;
+	public void setDayOfVisit(LocalDate dayOfVisit) {
+		this.dayOfVisit = dayOfVisit;
 	}
 
 	/**
-	 * This method sets the secondary request's park name
-	 * 
-	 * @param parkName
+	 * Sets the time of the visit.
+	 *
+	 * @param timeOfVisit The time of visit.
 	 */
-	public void setParkName(String parkName) {
-		this.parkName = parkName;
+	public void setTimeOfVisit(LocalTime timeOfVisit) {
+		this.timeOfVisit = timeOfVisit;
 	}
 
 	/**
-	 * This method sets the secondary request's email address
-	 * 
-	 * @param email
+	 * Sets the date when the booking was made.
+	 *
+	 * @param dayOfBooking The booking date.
 	 */
-	public void setEmail(String email) {
-		this.email = email;
+	public void setDayOfBooking(LocalDate dayOfBooking) {
+		this.dayOfBooking = dayOfBooking;
 	}
 
 	/**
-	 * This method sets the secondary request's phone number
-	 * 
-	 * @param phone
+	 * Sets the type of visit.
+	 *
+	 * @param visitType The visit type.
 	 */
-	public void setPhone(String phone) {
-		this.phone = phone;
+	public void setVisitType(String visitType) {
+		this.visitType = visitType;
 	}
 
 	/**
-	 * This method sets the secondary request's full name
-	 * 
-	 * @param fullName
+	 * Sets the number of visitors for the booking.
+	 *
+	 * @param numberOfVisitors The number of visitors.
 	 */
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
+	public void setNumberOfVisitors(int numberOfVisitors) {
+		this.numberOfVisitors = numberOfVisitors;
 	}
 
 	/**
-	 * This method sets the secondary request's visitors number
-	 * 
-	 * @param visitor
+	 * Sets the identification number of the person making the booking.
+	 *
+	 * @param idNumber The ID number.
 	 */
-	public void setVisitors(int visitors) {
-		this.visitors = visitors;
+	public void setIdNumber(String idNumber) {
+		this.idNumber = idNumber;
 	}
 
 	/**
-	 * This method sets the secondary request's final price
-	 * 
-	 * @param price
+	 * Sets the first name of the person making the booking.
+	 *
+	 * @param firstName The first name.
 	 */
-	public void setPrice(int price) {
-		this.price = price;
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
 	}
 
 	/**
-	 * This method sets the secondary request's paid property
-	 * 
-	 * @param paid
+	 * Sets the last name of the person making the booking.
+	 *
+	 * @param lastName The last name.
+	 */
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	/**
+	 * Sets the email address of the person making the booking.
+	 *
+	 * @param emailAddress The email address.
+	 */
+	public void setEmailAddress(String emailAddress) {
+		this.emailAddress = emailAddress;
+	}
+
+	/**
+	 * Sets the phone number of the person making the booking.
+	 *
+	 * @param phoneNumber The phone number.
+	 */
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
+	/**
+	 * Sets the final price of the booking.
+	 *
+	 * @param finalPrice The final price.
+	 */
+	public void setFinalPrice(int finalPrice) {
+		this.finalPrice = finalPrice;
+	}
+
+	/**
+	 * Sets the payment status of the booking.
+	 *
+	 * @param paid True if the booking is paid, false otherwise.
 	 */
 	public void setPaid(boolean paid) {
 		this.paid = paid;
 	}
 
 	/**
-	 * This method sets the secondary request's park location
-	 * 
-	 * @param parkLocation
+	 * Sets the name of the park.
+	 *
+	 * @param parkName The park name.
+	 */
+	public void setParkName(String parkName) {
+		this.parkName = parkName;
+	}
+
+	/**
+	 * Sets the location of the park.
+	 *
+	 * @param parkLocation The park location.
 	 */
 	public void setParkLocation(String parkLocation) {
 		this.parkLocation = parkLocation;
 	}
 
 	/**
-	 * This method sets the critical section boolean property
-	 * 
-	 * @param isCritical
+	 * Sets the capacities of the park.
+	 *
+	 * @param parkCapacities The park capacities.
 	 */
-	public void setCritical(boolean isCritical) {
-		this.isCritical = isCritical;
+	public void setParkCapacities(int parkCapacities) {
+		this.parkCapacities = parkCapacities;
 	}
 
 	/////////////////////////////////
@@ -763,6 +922,26 @@ public class Communication implements Serializable {
 		return null;
 	}
 
+	////////////////////////////////////////////////////////
+	/// METHODS FOR NOTIFICATION REQUESTS COMMUNICATIONS ///
+	////////////////////////////////////////////////////////
+
+	/**
+	 * @return the notification type
+	 */
+	public NotificationType getNotificationType() {
+		return notificationType;
+	}
+
+	/**
+	 * Sets the notification type requested
+	 * 
+	 * @param notificationType
+	 */
+	public void setNotificationType(NotificationType notificationType) {
+		this.notificationType = notificationType;
+	}
+
 	////////////////////////////////////////////////////////////
 	/// METHODS FOR HANDLING CLIENT TO SERVER COMMUNICATIONS ///
 	////////////////////////////////////////////////////////////
@@ -830,13 +1009,6 @@ public class Communication implements Serializable {
 	}
 
 	/**
-	 * @return the server message content
-	 */
-	public String getServerMessageContent() {
-		return serverMessageContent;
-	}
-
-	/**
 	 * This method returns the result of the transaction
 	 * 
 	 * @return true if all queries succeed, false otherwise
@@ -880,14 +1052,5 @@ public class Communication implements Serializable {
 	 */
 	public void setServerMessageType(ServerMessageType serverMessageType) {
 		this.serverMessageType = serverMessageType;
-	}
-
-	/**
-	 * Sets the server message content
-	 * 
-	 * @param serverMessageContent
-	 */
-	public void setServerMessageContent(String serverMessageContent) {
-		this.serverMessageContent = serverMessageContent;
 	}
 }

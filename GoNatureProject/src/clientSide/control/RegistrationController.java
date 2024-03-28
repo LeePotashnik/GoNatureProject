@@ -70,7 +70,7 @@ public class RegistrationController {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			request.setQueryType(QueryType.SELECT);
-			request.setTables(Arrays.asList(Communication.griupGuide));
+			request.setTables(Arrays.asList(Communication.groupGuide));
 			request.setSelectColumns(Arrays.asList("*"));
 			request.setWhereConditions(Arrays.asList("groupGuideId"), Arrays.asList("="), Arrays.asList(id));
 		} catch (CommunicationException e) {
@@ -159,7 +159,7 @@ public class RegistrationController {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			request.setQueryType(QueryType.INSERT);
-			request.setTables(Arrays.asList(Communication.griupGuide));
+			request.setTables(Arrays.asList(Communication.groupGuide));
 			request.setColumnsAndValues(
 					Arrays.asList("groupGuideId", "firstName", "lastName", "emailAddress", "phoneNumber", "userName",
 							"password", "isLoggedIn"),
