@@ -682,7 +682,6 @@ public class ParkController {
 							newBooking.getNumberOfVisitors(), newBooking.getIdNumber(), newBooking.getFirstName(),
 							newBooking.getLastName(), newBooking.getEmailAddress(), newBooking.getPhoneNumber(),
 							Communication.userCancelled));
-			BookingController.getInstance().sendNotification(newBooking, true);
 			break;
 		default: // active
 			insertRequest.setTables(Arrays.asList(table + Communication.activeBookings));

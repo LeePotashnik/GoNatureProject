@@ -178,19 +178,25 @@ public class CheckingNotificationsScreenController extends AbstractScreen {
 		int choise = showConfirmationAlert(
 				"Confirm booking to " + chosenBooking.getParkBooked().getParkName() + " park for "
 						+ chosenBooking.getDayOfVisit() + ", " + chosenBooking.getTimeOfVisit() + 
-						"\nBy confirming, you won't be able to edit or cancel your reservation.",
+						"\nBy confirming, you won't be able to edit or \ncancel your reservation.",
 				Arrays.asList("Confirm", "Cancelled", "return"));
 		switch(choise) {
 			case 1: 
 				// Updating that the user confirmed their arrival
 				chosenBooking.setConfirmed(true);
 				parkControl.updateConfirmed(ParkTable, chosenBooking.getBookingId());
+				observableBookings.remove(chosenBooking);
 				break;
 			case 2:
 				// Moving the traveler from the active bookings table to the canceled bookings table
 				parkControl.removeBooking(ParkTable + "_park_active_booking",
 					chosenBooking.getBookingId());
 				parkControl.insertBookingToTable(chosenBooking, ParkTable, "cancelled");
+				new Thread(() -> {
+					  // sending a notification
+					  parkControl.sendNotification(chosenBooking, true);
+					}).start();
+				observableBookings.remove(chosenBooking);
 				break;
 			default:
 				//visitor chose to return
@@ -198,7 +204,6 @@ public class CheckingNotificationsScreenController extends AbstractScreen {
 		}
 		// Remove the chosen booking from the observable list after a user decision has
 		// been made
-		observableBookings.remove(chosenBooking);
 		// Convert the modified ObservableList back to an ArrayList and update the
 		// central bookings list with the modified list
 		ArrayList<Booking> bookings = new ArrayList<>(observableBookings);
