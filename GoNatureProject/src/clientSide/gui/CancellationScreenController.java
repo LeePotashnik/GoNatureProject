@@ -47,6 +47,8 @@ public class CancellationScreenController extends AbstractScreen {
 	 */
 	void returnToAccount(ActionEvent event) {
 		ScreenManager.getInstance().resetScreensStack();
+		showInformationAlert(
+				"Please check your SMS and email inboxes, we have sent you confirmation about your cancellation.");
 		try {
 			ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController",
 					"/clientSide/fxml/ParkVisitorAccountScreen.fxml", false, false, null);
