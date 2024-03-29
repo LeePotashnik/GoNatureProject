@@ -14,14 +14,14 @@
 <Pane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onKeyPressed="#paneTabPressed" onMouseClicked="#paneClicked" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clientSide.gui.BookingScreenController">
    <children>
       <ComboBox fx:id="parkComboBox" layoutX="128.0" layoutY="166.0" onAction="#parkChosen" onKeyPressed="#parkTabPressed" prefHeight="35.0" prefWidth="489.0" promptText="Choose your park" />
-      <DatePicker fx:id="datePicker" layoutX="128.0" layoutY="215.0" onKeyPressed="#dateTabPressed" prefHeight="35.0" prefWidth="213.0" promptText="Choose date" />
-      <Label fx:id="hourLbl" layoutX="406.0" layoutY="220.0" text="Hour:">
+      <DatePicker fx:id="datePicker" layoutX="128.0" layoutY="215.0" onKeyPressed="#dateTabPressed" prefHeight="35.0" prefWidth="176.0" promptText="Choose date" />
+      <Label fx:id="hourLbl" layoutX="327.0" layoutY="220.0" text="Hour:">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <ComboBox fx:id="hourCombobox" layoutX="452.0" layoutY="215.0" onKeyPressed="#hourTabPressed" prefHeight="35.0" prefWidth="165.0" promptText="Choose hour" />
-      <TextField fx:id="visitorsTxt" layoutX="128.0" layoutY="313.0" onKeyPressed="#visitorsTabPressed" promptText="1-15">
+      <ComboBox fx:id="hourCombobox" layoutX="374.0" layoutY="215.0" onAction="#hourChosen" onKeyPressed="#hourTabPressed" prefHeight="35.0" prefWidth="147.0" promptText="Choose hour" />
+      <TextField fx:id="visitorsTxt" layoutX="128.0" layoutY="313.0" onKeyPressed="#visitorsTabPressed" prefHeight="36.0" prefWidth="72.0">
          <font>
             <Font size="16.0" />
          </font>
@@ -99,7 +99,7 @@
             <Font size="16.0" />
          </font>
       </TextField>
-      <Label fx:id="nameLbl" layoutX="-8.0" layoutY="267.0" prefHeight="25.0" prefWidth="126.0" text="Full Name:" textAlignment="RIGHT">
+      <Label fx:id="nameLbl" layoutX="-8.0" layoutY="267.0" prefHeight="25.0" prefWidth="126.0" text="Name:" textAlignment="RIGHT">
          <font>
             <Font size="16.0" />
          </font>
@@ -108,6 +108,26 @@
       <Label fx:id="waitLabel" layoutX="26.0" layoutY="334.0" prefHeight="75.0" prefWidth="656.0" text="Booking Managing">
          <font>
             <Font name="Cambria" size="20.0" />
+         </font>
+      </Label>
+      <Label fx:id="priceLbl" layoutX="204.0" layoutY="318.0" prefHeight="25.0" prefWidth="46.0" text="Price:" textAlignment="RIGHT">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label fx:id="totalLbl" layoutX="252.0" layoutY="318.0" prefHeight="25.0" prefWidth="79.0" text="total" textAlignment="RIGHT">
+         <font>
+            <Font name="System Bold" size="16.0" />
+         </font>
+      </Label>
+      <Label fx:id="tillLbl" layoutX="532.0" layoutY="220.0" prefHeight="25.0" prefWidth="26.0" text="till:" textAlignment="RIGHT">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label fx:id="tillHourLbl" layoutX="560.0" layoutY="220.0" prefHeight="25.0" prefWidth="58.0" text="-" textAlignment="RIGHT">
+         <font>
+            <Font name="System Bold" size="16.0" />
          </font>
       </Label>
    </children>

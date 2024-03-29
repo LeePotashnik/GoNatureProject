@@ -167,8 +167,26 @@ public class BookingViewScreenController extends AbstractScreen implements State
 			LocalDateTime bookingTime = LocalDateTime.of(chosenBooking.getDayOfVisit(), chosenBooking.getTimeOfVisit());
 			LocalDateTime now = LocalDateTime.now();
 			if (Math.abs(Duration.between(bookingTime, now).toHours()) <= control.reminderSendingTime) {
-				showErrorAlert("Confirmed booking that occurs in less than " + control.reminderSendingTime
-						+ " hours from now, can't be edited or cancelled.");
+				int choise = showConfirmationAlert(
+						"Bookings that occur in less then " + control.reminderSendingTime + " hours can't be edited or cancelled.",
+						Arrays.asList("Return", "View Invoice"));
+				switch (choise) {
+				// chose to return
+				case 1: {
+					return;
+				}
+				// chose to view invoice
+				case 2: {
+					try {
+						booking = chosenBooking;
+						ScreenManager.getInstance().showScreen("ConfirmationScreenController",
+								"/clientSide/fxml/ConfirmationScreen.fxml", true, true, booking);
+					} catch (StatefulException | ScreenException e) {
+						e.printStackTrace();
+					}
+					return;
+				}
+				}
 				return;
 			}
 

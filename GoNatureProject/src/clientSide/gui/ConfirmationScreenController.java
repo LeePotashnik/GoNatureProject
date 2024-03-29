@@ -37,7 +37,7 @@ public class ConfirmationScreenController extends AbstractScreen {
 	private Label bookingIdLabel, dateLabel, emailLabel, holderLabel, isPaidLabel, parkAddressLabel, parkNameLabel,
 			phoneLabel, priceLabel, timeLabel, visitorsLabel, titleLbl, secondLbl;
 	@FXML
-	private ImageView goNatureLogo, parkImage;
+	private ImageView goNatureLogo, parkImage, sentImage;
 	@FXML
 	private Button returnToAccountBtn;
 	@FXML
@@ -56,8 +56,6 @@ public class ConfirmationScreenController extends AbstractScreen {
 	void returnToAccount(ActionEvent event) {
 		SystemUser user = GoNatureUsersController.getInstance().restoreUser();
 		if (user instanceof ParkVisitor) {
-			showInformationAlert(
-					"Please check your SMS and email inboxes, we have sent you confirmation about your reservation.");
 			ScreenManager.getInstance().resetScreensStack();
 			try {
 				ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController",
@@ -89,6 +87,9 @@ public class ConfirmationScreenController extends AbstractScreen {
 		// initializing the image component and centering it
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+		
+		sentImage.setImage(new Image(getClass().getResourceAsStream("/confirmationSent.png")));
+
 
 		// centering the title labels
 		titleLbl.setAlignment(Pos.CENTER);
