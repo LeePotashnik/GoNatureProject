@@ -86,7 +86,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 
 	@FXML
 	private Label nameLbl, dateLbl, emailLbl, hourLbl, parkLbl, phoneLbl, visitorsLbl, titleLbl, bookingLbl, typeLbl,
-			waitLabel;
+			waitLabel, priceLbl, totalLbl, tillLbl, tillHourLbl;
 	@FXML
 	private Button backButton, makeReservationBtn;
 	@FXML
@@ -134,8 +134,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			int choise = showConfirmationAlert(
 					"Your reservation occurs in less than " + control.reminderSendingTime + " hours."
 							+ "\nIf we find place for your reservation, it will be"
-							+ "\nautomatically confirmed and won't be able to be"
-							+ "\nedited or cancelled.",
+							+ "\nautomatically confirmed and won't be able to be" + "\nedited or cancelled.",
 					Arrays.asList("Cancel", "Ok, Continue"));
 			switch (choise) {
 			case 1: // chose to cancel
@@ -255,9 +254,8 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		// chose to drop reservation
 		case 3: {
 			// deleting the new booking from the database cause it wat inserted in order to
-			// save the spot for the visitor, and returning to acount screen
+			// save the spot for the visitor, and returning to the reservation screen
 			control.deleteBooking(booking, Communication.activeBookings);
-			returnToPreviousScreen(null);
 			return;
 		}
 		}
@@ -329,6 +327,19 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			} catch (ScreenException | StatefulException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	@FXML
+	/**
+	 * This method updates the "until" hour where an hour is chosen
+	 * 
+	 * @param event
+	 */
+	void hourChosen(ActionEvent event) {
+		if (hourCombobox.getValue() != null) {
+			tillHourLbl.setText(hourCombobox.getValue()
+					.plusHours(parksList.get(hourCombobox.getSelectionModel().getSelectedIndex()).getTimeLimit()) + "");
 		}
 	}
 
@@ -531,6 +542,10 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		emailLbl.setVisible(visible);
 		emailTxt.setVisible(visible);
 		makeReservationBtn.setDisable(!visible);
+		priceLbl.setVisible(visible);
+		totalLbl.setVisible(visible);
+		tillLbl.setVisible(visible);
+		tillHourLbl.setVisible(visible);
 	}
 
 	/**
@@ -850,6 +865,9 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		phoneLbl.getStyleClass().add("label-center-right");
 		visitorsLbl.getStyleClass().add("label-center-right");
 		bookingLbl.getStyleClass().add("label-center-right");
+		priceLbl.getStyleClass().add("label-center-right");
+
+		totalLbl.setText("-");
 
 		// setting texts to font family and size
 		parkComboBox.getStyleClass().add("combo-box-text");
@@ -881,6 +899,27 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
 
 		setVisible(true);
+
+		visitorsTxt.focusedProperty().addListener((observable, oldValue, newValue) -> {
+			// When focus is lost (newValue is false), update the Label
+			if (!newValue) {
+				if (visitorsTxt.getText() == null || visitorsTxt.getText().isEmpty()) {
+					totalLbl.setText("-");
+					return;
+				}
+				int numberOfVisitors = Integer.parseInt(visitorsTxt.getText());
+				Booking tempBooking = new Booking(null, null, null, null, null, numberOfVisitors, null, null, null,
+						null, null, 0, false, false, null, null, false, null, null);
+				new Thread(() -> {
+					final int discountPrice = control.calculateFinalDiscountPrice(tempBooking, isGroupReservation,
+							false);
+
+					Platform.runLater(() -> {
+						totalLbl.setText(discountPrice + "$");
+					});
+				}).start();
+			}
+		});
 
 		// setting the application's background
 		setApplicationBackground(pane);
