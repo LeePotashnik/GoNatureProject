@@ -22,26 +22,26 @@
             <Font name="Cambria" size="30.0" />
          </font>
       </Label>
-      <Label fx:id="futureLabel" layoutX="26.0" layoutY="127.0" prefHeight="22.0" prefWidth="322.0" text="Your Upcoming Bookings:">
+      <Label fx:id="futureLabel" layoutX="28.0" layoutY="127.0" prefHeight="22.0" prefWidth="322.0" text="Your Upcoming Bookings:">
          <font>
             <Font name="Calibri" size="18.0" />
          </font>
       </Label>
       <Separator fx:id="seperator1" layoutX="26.0" layoutY="149.0" prefHeight="7.0" prefWidth="647.0" />
-      <Label fx:id="doubleClickLabel" layoutX="365.0" layoutY="127.0" prefHeight="22.0" prefWidth="308.0" text="Double click on a booking to select it" textAlignment="RIGHT">
+      <Label fx:id="doubleClickLabel" layoutX="400.0" layoutY="127.0" prefHeight="22.0" prefWidth="273.0" text="Double click on a booking to select it" textAlignment="RIGHT">
          <font>
             <Font name="Calibri" size="18.0" />
          </font>
       </Label>
-      <TableView fx:id="notificationsTable" layoutX="27.0" layoutY="169.0" prefHeight="163.0" prefWidth="647.0">
+      <TableView fx:id="notificationsTable" layoutX="26.0" layoutY="167.0" prefHeight="307.0" prefWidth="647.0">
          <columns>
-            <TableColumn fx:id="bookingIdColumn" editable="false" prefWidth="100.0" sortable="false" text="Booking ID" />
-            <TableColumn fx:id="parkColumn" editable="false" prefWidth="147.0" sortable="false" text="Park" />
-            <TableColumn fx:id="dateColumn" editable="false" prefWidth="93.0" text="Date" />
-            <TableColumn fx:id="timeColumn" editable="false" prefWidth="73.0" sortable="false" text="Time" />
-            <TableColumn fx:id="sizeColumn" editable="false" prefWidth="94.0" sortable="false" text="Group Size" />
-            <TableColumn fx:id="priceColumn" editable="false" prefWidth="85.0" sortable="false" text="Final Price" />
-            <TableColumn fx:id="paidColumn" editable="false" prefWidth="54.0" sortable="false" text="Paid" />
+            <TableColumn fx:id="bookingIdColumn" editable="false" prefWidth="92.0" sortable="false" text="Booking ID" />
+            <TableColumn fx:id="parkColumn" editable="false" prefWidth="135.0" sortable="false" text="Park" />
+            <TableColumn fx:id="dateColumn" editable="false" prefWidth="95.0" text="Date" />
+            <TableColumn fx:id="timeColumn" editable="false" prefWidth="60.0" sortable="false" text="Time" />
+            <TableColumn fx:id="sizeColumn" editable="false" prefWidth="89.0" sortable="false" text="Group Size" />
+            <TableColumn fx:id="priceColumn" editable="false" prefWidth="76.0" sortable="false" text="Final Price" />
+            <TableColumn fx:id="paidColumn" editable="false" prefWidth="73.0" sortable="false" text="Paid" />
          </columns>
       </TableView>
    </children>
