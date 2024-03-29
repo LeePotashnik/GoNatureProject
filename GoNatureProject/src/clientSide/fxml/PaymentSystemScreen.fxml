@@ -35,11 +35,6 @@
             <Font name="Calibri Bold" size="18.0" />
          </font>
       </Label>
-      <Button fx:id="processPayment" layoutX="523.0" layoutY="440.0" mnemonicParsing="false" onAction="#processPayment" text="Process Payment">
-         <font>
-            <Font name="Calibri" size="16.0" />
-         </font>
-      </Button>
       <ImageView fx:id="mastercardImage" fitHeight="28.0" fitWidth="46.0" layoutX="82.0" layoutY="243.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../../MasterCardIcon.png" />
@@ -153,5 +148,10 @@
             </HBox>
          </children>
       </VBox>
+      <Button fx:id="processPayment" layoutX="523.0" layoutY="440.0" mnemonicParsing="false" onAction="#processPayment" text="Process Payment">
+         <font>
+            <Font name="Calibri" size="16.0" />
+         </font>
+      </Button>
    </children>
 </Pane>

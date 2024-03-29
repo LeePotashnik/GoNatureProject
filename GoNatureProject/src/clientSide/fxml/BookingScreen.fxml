@@ -7,6 +7,7 @@
 <?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
@@ -115,7 +116,7 @@
             <Font size="16.0" />
          </font>
       </Label>
-      <Label fx:id="totalLbl" layoutX="252.0" layoutY="318.0" prefHeight="25.0" prefWidth="79.0" text="total" textAlignment="RIGHT">
+      <Label fx:id="totalLbl" layoutX="257.0" layoutY="318.0" prefHeight="25.0" prefWidth="72.0" text="total" textAlignment="RIGHT">
          <font>
             <Font name="System Bold" size="16.0" />
          </font>
@@ -130,5 +131,10 @@
             <Font name="System Bold" size="16.0" />
          </font>
       </Label>
+      <ImageView fx:id="info1" fitHeight="25.0" fitWidth="25.0" layoutX="618.0" layoutY="220.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../../info.png" />
+         </image>
+      </ImageView>
    </children>
 </Pane>
