@@ -11,6 +11,7 @@ import common.controllers.StatefulException;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -35,7 +36,7 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	@FXML
 	private TextField UserNameTxt, emailTxt, firstNameTxt, idTxt, lastNameTxt, phoneTxt;
 	@FXML
-	private Label name, emaillbl, passwordlbl, phonelbl, userNamelbl;
+	private Label name, emaillbl, passwordlbl, phonelbl, userNamelbl, titleLbl;
 	@FXML
 	private PasswordField passwordTxt;
 	@FXML
@@ -66,11 +67,10 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 		} else {
 			ArrayList<Object[]> userDetails = registerController.getUserDetails(id);
 			if (userDetails.isEmpty()) {
-				if(RegistrationController.getInstance().checkGroupGuideExistence(id)) {
+				if (RegistrationController.getInstance().checkGroupGuideExistence(id)) {
 					idTxt.setStyle(setFieldToError());
-					showErrorAlert("This ID is already registered as a Group Guide");	
-					}
-				else {
+					showErrorAlert("This ID is already registered as a Group Guide");
+				} else {
 					idTxt.setStyle(setFieldToError());
 					showErrorAlert("This ID does not exists in our System.");
 				}
@@ -106,20 +106,19 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 		String phone = phoneTxt.getText().trim();
 		String password = passwordTxt.getText();
 
-		if (DetailsValidation(firstName, lastName, email, phone, username, password)) { 					
+		if (DetailsValidation(firstName, lastName, email, phone, username, password)) {
 			registerController.checkIdExistenceAndDeleteFromTravellerTable(id);
 
-																												// if the the details are valid
-																												// in the aspect of not empty
-			boolean deleteUserSuccess = registerController.userDeleteFromTable(id,Communication.systemUser); 	// if the fields with correct format we
-																												// want to delete this user with this id
-																												// from the 'system_user' table and
-																												// insert him to the 'group_guide' table
-			if (!deleteUserSuccess) { // delete from 'system_users'	
+			// if the the details are valid
+			// in the aspect of not empty
+			boolean deleteUserSuccess = registerController.userDeleteFromTable(id, Communication.systemUser);
+			// if the fields with correct format want to delete this user with this id from the 'system_user'
+			// table and insert him to the group_guide table
+			if (!deleteUserSuccess) { // delete from 'system_users'
 				showErrorAlert("Failed to register the group guide.");
 				return;
 			}
-			
+
 			boolean insertSuccess = registerController.groupGuideInsertToDB(id, firstName, lastName, email, phone,
 					username, password);
 			if (insertSuccess) { // insert to 'group_guide'
@@ -234,6 +233,10 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	@Override
 	public void initialize() {
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+		// centering the title label
+		titleLbl.setAlignment(Pos.CENTER);
+		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
 		// setting the back button image
 		ImageView backImage = new ImageView(new Image(getClass().getResourceAsStream("/backButtonImage.png")));
 		backImage.setFitHeight(30);

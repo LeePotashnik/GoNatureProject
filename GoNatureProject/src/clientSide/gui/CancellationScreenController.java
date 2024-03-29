@@ -10,6 +10,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
@@ -55,6 +56,21 @@ public class CancellationScreenController extends AbstractScreen {
 		}
 	}
 
+	/**
+	 * This method sets the tooltip over the information circle image
+	 */
+	private void setToolTip() {
+		String message = "";
+		message += "You will recieve this confirmation to your inboxes.";
+		message += "\nIt takes up to 48 hours to refund pre-paid reservations.";
+		message += "\nFor any further question regarding cencallations,";
+		message += "\nyou can contact our customr service center.";
+		Tooltip info = new Tooltip(message);
+		Tooltip.install(sentImage, info);
+		info.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;"); // Make text bold and increase size
+		info.setShowDelay(javafx.util.Duration.ZERO);
+	}
+
 	///////////////////////////////
 	/// ABSTRACT SCREEN METHODS ///
 	///////////////////////////////
@@ -67,7 +83,7 @@ public class CancellationScreenController extends AbstractScreen {
 		// initializing the image component and centering it
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
-		
+
 		sentImage.setImage(new Image(getClass().getResourceAsStream("/confirmationSent.png")));
 
 		// setting the application's background
@@ -81,7 +97,7 @@ public class CancellationScreenController extends AbstractScreen {
 	 */
 	public void loadBefore(Object information) {
 		if (information != null && information instanceof Booking) {
-			booking = (Booking)information;
+			booking = (Booking) information;
 
 			parkNameLabel.setText("Park Name: " + booking.getParkBooked().getParkName());
 			parkAddressLabel.setText("Park Location: " + booking.getParkBooked().getParkCity() + ", "
@@ -103,6 +119,7 @@ public class CancellationScreenController extends AbstractScreen {
 			String parkImagePath = "/" + ParkController.getInstance().nameOfTable(booking.getParkBooked()) + ".jpg";
 			parkImage.setImage(new Image(getClass().getResourceAsStream(parkImagePath)));
 
+			setToolTip();
 		}
 	}
 

@@ -20,7 +20,7 @@
          </font>
       </Button>
       <ImageView fx:id="goNatureLogo" fitHeight="50.0" fitWidth="300.0" layoutX="200.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" />
-      <Label layoutX="151.0" layoutY="65.0" prefHeight="44.0" prefWidth="393.0" text="Group Guide Registration">
+      <Label fx:id="titleLbl" layoutX="151.0" layoutY="65.0" prefHeight="44.0" prefWidth="393.0" text="Group Guide Registration">
          <font>
             <Font name="Cambria" size="30.0" />
          </font>

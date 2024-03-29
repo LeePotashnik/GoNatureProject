@@ -72,8 +72,12 @@ public class ScreenManager {
 	 */
 	public void showScreen(String screenName, String fxmlResource, boolean showOnce, boolean saveState,
 			Object information) throws StatefulException, ScreenException {
-		System.out.println("screensStack: " + screensStack);
-		System.out.println("screensMap: " + screensMap);
+		
+		// printings for screens controlling
+//		System.out.println("screensStack: " + screensStack);
+//		System.out.println("screensMap: " + screensMap);
+		
+		
 		// checking if the saveState flag is true. In this case, calling the saveState()
 		// method of the current screen's controller
 		if (saveState && !screensStack.isEmpty()) {
@@ -132,8 +136,12 @@ public class ScreenManager {
 	 */
 	public void goToPreviousScreen(boolean wasShownOnce, boolean restoreState)
 			throws ScreenException, StatefulException {
-		System.out.println("screensStack: " + screensStack);
-		System.out.println("screensMap: " + screensMap);
+		
+		// printings for screen controlling
+//		System.out.println("screensStack: " + screensStack);
+//		System.out.println("screensMap: " + screensMap);
+		
+		
 		// checking if there's a screen to go back to
 		if (screensStack.size() < 1)
 			throw new ScreenException("No screens to go back to");

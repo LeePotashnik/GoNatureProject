@@ -84,7 +84,7 @@ public class ConfirmationScreenController extends AbstractScreen {
 		String message = "";
 		if (!isLessThen24Hours) {
 			message += "You will recieve this confirmation to your inboxes.";
-			message += "\nYou will also recieve a reminder " + BookingController.getInstance().reminderSendingTime + "hours before arrival.";
+			message += "\nYou will also recieve a reminder " + BookingController.getInstance().reminderSendingTime + " hours before arrival.";
 			message += "\nYou will have to enter your account on the GoNature app";
 			message += "\nand confirm the reminder, otherwise your reservation";
 			message += "\nwill be cancelled. You will have 2 hours to confirm";

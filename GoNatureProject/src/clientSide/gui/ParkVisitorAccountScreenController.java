@@ -161,12 +161,12 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 			if (userControl.logoutUser())
 				parkVisitor.setLoggedIn(false);
 			try {
-				ScreenManager.getInstance().showScreen("MainScreenController",
-						"/clientSide/fxml/MainScreen.fxml", true, false, null);
+				ScreenManager.getInstance().showScreen("MainScreenController", "/clientSide/fxml/MainScreen.fxml", true,
+						false, null);
 			} catch (ScreenException | StatefulException e) {
 				e.printStackTrace();
 			}
-			
+
 		case 2: // clicked "No"
 			event.consume();
 			break;
@@ -437,7 +437,8 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 			// once fetching is complete, updating the UI on the JavaFX Application Thread
 			Platform.runLater(() -> {
 				if (reminders.get()) {
-					showInformationAlert("Please confirm your reservation");
+					showInformationAlert(
+							"You have reminder/s waiting for response.\nClick on 'Confirm Arrivals' button to confirm/cancel your reservations.");
 				}
 				setVisible(true);
 				startSlideshow();

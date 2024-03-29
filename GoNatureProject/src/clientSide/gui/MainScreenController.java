@@ -226,6 +226,8 @@ public class MainScreenController extends AbstractScreen {
 		progressIndicator.setVisible(!visible);
 		waitLabel.setVisible(!visible);
 		hbox.setVisible(visible);
+		info1.setVisible(visible);
+		info2.setVisible(visible);
 	}
 
 	/**

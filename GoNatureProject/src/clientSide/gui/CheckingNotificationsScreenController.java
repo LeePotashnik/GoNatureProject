@@ -20,6 +20,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
@@ -41,7 +42,6 @@ public class CheckingNotificationsScreenController extends AbstractScreen {
 
 	@FXML
 	private Button backButton;
-
 	@FXML
 	private TableView<Booking> notificationsTable;
 	@FXML
@@ -58,16 +58,12 @@ public class CheckingNotificationsScreenController extends AbstractScreen {
 	private TableColumn<Booking, String> priceColumn;
 	@FXML
 	private TableColumn<Booking, String> paidColumn;
-
 	@FXML
 	private Label doubleClickLabel, futureLabel, titleLbl;
-
 	@FXML
 	private ImageView goNatureLogo;
-
 	@FXML
 	private Pane pane;
-
 	@FXML
 	private Separator seperator1;
 
@@ -233,6 +229,10 @@ public class CheckingNotificationsScreenController extends AbstractScreen {
 
 		// Sets the GoNature logo on the user interface
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
+		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
+		// centering the title label
+		titleLbl.setAlignment(Pos.CENTER);
+		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
 
 		// Prepares the back button with an image, sets its dimensions, and adjusts
 		// padding
@@ -256,6 +256,15 @@ public class CheckingNotificationsScreenController extends AbstractScreen {
 			});
 			return row;
 		});
+		
+		// setting the columns not resizable
+		bookingIdColumn.setResizable(false);
+		parkColumn.setResizable(false);
+		dateColumn.setResizable(false);
+		timeColumn.setResizable(false);
+		sizeColumn.setResizable(false);
+		priceColumn.setResizable(false);
+		paidColumn.setResizable(false);
 
 		// setting the application's background
 		setApplicationBackground(pane);

@@ -428,7 +428,7 @@ public class BookingViewScreenController extends AbstractScreen implements State
 				if (!row.isEmpty() && event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
 					Booking clickedRowData = row.getItem();
 					if (clickedRowData.getStatus().equals("Cancelled")) {
-						showInformationAlert("Past bookings cannot be edited");
+						showInformationAlert("Cancelled bookings cannot be edited");
 					} else {
 						bookingClicked(clickedRowData);
 					}
