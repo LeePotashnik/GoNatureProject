@@ -488,7 +488,7 @@ public class ParkController {
 	 *         Indicates that the booking is open in another screen of another park
 	 *         employee.
 	 */
-	public int checkIfBookingIsLock(String ID) {
+	public boolean checkIfBookingIsLock(String ID) {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
 		request.setCritical(true, park.getParkId() - 1);
 		try {
@@ -502,8 +502,8 @@ public class ParkController {
 		request.setSecondaryRequest(SecondaryRequest.LOCK_BOOKING);
 		request.setBookingId(ID);
 		GoNatureClientUI.client.accept(request);
-		
-		return (Integer)request.getResultList().get(0)[0];
+
+		return request.getQueryResult();
 	}
 
 	/**
