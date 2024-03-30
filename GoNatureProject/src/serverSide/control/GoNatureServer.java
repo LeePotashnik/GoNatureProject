@@ -306,9 +306,8 @@ public class GoNatureServer extends AbstractServer {
 					break;
 				}
 				case LOCK_BOOKING: {
-					ArrayList<Object[]> resultLock = new ArrayList<>();
-					Object[] ret = new Object[1];
-					if (request.getResultList().isEmpty()) { // inserting to the locked table
+					if (response.getResultList() == null || response.getResultList().isEmpty()) { // inserting to the
+																									// locked table
 						try {
 							request.setQueryType(QueryType.INSERT); // changing from select to insert
 						} catch (CommunicationException e) {
@@ -316,29 +315,17 @@ public class GoNatureServer extends AbstractServer {
 						}
 						request.setColumnsAndValues(Arrays.asList("bookingId"), Arrays.asList(request.getBookingId()));
 						boolean insertResult = database.executeInsertQuery(request);
-						if (insertResult) {
-							ret[0] = 0; // empty and insert succeed
-							resultLock.add(ret);
-						} else {
-							ret[0] = 1; // empty and insert failed
-							resultLock.add(ret);
-						}
+						response.setQueryResult(insertResult);
+
 					} else {
-						ret[0] = 2; // not empty
-						resultLock.add(ret);
-					}
-					response.setResultList(resultLock);
-					try {
-						request.setQueryType(QueryType.SELECT); // returning to select from insert
-						// this is done for correct identification in the client side
-					} catch (CommunicationException e) {
-						e.printStackTrace();
+						// not empty
+						response.setQueryResult(false);
 					}
 					break;
 				}
 				case UPDATE_CAPACITY: {
 					int visitorsBooking = request.getNumberOfVisitors();
-					int currentCapacity = (Integer) (request.getResultList().get(0)[0]);
+					int currentCapacity = (Integer) (response.getResultList().get(0)[0]);
 					try {
 						request.setQueryType(QueryType.UPDATE);
 					} catch (CommunicationException e) {
