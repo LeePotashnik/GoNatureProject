@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -16,7 +17,6 @@ import common.communication.CommunicationException;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.NotificationType;
 import common.communication.Communication.QueryType;
-import common.communication.Communication.SecondaryRequest;
 import common.entities.Booking;
 import common.entities.Park;
 import common.entities.Booking.VisitType;
@@ -403,26 +403,89 @@ public class ParkController {
 	 * @param amount
 	 * @return It returns a String describing the capacity
 	 */
-	public boolean updateCurrentCapacity(String park, int amount) {
+	public boolean updateCurrentCapacity(String park, int amount, boolean add) {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
 		request.setCritical(true,this.park.getParkId()-1);
-
+	    String[] currentCapacityInfo = checkCurrentCapacity(park); //line 409
+	    if (currentCapacityInfo == null) {
+	        System.out.println("Failed to retrieve all the capacity for park: " + park);
+	        return false;
+	    }
+	    if (currentCapacityInfo[3] == null) {
+	        System.out.println("Failed to retrieve current capacity for park: " + park);
+	        return false;
+	    }
+	    int amountToUpdate;
+	    if (add)
+	    	amountToUpdate = amount + Integer.parseInt(currentCapacityInfo[3]);
+	    else
+	    	amountToUpdate = Integer.parseInt(currentCapacityInfo[3]) - amount;
+	    
 		try {
 			request.setQueryType(QueryType.UPDATE);
 			request.setTables(Arrays.asList(Communication.park));
-			request.setColumnsAndValues(Arrays.asList("currentCapacity"), Arrays.asList(amount));
+			request.setColumnsAndValues(Arrays.asList("currentCapacity"), Arrays.asList(amountToUpdate));
 			request.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="), Arrays.asList(park));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		request.setSecondaryRequest(SecondaryRequest.UPDATE_CAPACITY);
-		request.setNumberOfVisitors(amount);
+
 		GoNatureClientUI.client.accept(request);
 		boolean result = request.getQueryResult();
 		if (result) {
 			return true;
 		}
 		return false;
+	}
+	
+
+	/**
+	 * Retrieves current capacity and limits information for a specified park from
+	 * the database. This method executes a 'SELECT' SQL query to obtain details
+	 * such as the maximum visitors capacity, maximum order amount, maximum time
+	 * limit, and the current capacity of the park.
+	 * 
+	 * @return A String array containing four elements: 1. Maximum visitors capacity
+	 *         (retValue[0]) 2. Maximum order amount (retValue[1]) 3. Maximum time
+	 *         limit for visits (retValue[2]) 4. Current capacity of the park
+	 *         (retValue[3]) If no information is found, returns null.
+	 */
+	public String[] checkCurrentCapacity(String parkName) {
+		String[] retValue = new String[4];
+		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			request.setQueryType(QueryType.SELECT);
+			request.setTables(Arrays.asList(Communication.park));
+			request.setSelectColumns(Arrays.asList("maximumVisitorsCapacity", "maximumOrderAmount", "maximumTimeLimit",
+					"currentCapacity"));
+			request.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="), Arrays.asList(parkName));
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		GoNatureClientUI.client.accept(request);
+		ArrayList<Object[]> result = request.getResultList();
+		// Saves the retrieved values from the database in order to return them to the
+		// requesting employee
+		try {
+			System.out.println(result.size());
+			if (!result.isEmpty()) {
+		        Object[] capacityDB = result.get(0);
+		        // Validate the result array to ensure it has the expected number of elements and none are null.
+		        if (capacityDB.length == 4 && Arrays.stream(capacityDB).noneMatch(Objects::isNull)) {
+		            retValue[0] = capacityDB[0].toString(); // maximumVisitorsCapacity
+		            retValue[1] = capacityDB[1].toString(); // maximumOrderAmount
+		            retValue[2] = capacityDB[2].toString(); // maximumTimeLimit
+		            retValue[3] = capacityDB[3].toString(); // currentCapacity
+		     } else {
+		         System.out.println("Received incomplete or invalid data for park capacity.");
+		         return null;
+		     }
+			}
+	    } catch (NullPointerException e){
+	        System.out.println("No results found for park: " + parkName);
+	        return null;
+	    }
+	    return retValue;
 	}
 
 	/**
@@ -450,11 +513,14 @@ public class ParkController {
 		//request.setSecondaryRequest(SecondaryRequest.UPDATE_CAPACITY);
 		GoNatureClientUI.client.accept(request);
 		ArrayList<Object[]> result = request.getResultList();
-		if (result.isEmpty()) {
-			if (insertBookingToLockBooking(ID))
-				return 0;
-			return 1;
-		}
+		try {
+			if (result.isEmpty()) {
+				if (insertBookingToLockBooking(ID))
+					return 0;
+				return 1;
+			}
+		} catch (NullPointerException e) {
+		}	
 		return 2;
 	}
 	
@@ -587,45 +653,6 @@ public class ParkController {
 		return false;
 	}
 
-	/**
-	 * Retrieves current capacity and limits information for a specified park from
-	 * the database. This method executes a 'SELECT' SQL query to obtain details
-	 * such as the maximum visitors capacity, maximum order amount, maximum time
-	 * limit, and the current capacity of the park.
-	 * 
-	 * @return A String array containing four elements: 1. Maximum visitors capacity
-	 *         (retValue[0]) 2. Maximum order amount (retValue[1]) 3. Maximum time
-	 *         limit for visits (retValue[2]) 4. Current capacity of the park
-	 *         (retValue[3]) If no information is found, returns null.
-	 */
-	public String[] checkCurrentCapacity(String parkName) {
-		String[] retValue = new String[4];
-		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
-		try {
-			request.setQueryType(QueryType.SELECT);
-			request.setTables(Arrays.asList(Communication.park));
-			request.setSelectColumns(Arrays.asList("maximumVisitorsCapacity", "maximumOrderAmount", "maximumTimeLimit",
-					"currentCapacity"));
-			request.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="), Arrays.asList(parkName));
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-		GoNatureClientUI.client.accept(request);
-		ArrayList<Object[]> result = request.getResultList();
-		// Saves the retrieved values from the database in order to return them to the
-		// requesting employee
-		if (!result.isEmpty()) {
-			Object[] capacityDB = result.get(0);
-			if (capacityDB.length > 1) {
-				retValue[0] = capacityDB[0].toString(); // maximumVisitorsCapacity
-				retValue[1] = capacityDB[1].toString(); // maximumOrderAmount
-				retValue[2] = capacityDB[2].toString(); // maximumTimeLimit
-				retValue[3] = capacityDB[3].toString(); // currentCapacity
-			}
-		}
-		// returns the array containing park capacity information
-		return retValue;
-	}
 
 	/**
 	 * Inserts a new booking record into a specified table within the database,

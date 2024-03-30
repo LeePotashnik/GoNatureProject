@@ -203,7 +203,10 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		// updates entry time
 		parkControl.updateTimeInPark(parkTable + Communication.activeBookings, "entryParkTime", bookingId);
 		// updates park's current capacity
-		if (parkControl.updateCurrentCapacity(parkEmployee.getWorkingIn().getParkName(), booking.getNumberOfVisitors()))
+		new Thread(() -> {
+			parkControl.updateCurrentCapacity(parkEmployee.getWorkingIn().getParkName(), booking.getNumberOfVisitors(), true);
+		}).start();
+		//if (parkControl.updateCurrentCapacity(parkEmployee.getWorkingIn().getParkName(), booking.getNumberOfVisitors()))
 			if (!booking.isPaid()) {// needs to update DB: "paid" ?
 				parkControl.payForBooking(parkTable); //
 				int decision = showConfirmationAlert(
@@ -237,8 +240,6 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 			} else { // already paid
 				arrivalLbl.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
 			}
-		//removes the booking lock for the specified booking ID from the database.
-		parkControl.removeBooking("booking_lock",bookingId);
 	}
 
 	/**
@@ -257,15 +258,18 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 	 */
 	@FXML
 	void updateExitTime(ActionEvent event) {
-		
 		String parkTable = parkControl.nameOfTable(parkEmployee.getWorkingIn());
-		parkControl.updateTimeInPark(parkTable + Communication.activeBookings, "exitParkTime", bookingId); // updates
-																											// exit time
-		parkControl.updateCurrentCapacity(parkEmployee.getWorkingIn().getParkName(), booking.getNumberOfVisitors());// updates park
-																										// current
-																										// capacity
+
+	//	new Thread(() -> {
+			parkControl.updateTimeInPark(parkTable + Communication.activeBookings, "exitParkTime", bookingId); // updates
+			// exit time
+			// updates park current capacity
+			String parkName = parkEmployee.getWorkingIn().getParkName();
+			int numberOfVisitors = booking.getNumberOfVisitors();
+			parkControl.updateCurrentCapacity(parkName, numberOfVisitors, false);
+		//}).start();
 		// remove the booking from active park table
-		parkControl.removeBooking(parkTable + Communication.activeBookings, booking.getBookingId());
+		parkControl.removeBooking(parkTable + Communication.activeBookings, bookingId);
 		// insert the booking to done park table
 		parkControl.insertBookingToTable(booking, parkTable, "done");
 		exitTimeBtn.setDisable(true);
@@ -318,7 +322,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 				parkName + Communication.cancelledBookings };
 		for (String table : tables) {
 			try {
-				Booking booking = parkControl.checkIfBookingExists(table, "bookingId", bookingId).get(0);
+				Booking booking = parkControl.checkIfBookingExists(table, "bookingId", bookingID).get(0);
 				return booking;
 			} catch (NullPointerException e) {
 			}
@@ -364,9 +368,10 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 			return false;
 		} 
 		
-		
-
+		//new Thread(() -> {
 		isLock = parkControl.checkIfBookingIsLock(insertedID);
+			
+		//}).start();
 		switch(isLock)	{
 		    case 1:
 		    	//No employee is currently assigned to this booking, but the locking process failed
