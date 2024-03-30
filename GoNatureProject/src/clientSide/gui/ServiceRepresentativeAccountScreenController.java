@@ -285,6 +285,7 @@ public class ServiceRepresentativeAccountScreenController extends AbstractScreen
 		nameLbl.layoutXProperty().bind(pane.widthProperty().subtract(nameLbl.widthProperty()).divide(2));
 		titleLbl.setAlignment(Pos.CENTER);
 		titleLbl.layoutXProperty().bind(pane.widthProperty().subtract(titleLbl.widthProperty()).divide(2));
+		titleLbl.setText("Service Representative");
 
 		// setting the image view array
 		imageViews[0] = image1;

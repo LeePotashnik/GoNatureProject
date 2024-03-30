@@ -8,9 +8,9 @@ import clientSide.entities.DepartmentManager;
 import clientSide.entities.ParkEmployee;
 import clientSide.entities.ParkManager;
 import clientSide.entities.ParkVisitor;
+import clientSide.entities.ParkVisitor.VisitorType;
 import clientSide.entities.Representative;
 import clientSide.entities.SystemUser;
-import clientSide.entities.ParkVisitor.VisitorType;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
@@ -28,6 +28,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -62,7 +63,7 @@ public class MainScreenController extends AbstractScreen {
 	@FXML
 	private Button signInBtn, bookNowbtn;
 	@FXML
-	private ImageView goNatureLogo, image1, image2, image3;
+	private ImageView goNatureLogo, image1, image2, image3, info1, info2;
 	@FXML
 	private HBox hbox;
 	@FXML
@@ -225,6 +226,8 @@ public class MainScreenController extends AbstractScreen {
 		progressIndicator.setVisible(!visible);
 		waitLabel.setVisible(!visible);
 		hbox.setVisible(visible);
+		info1.setVisible(visible);
+		info2.setVisible(visible);
 	}
 
 	/**
@@ -283,7 +286,7 @@ public class MainScreenController extends AbstractScreen {
 		}
 
 		if (passwordTxt.getText().isEmpty()) {
-			error += "\n• Please enter a username";
+			error += "\n• Please enter a password";
 			passwordTxt.setStyle(setFieldToError());
 			valid = false;
 		} else {
@@ -465,6 +468,18 @@ public class MainScreenController extends AbstractScreen {
 		progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
 		progressIndicator.layoutXProperty()
 				.bind(pane.widthProperty().subtract(progressIndicator.widthProperty()).divide(2));
+		
+		// adding tooltips
+		Tooltip tooltipInfo1 = new Tooltip("Signing into the system\nfor employees, managers\nand group guides.");
+		tooltipInfo1.setShowDelay(javafx.util.Duration.ZERO);
+		Tooltip.install(info1, tooltipInfo1);
+		tooltipInfo1.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;"); // Make text bold and increase size
+
+		Tooltip tooltipInfo2 = new Tooltip("Making fast reservations is\navailable for individual\nor family groups only.");
+		tooltipInfo2.setShowDelay(javafx.util.Duration.ZERO);
+		Tooltip.install(info2, tooltipInfo2);
+		tooltipInfo2.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;"); // Make text bold and increase size
+		
 
 		// setting the application's background
 		setApplicationBackground(pane);

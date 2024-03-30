@@ -19,6 +19,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
@@ -28,6 +29,7 @@ import javafx.scene.layout.Pane;
  * proccessed, showing a confirmation (invoice) to the user.
  */
 public class ConfirmationScreenController extends AbstractScreen {
+	private boolean isLessThen24Hours;
 
 	//////////////////////////////////
 	/// JAVAFX AND FXML COMPONENTS ///
@@ -75,6 +77,29 @@ public class ConfirmationScreenController extends AbstractScreen {
 		}
 	}
 
+	/**
+	 * This method sets the tooltip over the information circle image
+	 */
+	private void setToolTip() {
+		String message = "";
+		if (!isLessThen24Hours) {
+			message += "You will recieve this confirmation to your inboxes.";
+			message += "\nYou will also recieve a reminder " + BookingController.getInstance().reminderSendingTime + " hours before arrival.";
+			message += "\nYou will have to enter your account on the GoNature app";
+			message += "\nand confirm the reminder, otherwise your reservation";
+			message += "\nwill be cancelled. You will have 2 hours to confirm";
+			message += "\nfrom the moment of recieving the reminder.";
+		} else {
+			message += "You will recieve this confirmation to your inboxes.";
+			message += "\nPlease make sure to follow any further messages";
+			message += "\nyou'll recieve from us regarding your reservation.";
+		}
+		Tooltip info = new Tooltip(message);
+		Tooltip.install(sentImage, info);
+		info.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;"); // Make text bold and increase size
+		info.setShowDelay(javafx.util.Duration.ZERO);	
+	}
+
 	///////////////////////////////
 	/// JAVAFX AND FXML METHODS ///
 	///////////////////////////////
@@ -89,7 +114,6 @@ public class ConfirmationScreenController extends AbstractScreen {
 		goNatureLogo.layoutXProperty().bind(pane.widthProperty().subtract(goNatureLogo.fitWidthProperty()).divide(2));
 		
 		sentImage.setImage(new Image(getClass().getResourceAsStream("/confirmationSent.png")));
-
 
 		// centering the title labels
 		titleLbl.setAlignment(Pos.CENTER);
@@ -130,8 +154,9 @@ public class ConfirmationScreenController extends AbstractScreen {
 			LocalDateTime bookingTime = LocalDateTime.of(booking.getDayOfVisit(), booking.getTimeOfVisit());
 			LocalDateTime now = LocalDateTime.now();
 			String reminder = "";
-			if (Math.abs(Duration.between(bookingTime, now).toHours()) <= BookingController
-					.getInstance().reminderSendingTime) {
+			isLessThen24Hours = Math.abs(Duration.between(bookingTime, now).toHours()) <= BookingController
+					.getInstance().reminderSendingTime;
+			if (isLessThen24Hours) {
 				reminder += " Your reservation is confirmed.";
 			} else {
 				reminder += " 24 hours before arrival, you'll get a reminder.";
@@ -144,6 +169,8 @@ public class ConfirmationScreenController extends AbstractScreen {
 
 			String parkImagePath = "/" + ParkController.getInstance().nameOfTable(booking.getParkBooked()) + ".jpg";
 			parkImage.setImage(new Image(getClass().getResourceAsStream(parkImagePath)));
+			
+			setToolTip();
 		}
 	}
 

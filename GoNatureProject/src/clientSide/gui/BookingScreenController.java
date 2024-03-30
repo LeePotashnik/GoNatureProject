@@ -21,8 +21,8 @@ import common.controllers.ScreenManager;
 import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import common.entities.Booking;
-import common.entities.Park;
 import common.entities.Booking.VisitType;
+import common.entities.Park;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -39,6 +39,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -92,7 +93,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	@FXML
 	private DatePicker datePicker;
 	@FXML
-	private ImageView goNatureLogo;
+	private ImageView goNatureLogo, info1;
 	@FXML
 	private ComboBox<LocalTime> hourCombobox;
 	@FXML
@@ -337,9 +338,13 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 * @param event
 	 */
 	void hourChosen(ActionEvent event) {
-		if (hourCombobox.getValue() != null) {
+		if (hourCombobox.getValue() != null && parkComboBox.getValue() != null) {
+			// showing the till and tillHour labels
+			tillLbl.setVisible(true);
+			tillHourLbl.setVisible(true);
+			info1.setVisible(true);
 			tillHourLbl.setText(hourCombobox.getValue()
-					.plusHours(parksList.get(hourCombobox.getSelectionModel().getSelectedIndex()).getTimeLimit()) + "");
+					.plusHours(parksList.get(parkComboBox.getSelectionModel().getSelectedIndex()).getTimeLimit()) + "");
 		}
 	}
 
@@ -510,7 +515,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 			pane.getChildren().remove(0);
 		}
 		pane.getChildren().add(0, backgroundImage);
-
+		hourChosen(null);
 	}
 
 	////////////////////////
@@ -546,6 +551,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 		totalLbl.setVisible(visible);
 		tillLbl.setVisible(visible);
 		tillHourLbl.setVisible(visible);
+		info1.setVisible(visible);
 	}
 
 	/**
@@ -920,6 +926,19 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 				}).start();
 			}
 		});
+
+		// hiding the till and tillHour labels, and info1 image until an hour is chosen.
+		tillLbl.setVisible(false);
+		tillHourLbl.setVisible(false);
+		info1.setVisible(false);
+
+		// setting a tooltip over the info images
+		Tooltip infoTooltip1 = new Tooltip("This is an estimated visit time" + "\nrange for the selected park."
+				+ "\nPlease be aware these time" + "\nranges are subject to change.");
+
+		infoTooltip1.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;"); // Make text bold and increase size
+		infoTooltip1.setShowDelay(javafx.util.Duration.ZERO); // Show tooltip immediately
+		Tooltip.install(info1, infoTooltip1);
 
 		// setting the application's background
 		setApplicationBackground(pane);

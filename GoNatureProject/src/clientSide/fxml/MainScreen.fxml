@@ -7,6 +7,7 @@
 <?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
@@ -75,7 +76,7 @@
                   <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="10.0" stroke="TRANSPARENT" strokeType="INSIDE" width="56.0" />
                   <Label fx:id="lbl2" prefHeight="24.0" prefWidth="21.0" text="or" textAlignment="CENTER">
                      <font>
-                        <Font name="Calibri Light" size="18.0" />
+                        <Font name="Calibri" size="18.0" />
                      </font>
                   </Label>
                   <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="15.0" stroke="TRANSPARENT" strokeType="INSIDE" width="56.0" />
@@ -117,5 +118,15 @@
             <Font name="Cambria" size="20.0" />
          </font>
       </Label>
+      <ImageView fx:id="info2" fitHeight="25.0" fitWidth="25.0" layoutX="634.0" layoutY="309.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../../info.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="info1" fitHeight="25.0" fitWidth="25.0" layoutX="224.0" layoutY="310.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../../info.png" />
+         </image>
+      </ImageView>
    </children>
 </Pane>
