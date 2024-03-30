@@ -17,6 +17,7 @@ import common.communication.CommunicationException;
 import common.communication.Communication.CommunicationType;
 import common.communication.Communication.NotificationType;
 import common.communication.Communication.QueryType;
+import common.communication.Communication.SecondaryRequest;
 import common.entities.Booking;
 import common.entities.Park;
 import common.entities.Booking.VisitType;
@@ -403,41 +404,26 @@ public class ParkController {
 	 * @param amount
 	 * @return It returns a String describing the capacity
 	 */
-	public boolean updateCurrentCapacity(String park, int amount, boolean add) {
+	public boolean updateCurrentCapacity(String parkName, int amount, boolean add) {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
-		request.setCritical(true,this.park.getParkId()-1);
-	    String[] currentCapacityInfo = checkCurrentCapacity(park); //line 409
-	    if (currentCapacityInfo == null) {
-	        System.out.println("Failed to retrieve all the capacity for park: " + park);
-	        return false;
-	    }
-	    if (currentCapacityInfo[3] == null) {
-	        System.out.println("Failed to retrieve current capacity for park: " + park);
-	        return false;
-	    }
-	    int amountToUpdate;
-	    if (add)
-	    	amountToUpdate = amount + Integer.parseInt(currentCapacityInfo[3]);
-	    else
-	    	amountToUpdate = Integer.parseInt(currentCapacityInfo[3]) - amount;
-	    
+		request.setCritical(true, park.getParkId() - 1);
 		try {
-			request.setQueryType(QueryType.UPDATE);
-			request.setTables(Arrays.asList(Communication.park));
-			request.setColumnsAndValues(Arrays.asList("currentCapacity"), Arrays.asList(amountToUpdate));
-			request.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="), Arrays.asList(park));
+			request.setQueryType(QueryType.SELECT);
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
+		request.setTables(Arrays.asList(Communication.park));
+		request.setSelectColumns(Arrays.asList("currentCapacity"));
+		request.setWhereConditions(Arrays.asList("parkName"), Arrays.asList("="), Arrays.asList(parkName));
+
+		// setting the secondary request
+		request.setSecondaryRequest(SecondaryRequest.UPDATE_CAPACITY);
+		request.setNumberOfVisitors(add ? amount : amount * -1);
 
 		GoNatureClientUI.client.accept(request);
-		boolean result = request.getQueryResult();
-		if (result) {
-			return true;
-		}
-		return false;
+
+		return request.getQueryResult();
 	}
-	
 
 	/**
 	 * Retrieves current capacity and limits information for a specified park from
@@ -469,39 +455,42 @@ public class ParkController {
 		try {
 			System.out.println(result.size());
 			if (!result.isEmpty()) {
-		        Object[] capacityDB = result.get(0);
-		        // Validate the result array to ensure it has the expected number of elements and none are null.
-		        if (capacityDB.length == 4 && Arrays.stream(capacityDB).noneMatch(Objects::isNull)) {
-		            retValue[0] = capacityDB[0].toString(); // maximumVisitorsCapacity
-		            retValue[1] = capacityDB[1].toString(); // maximumOrderAmount
-		            retValue[2] = capacityDB[2].toString(); // maximumTimeLimit
-		            retValue[3] = capacityDB[3].toString(); // currentCapacity
-		     } else {
-		         System.out.println("Received incomplete or invalid data for park capacity.");
-		         return null;
-		     }
+				Object[] capacityDB = result.get(0);
+				// Validate the result array to ensure it has the expected number of elements
+				// and none are null.
+				if (capacityDB.length == 4 && Arrays.stream(capacityDB).noneMatch(Objects::isNull)) {
+					retValue[0] = capacityDB[0].toString(); // maximumVisitorsCapacity
+					retValue[1] = capacityDB[1].toString(); // maximumOrderAmount
+					retValue[2] = capacityDB[2].toString(); // maximumTimeLimit
+					retValue[3] = capacityDB[3].toString(); // currentCapacity
+				} else {
+					System.out.println("Received incomplete or invalid data for park capacity.");
+					return null;
+				}
 			}
-	    } catch (NullPointerException e){
-	        System.out.println("No results found for park: " + parkName);
-	        return null;
-	    }
-	    return retValue;
+		} catch (NullPointerException e) {
+			System.out.println("No results found for park: " + parkName);
+			return null;
+		}
+		return retValue;
 	}
 
 	/**
-	 * Checks if a booking is locked for processing by another park employee.
-	 * This method checks the status of a booking lock in the database.
-	 * A booking lock indicates whether the booking is currently being processed by another employee.
+	 * Checks if a booking is locked for processing by another park employee. This
+	 * method checks the status of a booking lock in the database. A booking lock
+	 * indicates whether the booking is currently being processed by another
+	 * employee.
 	 * 
 	 * @param ID The ID of the booking to check.
-	 * @return An integer representing the status of the booking lock.
-	 * 		0 - Indicates that the employee can work on this booking.
-	 * 		1 - Indicates that no one is working on that booking but the process of locking has failed.
-	 * 		2 - Indicates that the booking is open in another screen of another park employee.
+	 * @return An integer representing the status of the booking lock. 0 - Indicates
+	 *         that the employee can work on this booking. 1 - Indicates that no one
+	 *         is working on that booking but the process of locking has failed. 2 -
+	 *         Indicates that the booking is open in another screen of another park
+	 *         employee.
 	 */
 	public int checkIfBookingIsLock(String ID) {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
-		request.setCritical(true,park.getParkId()-1);
+		request.setCritical(true, park.getParkId() - 1);
 		try {
 			request.setQueryType(QueryType.SELECT);
 			request.setTables(Arrays.asList(Communication.bookingLock));
@@ -510,43 +499,13 @@ public class ParkController {
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
-		//request.setSecondaryRequest(SecondaryRequest.UPDATE_CAPACITY);
+		request.setSecondaryRequest(SecondaryRequest.LOCK_BOOKING);
+		request.setBookingId(ID);
 		GoNatureClientUI.client.accept(request);
-		ArrayList<Object[]> result = request.getResultList();
-		try {
-			if (result.isEmpty()) {
-				if (insertBookingToLockBooking(ID))
-					return 0;
-				return 1;
-			}
-		} catch (NullPointerException e) {
-		}	
-		return 2;
+		
+		return (Integer)request.getResultList().get(0)[0];
 	}
-	
-	/**
-	 * Inserts a booking ID into the booking lock table to lock it for processing.
-	 * 
-	 * @param ID The ID of the booking to insert into the booking lock table.
-	 * @return true if the booking was successfully inserted into the booking lock table, otherwise false.
-	 */
-	private boolean insertBookingToLockBooking(String ID) {
-		Communication insertRequest = new Communication(CommunicationType.QUERY_REQUEST);
-		try {
-			insertRequest.setQueryType(QueryType.INSERT);
-			insertRequest.setTables(Arrays.asList(Communication.bookingLock));
-			insertRequest.setColumnsAndValues(Arrays.asList("bookingId"),Arrays.asList(ID));
-		} catch (CommunicationException e) {
-			e.printStackTrace();
-		}
-		GoNatureClientUI.client.accept(insertRequest);
-		boolean result = insertRequest.getQueryResult();
-		if (result) {
-			return true;
-		}
-		return false;
-	}  
-	
+
 	/**
 	 * An 'UPDATE' SQL query is generated to access the relevant table in the
 	 * database and change the 'confirmed' field to true (represents by '1'). This
@@ -612,12 +571,13 @@ public class ParkController {
 	 * @return It returns a boolean value indicating whether the update succeeded
 	 *         (true) or not(false).
 	 */
-	public boolean payForBooking(String parkTable) {
+	public boolean payForBooking(String parkTable, String ID) {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			request.setQueryType(QueryType.UPDATE);
 			request.setTables(Arrays.asList(parkTable));
 			request.setColumnsAndValues(Arrays.asList("paid"), Arrays.asList('1'));
+			request.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList(ID));
 		} catch (CommunicationException e) {
 			e.printStackTrace();
 		}
@@ -652,7 +612,6 @@ public class ParkController {
 			return true;
 		return false;
 	}
-
 
 	/**
 	 * Inserts a new booking record into a specified table within the database,
