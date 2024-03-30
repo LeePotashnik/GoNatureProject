@@ -1,11 +1,9 @@
 package clientSide.gui;
 
-import java.util.ArrayList;
+
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
@@ -21,11 +19,13 @@ import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.chart.XYChart.Data;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.util.Pair;
 
 /**
  * Controls the Cancellation Report screen, displaying a chart with cancellation
@@ -33,7 +33,7 @@ import javafx.scene.layout.Pane;
  * no-shows.
  */
 public class CancellationReportController extends AbstractScreen {
-	private Map<String, List<XYChart.Data<String, Number>>> currentChartData;
+	private Pair<Map<String, List<XYChart.Data<String, Number>>>, Pair<Integer, Integer>> currentChartData;
 
 	//////////////////////////////////
 	/// JAVAFX AND FXML COMPONENTS ///
@@ -104,19 +104,26 @@ public class CancellationReportController extends AbstractScreen {
 	////////////////////////
 
 	/**
-	 * Populates a bar chart with cancellation data. This method expects a map with
-	 * cancellation reasons as keys and lists of XYChart.Data as values.
-	 *
-	 * @param chartData A map containing the data to be displayed on the chart. The
-	 *                  keys are expected to be strings representing the
-	 *                  cancellation reasons, and the values are lists of
-	 *                  XYChart.Data objects, each corresponding to a specific day
-	 *                  and the number of cancellations for that reason.
+	 * Populates a bar chart with aggregated cancellation data by day of the week. This method organizes
+	 * data into two main series based on cancellation reasons: cancelled orders and no-show visitors.
+	 * It then calculates the total counts for each reason across all days and adds these counts to the
+	 * chart. 
+	 * The method expects a Pair containing a map for chart data and another Pair for median values:
+	 * - The map's keys represent the cancellation reasons, and its values are lists of XYChart.Data objects,
+	 *   each corresponding to a specific day of the week and the number of cancellations for that reason.
+	 * - The second element of the Pair contains the median values for cancelled bookings and no-show visitors,
+	 *   respectively, which are used to update the corresponding UI labels.
+	 * 
+	 * @param pair A Pair where the key is a map with cancellation reasons as keys and lists of 
+	 *             XYChart.Data objects as values, and the value is a Pair containing median values for
+	 *             cancelled bookings and no-show visitors, respectively.
 	 */
 	@SuppressWarnings("unchecked")
-	public void populateChart(Map<String, List<XYChart.Data<String, Number>>> chartData) {
+	public void populateChart(Pair<Map<String, List<XYChart.Data<String, Number>>>, Pair<Integer, Integer>> pair) {
 		cancellationBarChart.getData().clear(); // Clear previous data
-		Map<String, Map<String, Number>> aggregatedData = aggregateDataByDay(chartData);
+		 Map<String, List<XYChart.Data<String, Number>>> dataMap = pair.getKey();
+		 Pair<Integer, Integer> medians = pair.getValue();
+
 		// Initializes two series for the chart, one for each cancellation reason
 		XYChart.Series<String, Number> seriesCancelledOrders = new XYChart.Series<>();
 		seriesCancelledOrders.setName("Cancelled Orders");
@@ -124,49 +131,41 @@ public class CancellationReportController extends AbstractScreen {
 		XYChart.Series<String, Number> seriesNoShowVisitors = new XYChart.Series<>();
 		seriesNoShowVisitors.setName("No-Show Visitors");
 
-		// Prepare to calculate medians
-		List<Number> cancelledOrdersValues = new ArrayList<>();
-		List<Number> noShowVisitorsValues = new ArrayList<>();
 
 		List<String> daysOrder = Arrays.asList("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
 				"Saturday");
 		daysOrder.forEach(day -> {
-			Number countCancelled = aggregatedData.getOrDefault("Cancelled Orders", new HashMap<>()).getOrDefault(day,
-					0);
-			seriesCancelledOrders.getData().add(new XYChart.Data<>(day, countCancelled));
+			 double countCancelled = 0;
+		     double countNoShow = 0;
+		        
+		        // Calculate the count for "Cancelled Orders" if present
+		        if(dataMap.containsKey("User Cancelled")) {
+		            countCancelled = dataMap.get("User Cancelled").stream()
+		                                    .filter(data -> data.getXValue().equals(day))
+		                                    .mapToDouble(data -> data.getYValue().doubleValue())
+		                                    .sum();
+		        }
+		        
+		        // Calculate the count for "No-Show Visitors" if present
+		        if(dataMap.containsKey("Did not arrive")) {
+		            countNoShow = dataMap.get("Did not arrive").stream()
+		                                 .filter(data -> data.getXValue().equals(day))
+		                                 .mapToDouble(data -> data.getYValue().doubleValue())
+		                                 .sum();
+		        }
+		        if(dataMap.containsKey("Did not confirm")) {
+		            countCancelled = dataMap.get("Did not confirm").stream()
+		                                    .filter(data -> data.getXValue().equals(day))
+		                                    .mapToDouble(data -> data.getYValue().doubleValue())
+		                                    .sum();
+		        }
+		        // Add data to series
+		        seriesCancelledOrders.getData().add(new XYChart.Data<>(day, countCancelled));
+		        seriesNoShowVisitors.getData().add(new XYChart.Data<>(day, countNoShow));
+		    });
 
-			Number countNoShow = aggregatedData.getOrDefault("No-Show Visitors", new HashMap<>()).getOrDefault(day, 0);
-			seriesNoShowVisitors.getData().add(new XYChart.Data<>(day, countNoShow));
-		});
-		aggregatedData.forEach((seriesName, dayCounts) -> {
-			if ("User Cancelled".equals(seriesName) || "Did not confirm".equals(seriesName)) {
-				dayCounts.forEach((day, count) -> {
-					seriesCancelledOrders.getData().add(new XYChart.Data<>(day, count));
-				});
-			} else if ("Did not arrive".equals(seriesName)) {
-				dayCounts.forEach((day, count) -> {
-					seriesNoShowVisitors.getData().add(new XYChart.Data<>(day, count));
-
-				});
-			}
-		});
-		// Aggregate data for the median calculation
-		chartData.forEach((reason, dataList) -> {
-			dataList.forEach(data -> {
-				// Assuming data.getYValue() returns the cancellation amount
-				Number amount = data.getYValue();
-				if ("User Cancelled".equals(reason) || "Did not confirm".equals(reason)) {
-					cancelledOrdersValues.add(amount);
-				} else if ("Did not arrive".equals(reason)) {
-					noShowVisitorsValues.add(amount);
-				}
-			});
-		});
-		// Calculate and update medians for Cancelled Orders and No-Show Visitors
-		double medianCancelled = calculateMedian(cancelledOrdersValues);
-		double medianNoShow = calculateMedian(noShowVisitorsValues);
-		medianLabelCancelled.setText(String.format("The median for cancelled booking: %.0f", medianCancelled));
-		medianLabelNoShow.setText(String.format("The median for No-Show visitors: %.0f", medianNoShow));
+		medianLabelCancelled.setText(String.format("The median for cancelled booking: %d", medians.getKey()));
+		medianLabelNoShow.setText(String.format("The median for No-Show visitors: %d", medians.getValue()));
 
 		// Add the series to the bar chart
 		cancellationBarChart.getData().addAll(seriesCancelledOrders, seriesNoShowVisitors);
@@ -176,58 +175,24 @@ public class CancellationReportController extends AbstractScreen {
 	}
 
 	/**
-	 * This method is calculate the median
-	 */
-	private double calculateMedian(List<Number> values) {
-		List<Double> nonZeroValues = values.stream().map(Number::doubleValue).filter(value -> value > 0).sorted()
-				.collect(Collectors.toList());
-		if (nonZeroValues.isEmpty()) {
-			return 0; // Return 0 if there are no relevant data points
-		}
-		int middle = nonZeroValues.size() / 2;
-		if (nonZeroValues.size() % 2 == 1) {
-			return nonZeroValues.get(middle);
-		} else {
-			// Need to check if the list has at least 2 elements before calculating the
-			// average of the middle two
-			return (nonZeroValues.get(middle - 1) + nonZeroValues.get(middle)) / 2.0;
-		}
-	}
-
-	/**
-	 * Aggregates cancellation data by day, preparing it for chart display.
+	 * Populates the line chart with cancellation data organized by day of the week. This method
+	 * creates two series: one for cancelled orders and another for no-show visitors, based on the
+	 * aggregated data provided. It then calculates the total counts for each cancellation reason
+	 * across the week and adds these data points to their respective series in the line chart.
 	 * 
-	 * @param chartData The raw chart data with cancellation reasons and
-	 *                  corresponding day-wise counts.
-	 * @return A map with aggregated data ready for display on the bar chart.
-	 */
-	private Map<String, Map<String, Number>> aggregateDataByDay(
-			Map<String, List<XYChart.Data<String, Number>>> chartData) {
-		Map<String, Map<String, Number>> aggregatedData = new HashMap<>();
-
-		chartData.forEach((seriesName, dataList) -> {
-			Map<String, Number> dayCounts = new HashMap<>();
-			dataList.forEach(data -> {
-				String day = data.getXValue();
-				Number count = data.getYValue();
-				dayCounts.merge(day, count, (oldValue, newValue) -> oldValue.doubleValue() + newValue.doubleValue());
-			});
-			aggregatedData.put(seriesName, dayCounts);
-		});
-
-		return aggregatedData;
-	}
-
-	/**
-	 * Populates the line chart with data. This method creates series for each
-	 * cancellation reason and adds them to the line chart.
-	 * 
-	 * @param chartData The data to be displayed in the line chart.
+	 * @param chartData A Pair object containing two elements:
+	 *                  - The first element is a map where keys are cancellation reasons 
+	 *                    and values are lists of XYChart.Data objects. Each XYChart.Data object represents
+	 *                    a day of the week and the count of occurrences.
+	 *                  - The second element is a Pair of Integers, representing the median values for
+	 *                    cancelled bookings and no-show visitors, respectively.
 	 */
 	@SuppressWarnings("unchecked")
-	private void populateLineChart(Map<String, List<XYChart.Data<String, Number>>> chartData) {
+	private void populateLineChart(Pair<Map<String, List<Data<String, Number>>>, Pair<Integer, Integer>> chartData) {
 		cancellationLineChart.getData().clear(); // Clear previous data
-		Map<String, Map<String, Number>> aggregatedData = aggregateDataByDay(chartData);
+		 Map<String, List<XYChart.Data<String, Number>>> dataMap = chartData.getKey();
+		 Pair<Integer, Integer> medians = chartData.getValue();
+		
 		// Initializes two series for the chart, one for each cancellation reason
 		XYChart.Series<String, Number> seriesCancelledOrders = new XYChart.Series<>();
 		seriesCancelledOrders.setName("Cancelled Orders");
@@ -235,38 +200,42 @@ public class CancellationReportController extends AbstractScreen {
 		XYChart.Series<String, Number> seriesNoShowVisitors = new XYChart.Series<>();
 		seriesNoShowVisitors.setName("No-Show Visitors");
 
-		// Prepare to calculate medians
-		List<Number> cancelledOrdersValues = new ArrayList<>();
-		List<Number> noShowVisitorsValues = new ArrayList<>();
-		aggregatedData.forEach((seriesName, dayCounts) -> {
-			if ("User Cancelled".equals(seriesName) || "Did not confirm".equals(seriesName)) {
-				dayCounts.forEach((day, count) -> {
-					seriesCancelledOrders.getData().add(new XYChart.Data<>(day, count));
-				});
-			} else if ("Did not arrive".equals(seriesName)) {
-				dayCounts.forEach((day, count) -> {
-					seriesNoShowVisitors.getData().add(new XYChart.Data<>(day, count));
 
-				});
-			}
-		});
-		// Aggregate data for the median calculation
-		chartData.forEach((reason, dataList) -> {
-			dataList.forEach(data -> {
-				// Assuming data.getYValue() returns the cancellation amount
-				Number amount = data.getYValue();
-				if ("User Cancelled".equals(reason) || "Did not confirm".equals(reason)) {
-					cancelledOrdersValues.add(amount);
-				} else if ("Did not arrive".equals(reason)) {
-					noShowVisitorsValues.add(amount);
-				}
-			});
-		});
-		// Calculate and update medians for Cancelled Orders and No-Show Visitors
-		double medianCancelled = calculateMedian(cancelledOrdersValues);
-		double medianNoShow = calculateMedian(noShowVisitorsValues);
-		medianLabelCancelled.setText(String.format("The median for cancelled booking: %.0f", medianCancelled));
-		medianLabelNoShow.setText(String.format("The median for No-Show visitors: %.0f", medianNoShow));
+		List<String> daysOrder = Arrays.asList("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+				"Saturday");
+		daysOrder.forEach(day -> {
+			 double countCancelled = 0;
+		     double countNoShow = 0;
+		        
+
+		        // Calculate the count for "Cancelled Orders" if present
+		        if(dataMap.containsKey("User Cancelled")) {
+		            countCancelled = dataMap.get("User Cancelled").stream()
+		                                    .filter(data -> data.getXValue().equals(day))
+		                                    .mapToDouble(data -> data.getYValue().doubleValue())
+		                                    .sum();
+		        }
+		        
+		        // Calculate the count for "No-Show Visitors" if present
+		        if(dataMap.containsKey("Did not arrive")) {
+		            countNoShow = dataMap.get("Did not arrive").stream()
+		                                 .filter(data -> data.getXValue().equals(day))
+		                                 .mapToDouble(data -> data.getYValue().doubleValue())
+		                                 .sum();
+		        }
+		        if(dataMap.containsKey("Did not confirm")) {
+		            countCancelled = dataMap.get("Did not confirm").stream()
+		                                    .filter(data -> data.getXValue().equals(day))
+		                                    .mapToDouble(data -> data.getYValue().doubleValue())
+		                                    .sum();
+		        }
+		        // Add data to series
+		        seriesCancelledOrders.getData().add(new XYChart.Data<>(day, countCancelled));
+		        seriesNoShowVisitors.getData().add(new XYChart.Data<>(day, countNoShow));
+		    });
+
+		medianLabelCancelled.setText(String.format("The median for cancelled booking: %d", medians.getKey()));
+		medianLabelNoShow.setText(String.format("The median for No-Show visitors: %d", medians.getValue()));
 
 		// Add the series to the bar chart
 		cancellationLineChart.getData().addAll(seriesCancelledOrders, seriesNoShowVisitors);
@@ -322,8 +291,8 @@ public class CancellationReportController extends AbstractScreen {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void loadBefore(Object information) {
-		if (information instanceof Map) {
-			currentChartData = (Map<String, List<XYChart.Data<String, Number>>>) information;
+		if (information instanceof Pair) {
+			currentChartData = (Pair<Map<String, List<XYChart.Data<String, Number>>>, Pair<Integer, Integer>>) information;	
 			populateChart(currentChartData); // Populate your initial chart as needed
 
 		} else {

@@ -20,6 +20,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.chart.XYChart;
+import javafx.scene.chart.XYChart.Data;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
@@ -190,12 +191,12 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen {
 				error += "\n• Total number of visitors report can be generated for a specific park only";
 				valid = false;
 			}
-			if (selectedParkName.equals("usage")) {
+		} else if (selected.getUserData().equals("usage") && selectedParkName != null) {
+			if (selectedParkName.equals("All Parks")) {
 				error += "\n• Usage report can be generated for a specific park only";
 				valid = false;
 			}
 		}
-
 		if (!valid) {
 			showErrorAlert(error);
 		}
@@ -204,7 +205,17 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen {
 	}
 
 	/**
+	 * Generates and displays the Total Number of Visitors report for a selected
+	 * park, month, and year. This method first verifies the existence of the
+	 * selected park and checks if the report data is available for the given time
+	 * period and park. If the data is available, it proceeds to generate the
+	 * report.
 	 * 
+	 * @param selectedMonth    The code of the month for which the report is to be
+	 *                         generated.
+	 * @param selectedYear     The year for which the report is to be generated.
+	 * @param selectedParkName The name of the park for which the report is to be
+	 *                         generated.
 	 */
 	private void totalNumberOfVisitorsReport(String selectedMonth, String selectedYear, String selectedParkName) {
 		// getting the park object based on the selected park name
@@ -228,7 +239,15 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen {
 	}
 
 	/**
+	 * Generates and displays a usage report for a specific park, month, and year.
+	 * This method validates the existence of the park based on the selected name
+	 * and checks if the park manager has available data for the specified period.
+	 * If the data is available, it retrieves usage statistics.
 	 * 
+	 * @param selectedMonth    The month for which the report is being generated.
+	 * @param selectedYear     The year for which the report is being generated.
+	 * @param selectedParkName The name of the park for which the report is being
+	 *                         generated.
 	 */
 	private void usageReport(String selectedMonth, String selectedYear, String selectedParkName) {
 		Park selectedPark = parks.stream().filter(p -> p.getParkName().equals(selectedParkName)).findFirst()
@@ -250,62 +269,143 @@ public class DepartmentManagerReportsScreenController extends AbstractScreen {
 		}
 	}
 
+//	/**
+//	 * Generates and displays a cancellation report for a specific park, or all parks collectively, 
+//	 * for a given month and year. The method handles both individual park data and aggregated data for 
+//	 * all parks. It checks for report availability before generating or displaying the data.
+//	 * @param selectedMonth      The month for which the cancellation report is being generated.
+//	 * @param selectedYear       The year for which the cancellation report is being generated.
+//	 * @param selectedParkName   The name of the park for the cancellation report, or "All Parks" for aggregated data.
+//	 */
+//	private void cancellationReport(String selectedMonth, String selectedYear, String selectedParkName) {
+//		try {
+//			// Handle the "All Parks" option
+//			if ("All Parks".equals(selectedParkName)) {
+//				// Aggregate data for all parks
+//				Map<String, List<XYChart.Data<String, Number>>> cancellationData = new HashMap<>();
+//				System.out.println(cancellationData);
+//				for (Park park : parks) {
+//					if (control.isReportDataAvailable(selectedMonth, selectedYear, park, "cancelled")) {
+//						Pair<Map<String, List<XYChart.Data<String, Number>>>, Pair<Integer, Integer>> pair = control
+//								.generateCancellationReport(selectedMonth, selectedYear, park);
+//						
+//						Map<String, List<XYChart.Data<String, Number>>> parkCancellationData = pair.getKey();
+//						System.out.println(parkCancellationData);
+//						// Aggregate cancellation data from parkCancellationData into cancellationData
+//						parkCancellationData.forEach((key, valueList) -> {
+//							cancellationData.merge(key, valueList, (existingValues, newValues) -> {
+//								// Aggregate numerical values by day
+//								Map<String, Double> tempMap = new HashMap<>();
+//								for (XYChart.Data<String, Number> val : existingValues) {
+//									tempMap.put(val.getXValue(), val.getYValue().doubleValue());
+//								}
+//								for (XYChart.Data<String, Number> newVal : newValues) {
+//									tempMap.merge(newVal.getXValue(), newVal.getYValue().doubleValue(), Double::sum);
+//								}
+//								System.out.println(tempMap);
+//								// Convert back to List<XYChart.Data<String, Number>>
+//								List<XYChart.Data<String, Number>> mergedList = new ArrayList<>();
+//								tempMap.forEach((day, sum) -> mergedList.add(new XYChart.Data<>(day, sum)));
+//								System.out.println(mergedList);
+//								return mergedList;
+//							});
+//						});
+//					}
+//				}
+//				// Show the aggregated report
+//				ScreenManager.getInstance().showScreen("CancellationReportController",
+//						"/clientSide/fxml/CancellationReport.fxml", true, false, cancellationData);
+//			} else {
+//				// Find the Park object that matches the selected park name
+//				Park selectedPark = parks.stream().filter(p -> p.getParkName().equals(selectedParkName)).findFirst()
+//						.orElseThrow(() -> new IllegalArgumentException("Selected park not found"));
+//				// Check if data is available for the selected parameters
+//				if (!control.isReportDataAvailable(selectedMonth, selectedYear, selectedPark, "cancelled")) {
+//					showErrorAlert("No data available for the selected time period.");
+//					return;
+//				}
+//				Pair<Map<String, List<Data<String, Number>>>, Pair<Integer, Integer>> cancelData = control
+//						.generateCancellationReport(selectedMonth, selectedYear, selectedPark);
+//				ScreenManager.getInstance().showScreen("CancellationReportController",
+//						"/clientSide/fxml/CancellationReport.fxml", true, false, cancelData);
+//			}
+//		} catch (StatefulException | ScreenException e) {
+//			e.printStackTrace();
+//		}
+//	}
+
 	/**
+	 * Generates and displays a cancellation report for a specific park, or all
+	 * parks collectively, for a given month and year. The method handles both
+	 * individual park data and aggregated data for all parks. It checks for report
+	 * availability before generating or displaying the data.
 	 * 
+	 * @param selectedMonth    The month for which the cancellation report is being
+	 *                         generated.
+	 * @param selectedYear     The year for which the cancellation report is being
+	 *                         generated.
+	 * @param selectedParkName The name of the park for the cancellation report, or
+	 *                         "All Parks" for aggregated data.
 	 */
 	private void cancellationReport(String selectedMonth, String selectedYear, String selectedParkName) {
-		try {
-			// Handle the "All Parks" option
-			if ("All Parks".equals(selectedParkName)) {
-				// Aggregate data for all parks
-				Map<String, List<XYChart.Data<String, Number>>> cancellationData = new HashMap<>();
-				for (Park park : parks) {
-					if (control.isReportDataAvailable(selectedMonth, selectedYear, park, "cancelled")) {
-						Map<String, List<XYChart.Data<String, Number>>> parkCancellationData = control
-								.generateCancellationReport(selectedMonth, selectedYear, park);
-						// Aggregate cancellation data from parkCancellationData into cancellationData
-						parkCancellationData.forEach((key, valueList) -> {
-							cancellationData.merge(key, valueList, (existingValues, newValues) -> {
-								// Aggregate numerical values by day
-								Map<String, Double> tempMap = new HashMap<>();
-								for (XYChart.Data<String, Number> val : existingValues) {
-									tempMap.put(val.getXValue(), val.getYValue().doubleValue());
-								}
-								for (XYChart.Data<String, Number> newVal : newValues) {
-									tempMap.merge(newVal.getXValue(), newVal.getYValue().doubleValue(), Double::sum);
-								}
-								// Convert back to List<XYChart.Data<String, Number>>
-								List<XYChart.Data<String, Number>> mergedList = new ArrayList<>();
-								tempMap.forEach((day, sum) -> mergedList.add(new XYChart.Data<>(day, sum)));
-								return mergedList;
-							});
-						});
-					}
+		// Handle the "All Parks" option
+		if ("All Parks".equals(selectedParkName)) {
+			boolean isAvailable = false;
+			for (Park park : parks) {
+				if (control.isReportDataAvailable(selectedMonth, selectedYear, park, "cancelled")) {
+					isAvailable = true;
+					break;
 				}
-				// Show the aggregated report
-				ScreenManager.getInstance().showScreen("CancellationReportController",
-						"/clientSide/fxml/CancellationReport.fxml", true, false, cancellationData);
-			} else {
-				// Find the Park object that matches the selected park name
-				Park selectedPark = parks.stream().filter(p -> p.getParkName().equals(selectedParkName)).findFirst()
-						.orElseThrow(() -> new IllegalArgumentException("Selected park not found"));
-				// Check if data is available for the selected parameters
-				if (!control.isReportDataAvailable(selectedMonth, selectedYear, selectedPark, "cancelled")) {
-					showErrorAlert("No data available for the selected time period.");
-					return;
-				}
-				Map<String, List<XYChart.Data<String, Number>>> cancelData = control
-						.generateCancellationReport(selectedMonth, selectedYear, selectedPark);
-				ScreenManager.getInstance().showScreen("CancellationReportController",
-						"/clientSide/fxml/CancellationReport.fxml", true, false, cancelData);
 			}
-		} catch (StatefulException | ScreenException e) {
-			e.printStackTrace();
+
+			if (!isAvailable) { // no data available to generate report
+				showErrorAlert("No data available for the selected time period.");
+				return;
+			}
+
+			Pair<Map<String, List<XYChart.Data<String, Number>>>, Pair<Integer, Integer>> pair = control
+					.generateCancellationReport(selectedMonth, selectedYear, parks);
+
+			// Show the aggregated report
+			try {
+				ScreenManager.getInstance().showScreen("CancellationReportController",
+						"/clientSide/fxml/CancellationReport.fxml", true, false, pair);
+			} catch (StatefulException | ScreenException e) {
+				e.printStackTrace();
+			}
+			
+		} else {
+			// Find the Park object that matches the selected park name
+			Park selectedPark = parks.stream().filter(p -> p.getParkName().equals(selectedParkName)).findFirst()
+					.orElseThrow(() -> new IllegalArgumentException("Selected park not found"));
+			// Check if data is available for the selected parameters
+			if (!control.isReportDataAvailable(selectedMonth, selectedYear, selectedPark, "cancelled")) {
+				showErrorAlert("No data available for the selected time period.");
+				return;
+			}
+			Pair<Map<String, List<Data<String, Number>>>, Pair<Integer, Integer>> pair = control
+					.generateCancellationReport(selectedMonth, selectedYear, selectedPark);
+			try {
+				ScreenManager.getInstance().showScreen("CancellationReportController",
+						"/clientSide/fxml/CancellationReport.fxml", true, false, pair);
+			} catch (StatefulException | ScreenException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
 	/**
-	 * 
+	 * Generates and displays a visitation report for either a specific park or
+	 * aggregated across all parks, based on user selection for a particular month
+	 * and year. This method ensures the selected park exists checks report data
+	 * availability, and then displays the visitation data.
+	 *
+	 * @param selectedMonth    The month for which the visit report is being
+	 *                         generated.
+	 * @param selectedYear     The year for which the visit report is being
+	 *                         generated.
+	 * @param selectedParkName The name of the park for the visit report, or "All
+	 *                         Parks" for aggregated data.
 	 */
 	private void visitReport(String selectedMonth, String selectedYear, String selectedParkName) {
 		try {

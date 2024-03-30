@@ -22,6 +22,7 @@ import common.communication.Communication.CommunicationType;
 import common.entities.Park;
 import common.communication.CommunicationException;
 import javafx.scene.chart.XYChart;
+import javafx.scene.chart.XYChart.Data;
 import javafx.util.Pair;
 
 /**
@@ -113,7 +114,6 @@ public class ReportsController {
 			String reportType) {
 		String reportTableName = reportType.equals("total_visitors") ? Communication.totalReport
 				: Communication.usageReport;
-		// String parkName = park.getParkName();
 		String parkTableName = ParkController.getInstance().nameOfTable(park);
 		if (park == null || selectedMonth == null || selectedYear == null) {
 			return false;
@@ -482,7 +482,6 @@ public class ReportsController {
 		Map<String, List<XYChart.Data<Number, Number>>> chartData = new HashMap<>();
 		chartData.put("Group", groupVisits);
 		chartData.put("Individual Visitor", individualVisits);
-		System.out.println(chartData);
 		return chartData;
 	}
 
@@ -498,53 +497,102 @@ public class ReportsController {
 	 *         of XYChart.Data objects. Each XYChart.Data object pairs a day of the
 	 *         week with the average number of cancellations for that reason.
 	 */
-	public Map<String, List<XYChart.Data<String, Number>>> generateCancellationReport(String selectedMonth,
-			String selectedYear, Park selectedPark) {
+	@SuppressWarnings("unchecked")
+	public Pair<Map<String, List<Data<String, Number>>>, Pair<Integer, Integer>> generateCancellationReport(
+			String selectedMonth, String selectedYear, Object fetchFrom) {
 		// Ensure the park parameter is not null
-		if (selectedPark == null) {
+		if (fetchFrom == null) {
 			throw new IllegalArgumentException("Park cannot be null");
 		}
-		// Prepare a database query to select cancellation data for the specified park
-		String parkTableName = ParkController.getInstance().nameOfTable(selectedPark) + Communication.cancelledBookings;
-		Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
-		// Set the type of the query
-		try {
-			comm.setQueryType(Communication.QueryType.SELECT);
-		} catch (CommunicationException e) {
-			e.printStackTrace();
+
+		if (fetchFrom instanceof Park) {
+			// Prepare a database query to select cancellation data for the specified park
+			Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
+			// Set the type of the query
+			try {
+				comm.setQueryType(Communication.QueryType.SELECT);
+			} catch (CommunicationException e) {
+				e.printStackTrace();
+			}
+
+			Park selectedPark = (Park) fetchFrom;
+			String tableName = ParkController.getInstance().nameOfTable(selectedPark) + Communication.cancelledBookings;
+			comm.setTables(Arrays.asList(tableName));
+			// Configure the query with columns to select, and the date range
+			// for filtering.
+			comm.setSelectColumns(Arrays.asList("dayOfVisit", "cancellationReason", "numberOfVisitors"));
+			int month = Integer.parseInt(selectedMonth);
+			int year = Integer.parseInt(selectedYear);
+			LocalDate from = LocalDate.of(year, month, 1);
+			LocalDate to = from.plusMonths(1).minusDays(1);
+			comm.setWhereConditions(Arrays.asList("dayOfVisit", "dayOfVisit"), Arrays.asList(">=", "AND", "<="),
+					Arrays.asList(from, to));
+			// Send the query request to the server and process the returned results for
+			// charting
+			try {
+				System.out.println(comm.combineQuery());
+			} catch (CommunicationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			GoNatureClientUI.client.accept(comm);
+			return processFetchedCancellationDataForChart(comm.getResultList());
+
+		} else {
+			ArrayList<Object[]> results = new ArrayList<>();
+			for (Park park : (ArrayList<Park>) fetchFrom) {
+				// Prepare a database query to select cancellation data for the specified park
+				Communication comm = new Communication(Communication.CommunicationType.QUERY_REQUEST);
+				// Set the type of the query
+				try {
+					comm.setQueryType(Communication.QueryType.SELECT);
+				} catch (CommunicationException e) {
+					e.printStackTrace();
+				}
+				comm.setTables(Arrays
+						.asList(ParkController.getInstance().nameOfTable(park) + Communication.cancelledBookings));
+				// Configure the query with columns to select, and the date range
+				// for filtering.
+				comm.setSelectColumns(Arrays.asList("dayOfVisit", "cancellationReason", "numberOfVisitors"));
+				int month = Integer.parseInt(selectedMonth);
+				int year = Integer.parseInt(selectedYear);
+				LocalDate from = LocalDate.of(year, month, 1);
+				LocalDate to = from.plusMonths(1).minusDays(1);
+				comm.setWhereConditions(Arrays.asList("dayOfVisit", "dayOfVisit"), Arrays.asList(">=", "AND", "<="),
+						Arrays.asList(from, to));
+				// Send the query request to the server and process the returned results for
+				// charting
+				GoNatureClientUI.client.accept(comm);
+				results.addAll(comm.getResultList());
+			}
+			return processFetchedCancellationDataForChart(results);
 		}
-		// Configure the query with table name, columns to select, and the date range
-		// for filtering.
-		comm.setTables(Arrays.asList(parkTableName));
-		comm.setSelectColumns(Arrays.asList("dayOfVisit", "cancellationReason", "numberOfVisitors"));
-		int month = Integer.parseInt(selectedMonth);
-		int year = Integer.parseInt(selectedYear);
-		LocalDate from = LocalDate.of(year, month, 1);
-		LocalDate to = from.plusMonths(1).minusDays(1);
-		comm.setWhereConditions(Arrays.asList("dayOfVisit", "dayOfVisit"), Arrays.asList(">=", "AND", "<="),
-				Arrays.asList(from, to));
-		// Send the query request to the server and process the returned results for
-		// charting
-		GoNatureClientUI.client.accept(comm);
-		return processFetchedCancellationDataForChart(comm.getResultList());
 	}
 
 	/**
-	 * Processes fetched data to prepare it for visualization in a chart. This
-	 * method calculates the average number of visitors for each cancellation reason
-	 * and organizes the data by days of the week.
+	 * Processes fetched data to prepare it for visualization in a chart by
+	 * calculating the average number of visitors for each cancellation reason and
+	 * organizing the data by days of the week. Additionally, this method calculates
+	 * the median number of cancelled orders and no-show visitors across all days,
+	 * which can provide insights into typical cancellation volumes.
 	 *
-	 * @param resultList A list of object arrays, each representing a row from the
-	 *                   database query result. Expected data includes the day of
-	 *                   visit, cancellation reason, and number of visitors.
-	 * @return A map where keys are cancellation reasons and values are lists of
-	 *         XYChart.Data objects, each representing the average number of
-	 *         cancellations for a day of the week.
+	 * @param resultList A list of object arrays, each array representing a row from
+	 *                   the database query result. Each array is expected to
+	 *                   contain data for the day of visit , cancellation reason and
+	 *                   number of visitors.
+	 * 
+	 * @return A pair consisting of a map and another pair. The map's keys are
+	 *         cancellation reasons, and its values are lists of XYChart.Data
+	 *         objects, each representing the average number of cancellations for a
+	 *         day of the week. The nested pair contains the median values for
+	 *         cancelled orders and no-show visitors, respectively.
 	 */
-	private Map<String, List<XYChart.Data<String, Number>>> processFetchedCancellationDataForChart(
+	private Pair<Map<String, List<XYChart.Data<String, Number>>>, Pair<Integer, Integer>> processFetchedCancellationDataForChart(
 			List<Object[]> resultList) {
 		Map<String, List<Integer>> cancelledOrdersStats = new HashMap<>();
 		Map<String, List<Integer>> noShowVisitorsStats = new HashMap<>();
+		ArrayList<Integer> cancelledOrdersList = new ArrayList<>();
+		ArrayList<Integer> noShowVisitorsList = new ArrayList<>();
 
 		// Initialize lists for each day of the week
 		for (DayOfWeek day : DayOfWeek.values()) {
@@ -564,9 +612,37 @@ public class ReportsController {
 			if (Communication.userCancelled.equals(cancellationReason)
 					|| Communication.userDidNotConfirm.equals(cancellationReason)) {
 				cancelledOrdersStats.get(dayName).add(numberOfVisitors);
+				cancelledOrdersList.add(numberOfVisitors);
 			} else if (Communication.userDidNotArrive.equals(cancellationReason)) {
 				noShowVisitorsStats.get(dayName).add(numberOfVisitors);
+				noShowVisitorsList.add(numberOfVisitors);
 			}
+		}
+
+		Collections.sort(cancelledOrdersList);
+		int cancelledOrdersMedian;
+		if (cancelledOrdersList.isEmpty()) {
+			cancelledOrdersMedian = 0;
+		} else if (cancelledOrdersList.size() % 2 == 0) { // Even number of elements
+			int midIndex1 = cancelledOrdersList.size() / 2 - 1; // Index of the first middle element
+			int midIndex2 = cancelledOrdersList.size() / 2; // Index of the second middle element
+			cancelledOrdersMedian = (int) ((cancelledOrdersList.get(midIndex1) + cancelledOrdersList.get(midIndex2))
+					/ 2.0);
+		} else { // Odd number of elements
+			cancelledOrdersMedian = cancelledOrdersList.get(cancelledOrdersList.size() / 2);
+		}
+
+		Collections.sort(noShowVisitorsList);
+		int noShowVisitorsMedian;
+		if (noShowVisitorsList.isEmpty()) {
+			noShowVisitorsMedian = 0;
+		} else if (noShowVisitorsList.size() % 2 == 0) { // Even number of elements
+			int midIndex1 = noShowVisitorsList.size() / 2 - 1; // First middle element
+			int midIndex2 = noShowVisitorsList.size() / 2; // Second middle element
+			noShowVisitorsMedian = (int) ((noShowVisitorsList.get(midIndex1) + noShowVisitorsList.get(midIndex2))
+					/ 2.0);
+		} else { // Odd number of elements
+			noShowVisitorsMedian = noShowVisitorsList.get(noShowVisitorsList.size() / 2);
 		}
 
 		// Calculate averages and prepare chart data
@@ -588,6 +664,9 @@ public class ReportsController {
 		chartData.put(Communication.userDidNotConfirm, cancelledOrdersAvgData);
 		chartData.put(Communication.userDidNotArrive, noShowVisitorsAvgData);
 
-		return chartData;
+		Pair<Map<String, List<XYChart.Data<String, Number>>>, Pair<Integer, Integer>> pair = new Pair<>(chartData,
+				new Pair<Integer, Integer>(cancelledOrdersMedian, noShowVisitorsMedian));
+		return pair;
+
 	}
 }

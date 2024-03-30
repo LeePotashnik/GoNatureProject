@@ -149,7 +149,6 @@ public class ParkManagerReportScreenController extends AbstractScreen {
 					selectedYear, parkManager.getParkObject());
 			boolean saveSuccess = control.saveTotalNumberOfVisitorsReport(selectedMonth, selectedYear,
 					parkManager.getParkObject());
-			System.out.println(saveSuccess);
 			ScreenManager.getInstance().showScreen("TotalNumberOfVisitorsReportController",
 					"/clientSide/fxml/TotalNumberOfVisitorsReport.fxml", true, false, visitorsData);
 		} catch (StatefulException | ScreenException e) {
@@ -172,7 +171,6 @@ public class ParkManagerReportScreenController extends AbstractScreen {
 			List<Pair<LocalDate, Integer>> usageData = control.generateUsageReport(selectedMonth, selectedYear,
 					parkManager.getParkObject());
 			boolean saveSuccess = control.saveUsageReport(selectedMonth, selectedYear, parkManager.getParkObject());
-			System.out.println(saveSuccess);
 			ScreenManager.getInstance().showScreen("UsageReportController", "/clientSide/fxml/UsageReport.fxml", true,
 					false, usageData);
 		} catch (StatefulException | ScreenException e) {
