@@ -94,7 +94,7 @@ public class PaymentSystemScreenController extends AbstractScreen {
 					new Thread(() -> {
 						if (bookingMethod.equals("online")) { // send a regular notification
 							BookingController.getInstance().sendNotification(booking, false);
-						} else { // send a notification without a reminder
+						} else if (bookingMethod.equals("casual")) { // send a notification without a reminder
 							ParkController.getInstance().sendNotification(booking, false);
 						}
 					}).start();
@@ -467,11 +467,8 @@ public class PaymentSystemScreenController extends AbstractScreen {
 			// cancelling the reservation
 			BookingController.getInstance().deleteBooking(booking, Communication.activeBookings);
 			if (bookingMethod.equals("casual")) {
-				int newCurrectCapacity = Integer.parseInt(
-						(ParkController.getInstance().checkCurrentCapacity(booking.getParkBooked().getParkName()))[3]);
-				newCurrectCapacity -= booking.getNumberOfVisitors();
 				ParkController.getInstance().updateCurrentCapacity(booking.getParkBooked().getParkName(),
-						newCurrectCapacity);
+						booking.getNumberOfVisitors(), false);
 			}
 
 			event.consume();

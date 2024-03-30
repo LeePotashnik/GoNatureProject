@@ -305,9 +305,40 @@ public class GoNatureServer extends AbstractServer {
 						response.setQueryResult(true);
 					break;
 				}
+				case LOCK_BOOKING: {
+					ArrayList<Object[]> resultLock = new ArrayList<>();
+					Object[] ret = new Object[1];
+					if (request.getResultList().isEmpty()) { // inserting to the locked table
+						try {
+							request.setQueryType(QueryType.INSERT); // changing from select to insert
+						} catch (CommunicationException e) {
+							e.printStackTrace();
+						}
+						request.setColumnsAndValues(Arrays.asList("bookingId"), Arrays.asList(request.getBookingId()));
+						boolean insertResult = database.executeInsertQuery(request);
+						if (insertResult) {
+							ret[0] = 0; // empty and insert succeed
+							resultLock.add(ret);
+						} else {
+							ret[0] = 1; // empty and insert failed
+							resultLock.add(ret);
+						}
+					} else {
+						ret[0] = 2; // not empty
+						resultLock.add(ret);
+					}
+					response.setResultList(resultLock);
+					try {
+						request.setQueryType(QueryType.SELECT); // returning to select from insert
+						// this is done for correct identification in the client side
+					} catch (CommunicationException e) {
+						e.printStackTrace();
+					}
+					break;
+				}
 				case UPDATE_CAPACITY: {
 					int visitorsBooking = request.getNumberOfVisitors();
-					int currentCapacity = (Integer) (request.getResultList().get(0)[3]);
+					int currentCapacity = (Integer) (request.getResultList().get(0)[0]);
 					try {
 						request.setQueryType(QueryType.UPDATE);
 					} catch (CommunicationException e) {
@@ -327,7 +358,7 @@ public class GoNatureServer extends AbstractServer {
 					} catch (CommunicationException e) {
 						e.printStackTrace();
 					}
-					
+
 					// if the returned value is null/empty, it means the selection returned no rows
 					// thus, the booking can be inserted to the active bookings table of the park
 					// as long as it does not exceed from the park limits
@@ -343,7 +374,7 @@ public class GoNatureServer extends AbstractServer {
 						// calculating the current number of visitors
 						int sumOfVisitors = 0;
 						for (Object[] row : result) {
-							sumOfVisitors += (Integer)row[0];
+							sumOfVisitors += (Integer) row[0];
 						}
 
 						if (maximumCapacity - sumOfVisitors - bookingVisitors >= 0) { // inserting
@@ -427,11 +458,10 @@ public class GoNatureServer extends AbstractServer {
 								request.getNumberOfVisitors(), request.getFinalPrice(), request.isPaid()));
 				break;
 			case SEND_WAITING_LIST_ENTRANCE: // sending a waiting list entrance approval
-				notifications.sendWaitingListEnteranceEmailNotification(
-						Arrays.asList(request.getEmailAddress(), request.getPhoneNumber(), request.getParkName(),
-								request.getDayOfVisit(), request.getTimeOfVisit(),
-								request.getFirstName() + " " + request.getLastName(), request.getParkLocation(),
-								request.getNumberOfVisitors(), request.getFinalPrice()));
+				notifications.sendWaitingListEnteranceEmailNotification(Arrays.asList(request.getEmailAddress(),
+						request.getPhoneNumber(), request.getParkName(), request.getDayOfVisit(),
+						request.getTimeOfVisit(), request.getFirstName() + " " + request.getLastName(),
+						request.getParkLocation(), request.getNumberOfVisitors(), request.getFinalPrice()));
 				break;
 			case NONE:
 				return;
