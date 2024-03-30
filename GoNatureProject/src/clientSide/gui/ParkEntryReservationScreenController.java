@@ -141,7 +141,8 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 			else {
 				showErrorAlert(
 						"Unfortunately, there is no place available in the park for the number of people in the reservation");
-				visitorIDTxt.setStyle(setFieldToError());
+				visitorsAmountTxt.setStyle(setFieldToError());
+				return;
 			}
 		}
 
@@ -208,17 +209,21 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 				switch (decision) {
 				case 1: // Cash
 					try {
-						processBooking(amount);
+						processBooking(amount, true);
 						ScreenManager.getInstance().showScreen("ConfirmationScreenController",
 								"/clientSide/fxml/ConfirmationScreen.fxml", true, false, newBooking);
 					} catch (StatefulException | ScreenException e) {
 						e.printStackTrace();
 					}
+					new Thread(() -> {
+						  // sending a notification
+						  parkControl.sendNotification(newBooking, false);
+						}).start();
 					break;
 				case 2: // Credit Card
 					event.consume();
 					try {
-						processBooking(amount);
+						processBooking(amount, true);
 						ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
 								"/clientSide/fxml/PaymentSystemScreen.fxml", true, true,
 								new Pair<Booking, String>(newBooking, "casual"));
@@ -271,13 +276,12 @@ public class ParkEntryReservationScreenController extends AbstractScreen impleme
 	/**
 	 * This method inserts the new booking to the database
 	 */
-	private void processBooking(int amount) {
+	private void processBooking(int amount, boolean add) {
 		newBooking.setPaid(true);
-		String parkTable = parkControl.nameOfTable(parkEmployee.getWorkingIn()) + Communication.activeBookings;
+		String parkTable = parkControl.nameOfTable(parkEmployee.getWorkingIn());
 		parkControl.insertBookingToTable(newBooking, parkTable, "active");
 		// updating park capacity
-		int update = amount + parkEmployee.getWorkingIn().getCurrentCapacity();
-		parkControl.updateCurrentCapacity(newBooking.getParkBooked().getParkName(), update);
+		parkControl.updateCurrentCapacity(newBooking.getParkBooked().getParkName(), amount, add);
 	}
 
 	/**
