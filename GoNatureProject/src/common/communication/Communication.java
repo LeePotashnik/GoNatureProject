@@ -185,7 +185,7 @@ public class Communication implements Serializable {
 	////////////////////////////////////////////////////
 
 	public enum SecondaryRequest {
-		UPDATE_WAITING_LIST, UPDATE_CAPACITY, INSERT_BOOKING_AFTER_CHECKING_CAPACITIES;
+		UPDATE_WAITING_LIST, UPDATE_CAPACITY, INSERT_BOOKING_AFTER_CHECKING_CAPACITIES, LOCK_BOOKING;
 	}
 
 	private SecondaryRequest secondaryRequest;

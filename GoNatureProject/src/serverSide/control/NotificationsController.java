@@ -164,7 +164,7 @@ public class NotificationsController {
 		message += isPaid ? "\nYour booking is fully paid!"
 				: "\nYour booking is not paid, you will need to pay at the park entrance.";
 
-		sendEmail(emailAddress, "GoNature - Confirmation", message);
+		sendEmail(emailAddress, "GoNature - " + (isPaid ? "Invoice" : "Confirmation"), message);
 	}
 
 	/**

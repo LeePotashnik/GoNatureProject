@@ -162,8 +162,10 @@ public class ConfirmationScreenController extends AbstractScreen {
 				reminder += " 24 hours before arrival, you'll get a reminder.";
 			}
 			if (booking.isPaid()) {
+				titleLbl.setText("Invoice");
 				isPaidLabel.setText("Your reservation is fully paid." + reminder);
 			} else {
+				titleLbl.setText("Confirmation");
 				isPaidLabel.setText("Your reservation is not paid." + reminder);
 			}
 
