@@ -203,7 +203,7 @@
             </Button>
          </children>
       </VBox>
-      <Button fx:id="releaseBtn" layoutX="370.0" layoutY="140.0" mnemonicParsing="false" onAction="#checkIdClicked" prefHeight="36.0" prefWidth="147.0" text="Release Booking">
+      <Button fx:id="releaseBtn" layoutX="370.0" layoutY="140.0" mnemonicParsing="false" onAction="#releaseClicked" prefHeight="36.0" prefWidth="147.0" text="Release Booking">
          <font>
             <Font size="16.0" />
          </font>

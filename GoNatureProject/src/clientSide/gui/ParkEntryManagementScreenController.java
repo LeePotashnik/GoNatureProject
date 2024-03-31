@@ -68,7 +68,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 	//////////////////////////////////
 
 	@FXML
-	private Button backButton, entryTimeBtn, exitTimeBtn, invoiceBtn, checkBtn;
+	private Button backButton, entryTimeBtn, exitTimeBtn, invoiceBtn, checkBtn, releaseBtn;
 	@FXML
 	private TextField bookingIDTxt;
 	@FXML
@@ -82,26 +82,33 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 	//////////////////////////////
 	/// EVENT HANDLING METHODS ///
 	//////////////////////////////
+	
+	@FXML
+	void releaseClicked(ActionEvent event) {
+		new Thread(() -> {
+			parkControl.removeBooking(Communication.bookingLock, booking.getBookingId());
+			Platform.runLater(() -> {
+				// reset lables
+				fullNameLbl.setText("");
+				dateLbl.setText("");
+				sizeLbl.setText("");
+				priceLbl.setText("");
+				isPaidLbl.setText("");
+				arrivalLbl.setText("");
+				leavingLbl.setText("");
+				statusLbl.setText("");
+				releaseBtn.setDisable(true);
+				checkBtn.setDisable(false);
+				bookingIDTxt.setDisable(false);
+				bookingIDTxt.setText("");
+			});
+		}).start();
+	}
 
 	@FXML
 	void checkIdClicked(ActionEvent event) {
-//		if (bookingIDTxt.getText() != null && !bookingIDTxt.getText().isEmpty() && bookingId != null) {
-//			if (bookingIDTxt.getText().equals(bookingId)) {
-//				event.consume();
-//				return;
-//			}
-//		}
-
-		// reset lables
-		fullNameLbl.setText("");
-		dateLbl.setText("");
-		sizeLbl.setText("");
-		priceLbl.setText("");
-		isPaidLbl.setText("");
-		arrivalLbl.setText("");
-		leavingLbl.setText("");
-		statusLbl.setText("");
-
+		checkBtn.setDisable(true);
+		bookingIDTxt.setDisable(true);
 		validate();
 	}
 
@@ -127,6 +134,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		}
 	}
 
+	@FXML
 	/**
 	 * Updates the entry time for a visitor based on a valid booking ID. It first
 	 * validates the booking ID, then checks for the booking's existence and its
@@ -137,7 +145,6 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 	 * @param event The ActionEvent triggered by the employee's interaction with the
 	 *              UI to update a booking's entry time.
 	 */
-	@FXML
 	void updateEntryTime(ActionEvent event) {
 		String bookingId = bookingIDTxt.getText();
 		String parkTable = parkControl.nameOfTable(parkEmployee.getWorkingIn());
@@ -165,9 +172,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 			parkControl.updateCurrentCapacity(parkEmployee.getWorkingIn().getParkName(), booking.getNumberOfVisitors(),
 					true);
 		}).start();
-
-		entryTimeBtn.setDisable(true);
-
+		booking.setEntryParkTime(LocalTime.now());
 		// if
 		// (parkControl.updateCurrentCapacity(parkEmployee.getWorkingIn().getParkName(),
 		// booking.getNumberOfVisitors()))
@@ -212,8 +217,11 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		} else { // already paid
 			arrivalLbl.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
 		}
+		entryTimeBtn.setDisable(true);
+		exitTimeBtn.setDisable(false);
 	}
 
+	@FXML
 	/**
 	 * Updates the exit time for a visitor based on a valid booking ID. This method
 	 * validates the booking ID and confirms the booking's existence. It ensures
@@ -228,7 +236,6 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 	 * @param event The ActionEvent triggered by the employee's interaction with the
 	 *              UI to update a booking's exit time.
 	 */
-	@FXML
 	void updateExitTime(ActionEvent event) {
 		String parkTable = parkControl.nameOfTable(parkEmployee.getWorkingIn());
 
@@ -260,8 +267,11 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 	 * @param event
 	 */
 	void returnToPreviousScreen(ActionEvent event) {
-		if (bookingId != null)
-			parkControl.removeBooking(Communication.bookingLock, bookingId);
+		if (!releaseBtn.isDisable()) {
+			event.consume();
+			showErrorAlert("Please release the booking first in order to go back to your account");
+			return;
+		}
 		try {
 			ScreenManager.getInstance().goToPreviousScreen(false, false);
 		} catch (ScreenException | StatefulException e) {
@@ -305,14 +315,6 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		return null;
 	}
 
-	public ParkEmployee getParkEmployee() {
-		return parkEmployee;
-	}
-
-	public void setParkEmployee(ParkEmployee parkEmployee) {
-		this.parkEmployee = parkEmployee;
-	}
-
 	/**
 	 * booking ID validation: Ensuring that the inserted ID is valid in terms of
 	 * length and contains only digits.
@@ -321,27 +323,15 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 	 */
 	private void validate() {
 		valid.set(true);
-		System.out.println(valid.get());
 		String insertedID = bookingIDTxt.getText();
-
-		if (bookingId != null) {
-			// If the user hasn't exited the screen and has already checked a valid
-			// bookingID before
-			if (bookingId.equals(insertedID) && bookingId.length() == 10) {
-				bookingIDTxt.setStyle(setFieldToRegular());
-				valid.set(true);
-			} else
-				// If there's a new booking ID to check, the previous booking ID is removed from
-				// the lock bookings in the database.
-				new Thread(() -> {
-					parkControl.removeBooking(Communication.bookingLock, bookingId);
-				}).start();
-		}
 
 		if (insertedID.length() != 10 || !insertedID.matches("\\d+")) {
 			bookingIDTxt.setStyle(setFieldToError());
 			showErrorAlert("You must enter a valid booking ID number with exactly 10 digits");
 			valid.set(false);
+			checkBtn.setDisable(false);
+			bookingIDTxt.setDisable(false);
+			return;
 		}
 
 		// if arrived here, the validation process for the input is completed
@@ -362,7 +352,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 					new Thread(() -> {
 						final boolean lockResult = parkControl.checkIfBookingIsLock(insertedID);
 						isLockedAlready.set(lockResult);
-						System.out.println("LOCK RESULT " + lockResult);
+						System.out.println("NOW lockResult IS " + lockResult);
 
 						Platform.runLater(() -> {
 							// locking process failed
@@ -374,14 +364,15 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 								bookingId = insertedID;
 								valid.set(true);
 							}
-
 							if (valid.get()) {
 								bookingIDTxt.setStyle(setFieldToRegular());
 								afterValidation();
+							} else {
+								checkBtn.setDisable(false);
+								bookingIDTxt.setDisable(false);
 							}
 						});
 					}).start();
-
 				} else {
 					valid.set(false);
 				}
@@ -389,10 +380,11 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		}).start();
 	}
 
+	/**
+	 * This method is called after the validation process succeeds
+	 */
 	private void afterValidation() {
-//		if (!valid.get())
-//			return;
-
+		releaseBtn.setDisable(false);
 		fullNameLbl.setText(booking.getFirstName() + " " + booking.getLastName());
 		dateLbl.setText(booking.getDayOfVisit() + " " + booking.getTimeOfVisit());
 		sizeLbl.setText(booking.getNumberOfVisitors() + "");
@@ -456,12 +448,16 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 	 */
 	@Override
 	public void handleCloseRequest(WindowEvent event) {
+		if (!releaseBtn.isDisable()) {
+			event.consume();
+			showErrorAlert("Please release the booking first in order to leave the application");
+			return;
+		}
+		
 		int decision = showConfirmationAlert("Are you sure you want to log out from the system?",
 				Arrays.asList("Yes", "No"));
 		switch (decision) {
 		case 1: // Yes
-			if (bookingId != null)
-				parkControl.removeBooking(Communication.bookingLock, bookingId);
 			userControl.logoutUser();
 			// creating a communication request for disconnecting from the server port
 			Communication message = new Communication(CommunicationType.CLIENT_SERVER_MESSAGE);
@@ -515,6 +511,8 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		entryTimeBtn.setDisable(true);
 		exitTimeBtn.setDisable(true);
 		invoiceBtn.setDisable(true);
+		
+		releaseBtn.setDisable(true);
 
 		// setting the application's background
 		setApplicationBackground(pane);
