@@ -1,10 +1,13 @@
 package clientSide.gui;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
 import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -12,6 +15,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -55,6 +59,8 @@ public class ClientConnectionController extends AbstractScreen {
 	private Label titleLbl, instrLbl;
 	@FXML
 	private Rectangle rectangle;
+	@FXML
+	private ProgressIndicator progress;
 
 	//////////////////////////////
 	/// EVENT HANDLING METHODS ///
@@ -97,17 +103,36 @@ public class ClientConnectionController extends AbstractScreen {
 		if (valid) {
 			int portNumber = Integer.parseInt(port); // changing the string to int
 			GoNatureClientUI.createClient(host, portNumber); // creating an instance of the PrototypeClient
-			boolean result = GoNatureClientUI.client.connectClientToServer(host, portNumber);
-			if (!result) { // if the client connection failed
-				showErrorAlert("Establishing connection to server (host: " + host + ", port: " + port + ") failed");
-				GoNatureClientUI.client = null;
-			} else { // if the client connection succeed
-				System.out
-						.println("Establishing connection to server (host: " + host + ", port: " + port + ") succeed");
-				runClientSide(); // running the client side
-			}
+			AtomicBoolean connectionResult = new AtomicBoolean();
+			new Thread(() -> {
+				hostTxtField.setDisable(true);
+				portTxtField.setDisable(true);
+				connectBtn.setDisable(true);
+				progress.setVisible(true);
+				final boolean result = GoNatureClientUI.client.connectClientToServer(host, portNumber);
+				connectionResult.set(result);
+
+				Platform.runLater(() -> {
+					if (!connectionResult.get()) { // if the client connection failed
+						showErrorAlert(
+								"Establishing connection to server (host: " + host + ", port: " + port + ") failed"
+								+ "\nPlease check the entered details.");
+						GoNatureClientUI.client = null;
+						hostTxtField.setDisable(false);
+						portTxtField.setDisable(false);
+						connectBtn.setDisable(false);
+						progress.setVisible(false);
+					} else { // if the client connection succeed
+						System.out.println(
+								"Establishing connection to server (host: " + host + ", port: " + port + ") succeed");
+						runClientSide(); // running the client side
+					}
+				});
+			}).start();
+
 		} else {
 			showErrorAlert("Errors:" + showMessage);
+			return;
 		}
 	}
 
@@ -287,6 +312,10 @@ public class ClientConnectionController extends AbstractScreen {
 		goNatureLogo.setImage(new Image(getClass().getResourceAsStream("/GoNatureBanner.png")));
 
 		setupTextFieldToDigitsOnly(portTxtField);
+
+		// setting the porgress indicator
+		progress.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
+		progress.setVisible(false);
 
 		// setting the application's background
 		setApplicationBackground(pane);
