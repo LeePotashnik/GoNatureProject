@@ -775,7 +775,7 @@ public class BookingController {
 			countVisitors += (Integer) row[0];
 		}
 		// checking park parameters
-		return pair.getKey() - countVisitors - numberOfVisitors > 0;
+		return pair.getKey() - countVisitors - numberOfVisitors >= 0;
 	}
 
 	//////////////////////////////////////////////////////
