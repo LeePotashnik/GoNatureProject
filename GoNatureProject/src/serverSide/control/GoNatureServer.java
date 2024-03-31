@@ -28,7 +28,7 @@ public class GoNatureServer extends AbstractServer {
 	public static final ObservableList<ConnectedClient> connectedToGUI = FXCollections.observableArrayList();
 	private NotificationsController notifications = NotificationsController.getInstance();
 	private StaffController staffController;
-	private static final int parkAmount = 17;
+	private static final int parkAmount = 18; // 17 parks and 1 more for other uses
 	private ArrayList<Semaphore> parksSemaphores = new ArrayList<>(); // for park capacities critical section control
 
 	/**
@@ -241,7 +241,7 @@ public class GoNatureServer extends AbstractServer {
 		// if so: acquires the semaphore, or waiting for it to be released if already
 		// acquired
 		int isRequestCritical = request.isCritical(); // returns -1 if not requires a critical section
-		if (isRequestCritical != -1) { // aquiring the critical section
+		if (isRequestCritical != -1) { // acquiring the critical section
 			try {
 				parksSemaphores.get(isRequestCritical).acquire();
 				System.out.println("Semaphore is aquired for park #" + isRequestCritical);
@@ -259,6 +259,13 @@ public class GoNatureServer extends AbstractServer {
 		/////////////////////
 		case QUERY_REQUEST: // if this is a query request
 		{
+			try {
+				System.out.println("GOT: " + request.combineQuery());
+			} catch (CommunicationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			// creating a communication response to be sent later to the client side
 			response = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
 			response.setServerMessageType(ServerMessageType.RESPONSE);
@@ -372,6 +379,40 @@ public class GoNatureServer extends AbstractServer {
 						}
 					}
 					break;
+				}
+				case CHECK_USER_LOCKED: {
+					ArrayList<Object[]> selectResult = response.getResultList();
+					if (selectResult == null || selectResult.isEmpty()) { // user does not exist
+						response.setResultList(null);
+						response.setQueryResult(false);
+
+					} else { // if this user exists
+						boolean isLocked = (Integer) selectResult.get(0)[6] == 0 ? false : true;
+						if (isLocked) { // if locked
+							response.setQueryResult(false);
+						} else { // if not locked
+							// changing the communication to update query
+							try {
+								request.setQueryType(QueryType.UPDATE);
+							} catch (CommunicationException e) {
+								e.printStackTrace();
+							}
+							request.setColumnsAndValues(Arrays.asList("isLocked"), Arrays.asList("1"));
+							boolean updateResult = database.executeUpdateQuery(request);
+							if (!updateResult) { // if failed
+								response.setQueryResult(false);
+							} else { // if succeed
+								response.setQueryResult(true);
+							}
+						}
+					}
+					// returning the communication to select query
+					// for client-side data retrieval
+					try {
+						request.setQueryType(QueryType.SELECT);
+					} catch (CommunicationException e) {
+						e.printStackTrace();
+					}
 				}
 				}
 			}

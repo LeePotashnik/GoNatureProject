@@ -1,13 +1,15 @@
 package clientSide.gui;
 
-import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import clientSide.control.RegistrationController;
+import clientSide.entities.SystemUser;
 import common.communication.Communication;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
 import common.controllers.StatefulException;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -22,10 +24,13 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.stage.WindowEvent;
+import javafx.util.Pair;
 
 public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	private final String DIGITS_ONLY_REGEX = "\\d+";
 	private RegistrationController registerController = (RegistrationController) RegistrationController.getInstance();
+	private SystemUser systemUser;
 
 	//////////////////////////////////
 	/// FXML AND JAVAFX COMPONENTS ///
@@ -61,32 +66,56 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	@FXML
 	void checkId(ActionEvent event) {
 		String id = idTxt.getText().trim();
+
+		// reseting the text fields
+		firstNameTxt.setText("");
+		lastNameTxt.setText("");
+		emailTxt.setText("");
+		phoneTxt.setText("");
+		UserNameTxt.setText("");
+		passwordTxt.setText("");
+
 		if (id.isEmpty() || !(id.matches(DIGITS_ONLY_REGEX) && id.length() == 9)) { // check if not empty and 9 digits
 			idTxt.setStyle(setFieldToError());
 			showErrorAlert("- ID number is not valid.");
 		} else {
-			ArrayList<Object[]> userDetails = registerController.getUserDetails(id);
-			if (userDetails.isEmpty()) {
-				if (RegistrationController.getInstance().checkGroupGuideExistence(id)) {
-					idTxt.setStyle(setFieldToError());
-					showErrorAlert("This ID is already registered as a Group Guide");
-				} else {
-					idTxt.setStyle(setFieldToError());
-					showErrorAlert("This ID does not exists in our System.");
-				}
-			} else {
-				showInformationAlert("User Details loaded for conversion.");
-				idTxt.setStyle(setFieldToRegular());
-				idTxt.setDisable(true);
-				showAllFieldsAndRegisterButton();
-				loadUserDetails(userDetails.get(0));
-				firstNameTxt.setDisable(true);
-				lastNameTxt.setDisable(true);
-				emailTxt.setDisable(true);
-				phoneTxt.setDisable(true);
-				UserNameTxt.setDisable(true);
-				passwordTxt.setDisable(true);
-			}
+			AtomicBoolean haveAccess = new AtomicBoolean();
+			new Thread(() -> {
+				Pair<SystemUser, Boolean> pair = registerController.getUserDetails(id);
+				systemUser = pair.getKey();
+				final boolean canHaveAccess = pair.getValue();
+				haveAccess.set(canHaveAccess);
+
+				Platform.runLater(() -> {
+					if (systemUser == null) { // if this id does not exist
+						idTxt.setStyle(setFieldToError());
+						showErrorAlert("This id number does not exist in the system");
+					} else { // if exists
+						if (!haveAccess.get()) { // user is locked and can't be accessed
+							idTxt.setStyle(setFieldToError());
+							showErrorAlert("This id number can't be registered at the moment");
+						} else { // can be accessed
+							// checking if already exist in the group guide table
+							boolean isInGroupGuideTable = registerController.checkGroupGuideExistence(id);
+							if (isInGroupGuideTable) {
+								showErrorAlert("This group guide is already registered to the system.");
+								registerbtn.setDisable(true);
+								checkIDbtn.setDisable(false);
+								idTxt.setDisable(false);
+								idTxt.setStyle(setFieldToError());
+								registerController.userDeleteFromTable(id, Communication.systemUser);
+							} else {
+								showInformationAlert("User Details loaded for conversion.");
+								idTxt.setStyle(setFieldToRegular());
+								idTxt.setDisable(true);
+								checkIDbtn.setDisable(true);
+								registerbtn.setDisable(false);
+								loadUserDetails(systemUser);
+							}
+						}
+					}
+				});
+			}).start();
 		}
 	}
 
@@ -98,39 +127,39 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	 */
 	@FXML
 	void register(ActionEvent event) {
-		String username = UserNameTxt.getText().trim();
-		String email = emailTxt.getText().trim();
-		String firstName = firstNameTxt.getText().trim();
-		String lastName = lastNameTxt.getText().trim();
-		String id = idTxt.getText().trim();
-		String phone = phoneTxt.getText().trim();
-		String password = passwordTxt.getText();
+		String id = idTxt.getText();
 
-		if (DetailsValidation(firstName, lastName, email, phone, username, password)) {
-			registerController.checkIdExistenceAndDeleteFromTravellerTable(id);
+		// checking if somehow in the traveller's table if so, removes him
+		registerController.checkIdExistenceAndDeleteFromTravellerTable(id);
+		registerController.userDeleteFromTable(id, Communication.systemUser);
 
-			// if the the details are valid
-			// in the aspect of not empty
-			boolean deleteUserSuccess = registerController.userDeleteFromTable(id, Communication.systemUser);
-			// if the fields with correct format want to delete this user with this id from the 'system_user'
-			// table and insert him to the group_guide table
-			if (!deleteUserSuccess) { // delete from 'system_users'
-				showErrorAlert("Failed to register the group guide.");
-				return;
-			}
-
-			boolean insertSuccess = registerController.groupGuideInsertToDB(id, firstName, lastName, email, phone,
-					username, password);
-			if (insertSuccess) { // insert to 'group_guide'
-				showInformationAlert("Registration Successful.");
-				try {
-					returnToPreviousScreen(null);
-				} catch (ScreenException | StatefulException e) {
-					e.printStackTrace();
-				}
-			} else {
-				showErrorAlert("Failed to register the group guide.");
-			}
+		boolean insertResult = registerController.groupGuideInsertToDB(systemUser);
+		if (insertResult) {
+			showInformationAlert("Registration process succeed");
+			// reseting the text fields
+			idTxt.setText("");
+			firstNameTxt.setText("");
+			lastNameTxt.setText("");
+			emailTxt.setText("");
+			phoneTxt.setText("");
+			UserNameTxt.setText("");
+			passwordTxt.setText("");
+			registerbtn.setDisable(true);
+			checkIDbtn.setDisable(false);
+			idTxt.setDisable(false);
+		} else {
+			showInformationAlert("Registration process failed");
+			// reseting the text fields
+			idTxt.setText("");
+			firstNameTxt.setText("");
+			lastNameTxt.setText("");
+			emailTxt.setText("");
+			phoneTxt.setText("");
+			UserNameTxt.setText("");
+			passwordTxt.setText("");
+			registerbtn.setDisable(true);
+			checkIDbtn.setDisable(false);
+			idTxt.setDisable(false);
 		}
 	}
 
@@ -153,46 +182,25 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	 *                           navigation.
 	 */
 	@FXML
-	void returnToPreviousScreen(ActionEvent event) throws ScreenException, StatefulException {
-		ScreenManager.getInstance().goToPreviousScreen(true, false);
+	void returnToPreviousScreen(ActionEvent event) {
+		new Thread(() -> { // deleting the locking, if this representative had access
+			if (idTxt.getText() != null && !idTxt.getText().isEmpty() && checkIDbtn.isDisable()
+					&& !registerbtn.isDisable()) {
+				registerController.unlockUser(idTxt.getText());
+			}
+		}).start();
+
+		try {
+			ScreenManager.getInstance().goToPreviousScreen(true, false);
+		} catch (ScreenException | StatefulException e) {
+			e.printStackTrace();
+		}
 
 	}
 
 	////////////////////////
 	/// INSTANCE METHODS ///
 	////////////////////////
-
-	/**
-	 * This method validates the entered details by the user
-	 * 
-	 * @param firstName
-	 * @param lastName
-	 * @param email
-	 * @param phone
-	 * @param username
-	 * @param password
-	 * @return
-	 */
-	private boolean DetailsValidation(String firstName, String lastName, String email, String phone, String username,
-			String password) {
-		if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || phone.isEmpty() || username.isEmpty()
-				|| password.isEmpty()) {
-			return false;
-		}
-		return true;
-	}
-
-	/**
-	 * Shows all registration fields and the register button, making them enabled
-	 */
-	private void showAllFieldsAndRegisterButton() {
-		hbox1.setDisable(true);
-		hbox2.setDisable(false);
-		hbox3.setDisable(false);
-		hbox4.setDisable(false);
-		hbox5.setDisable(false);
-		registerbtn.setDisable(false);
-	}
 
 	/**
 	 * Hides all fields except for the ID field and the check ID button, making them
@@ -208,19 +216,19 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 	}
 
 	/**
-	 * Loads traveler details into the registration form fields. Intended for use
-	 * when a traveler's ID is found and their details are to be converted into a
-	 * group guide registration.
+	 * Loads guides details into the registration form fields. Intended for use when
+	 * a user ID is found and their details are to be converted into a group guide
+	 * registration.
 	 *
-	 * @param details the traveler details to load, expected in a specific order.
+	 * @param user the systemUser's object of the group guide
 	 */
-	private void loadUserDetails(Object[] details) {
-		firstNameTxt.setText((String) details[0]);
-		lastNameTxt.setText((String) details[1]);
-		emailTxt.setText((String) details[2]);
-		phoneTxt.setText((String) details[3]);
-		UserNameTxt.setText((String) details[4]);
-		passwordTxt.setText((String) details[5]);
+	private void loadUserDetails(SystemUser user) {
+		firstNameTxt.setText(user.getFirstName());
+		lastNameTxt.setText(user.getLastName());
+		emailTxt.setText(user.getEmailAddress());
+		phoneTxt.setText(user.getPhoneNumber());
+		UserNameTxt.setText(user.getUsername());
+		passwordTxt.setText(user.getPassword());
 	}
 
 	///////////////////////////////
@@ -249,6 +257,21 @@ public class GroupGuideRegistrationScreenController extends AbstractScreen {
 		// setting the application's background
 		setApplicationBackground(pane);
 
+	}
+
+	@Override
+	/**
+	 * Handles the close request when the user clicks on the X
+	 */
+	public void handleCloseRequest(WindowEvent event) {
+		new Thread(() -> { // deleting the locking, if this representative had access
+			if (idTxt.getText() != null && !idTxt.getText().isEmpty() && checkIDbtn.isDisable()
+					&& !registerbtn.isDisable()) {
+				registerController.unlockUser(idTxt.getText());
+			}
+		}).start();
+
+		super.handleCloseRequest(event);
 	}
 
 	@Override
