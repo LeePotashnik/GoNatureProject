@@ -223,6 +223,7 @@ public class CancellationReportController extends AbstractScreen {
 		                                 .mapToDouble(data -> data.getYValue().doubleValue())
 		                                 .sum();
 		        }
+		        // Calculate the count for "Did not confirm" if present
 		        if(dataMap.containsKey("Did not confirm")) {
 		            countCancelled = dataMap.get("Did not confirm").stream()
 		                                    .filter(data -> data.getXValue().equals(day))
@@ -237,7 +238,7 @@ public class CancellationReportController extends AbstractScreen {
 		medianLabelCancelled.setText(String.format("The median for cancelled booking: %d", medians.getKey()));
 		medianLabelNoShow.setText(String.format("The median for No-Show visitors: %d", medians.getValue()));
 
-		// Add the series to the bar chart
+		// Add the series to the Line chart
 		cancellationLineChart.getData().addAll(seriesCancelledOrders, seriesNoShowVisitors);
 	}
 
