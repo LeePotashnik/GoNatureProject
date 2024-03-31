@@ -150,7 +150,9 @@ public class Communication implements Serializable {
 	/// NOTIFICATIONS REQUESTS - PROPERTIES ///
 	///////////////////////////////////////////
 
-	// determines the type of notification to be sent to the user
+	/**
+	 * Determines the notification's type
+	 */
 	public enum NotificationType {
 		SEND_CONFIRMATION, SEND_CANCELLATION, SEND_CONFIRMATION_WITHOUT_REMINDER, SEND_WAITING_LIST_ENTRANCE, NONE
 	}
@@ -161,6 +163,9 @@ public class Communication implements Serializable {
 	/// CLIENT-SERVER MESSAGES COMMUNICATION - PROPERTIES ///
 	/////////////////////////////////////////////////////////
 
+	/**
+	 * Determines the client message's type
+	 */
 	public enum ClientMessageType {
 		CONNECT, DISCONNECT, NONE;
 	}
@@ -171,6 +176,9 @@ public class Communication implements Serializable {
 	/// SERVER-CLIENT MESSAGES COMMUNICATION - PROPERTIES ///
 	/////////////////////////////////////////////////////////
 
+	/**
+	 * Determines the server message's type
+	 */
 	public enum ServerMessageType {
 		RESPONSE, NONE;
 	}
@@ -184,8 +192,11 @@ public class Communication implements Serializable {
 	/// SECONDARY REQUEST COMMUNICATION - PROPERTIES ///
 	////////////////////////////////////////////////////
 
+	/**
+	 * Determines the secondary request's type
+	 */
 	public enum SecondaryRequest {
-		UPDATE_WAITING_LIST, UPDATE_CAPACITY, INSERT_BOOKING_AFTER_CHECKING_CAPACITIES, LOCK_BOOKING;
+		UPDATE_WAITING_LIST, UPDATE_CAPACITY, INSERT_BOOKING_AFTER_CHECKING_CAPACITIES, LOCK_BOOKING, CHECK_USER_LOCKED;
 	}
 
 	private SecondaryRequest secondaryRequest;
