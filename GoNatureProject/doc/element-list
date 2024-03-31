@@ -1,0 +1,11 @@
+clientSide.control
+clientSide.entities
+clientSide.gui
+common.communication
+common.controllers
+common.entities
+ocsf.client
+ocsf.server
+serverSide.control
+serverSide.gui
+serverSide.jdbc
