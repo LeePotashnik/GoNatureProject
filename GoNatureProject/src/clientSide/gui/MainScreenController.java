@@ -36,6 +36,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import javafx.util.Pair;
 
 public class MainScreenController extends AbstractScreen {
 	boolean screenIsActive;
@@ -130,7 +131,7 @@ public class MainScreenController extends AbstractScreen {
 							// showing the new booking screen
 							try {
 								ScreenManager.getInstance().showScreen("BookingScreenController",
-										"/clientSide/fxml/BookingScreen.fxml", false, false, traveller);
+										"/clientSide/fxml/BookingScreen.fxml", false, false, new Pair<ParkVisitor, Boolean>(traveller, false));
 							} catch (StatefulException | ScreenException e) {
 								e.printStackTrace();
 							}
@@ -150,9 +151,11 @@ public class MainScreenController extends AbstractScreen {
 								openRelevantScreen(user);
 								return;
 							} else { // if does not have bookings
+								ParkVisitor traveller = new ParkVisitor(user.getIdNumber(), null, null, null, null, null, null, true,
+										VisitorType.TRAVELLER);
 								try {
 									ScreenManager.getInstance().showScreen("BookingScreenController",
-											"/clientSide/fxml/BookingScreen.fxml", false, false, user);
+											"/clientSide/fxml/BookingScreen.fxml", false, false, new Pair<ParkVisitor, Boolean>(traveller, false));
 								} catch (StatefulException | ScreenException e) {
 									e.printStackTrace();
 								}

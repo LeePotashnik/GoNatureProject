@@ -16,6 +16,7 @@ import common.communication.Communication.CommunicationType;
 import common.controllers.AbstractScreen;
 import common.controllers.ScreenException;
 import common.controllers.ScreenManager;
+import common.controllers.Stateful;
 import common.controllers.StatefulException;
 import common.entities.Booking;
 import javafx.application.Platform;
@@ -46,7 +47,7 @@ import javafx.util.Pair;
  * processing screens as needed.
  * 
  */
-public class ParkEntryManagementScreenController extends AbstractScreen {
+public class ParkEntryManagementScreenController extends AbstractScreen implements Stateful {
 
 	private ParkController parkControl;
 	private GoNatureUsersController userControl;
@@ -82,7 +83,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 	//////////////////////////////
 	/// EVENT HANDLING METHODS ///
 	//////////////////////////////
-	
+
 	@FXML
 	void releaseClicked(ActionEvent event) {
 		new Thread(() -> {
@@ -156,12 +157,13 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 			if (!booking.getDayOfVisit().equals(LocalDate.now())) {
 				showErrorAlert("The visitor arrived too early.\nPlease inform the visitor they can't enter now. "
 						+ "\nSuggest they come closer to their reservation time or check back later. ");
-				parkControl.removeBooking(Communication.bookingLock, bookingId);
 				return;
 			} else {
 				showInformationAlert(
 						"The visitor arrived earlier than the scheduled time, but there is space available in"
 								+ " the park! They can enter now and enjoy their visit!");
+				// parkControl.removeBooking(Communication.bookingLock, bookingId);
+
 			}
 		}
 
@@ -185,6 +187,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 				// user clicked on "Cash", showing the confirmation screen
 				parkControl.payForBooking(parkTable, booking.getBookingId());
 				booking.setPaid(true);
+				parkControl.removeBooking(Communication.bookingLock, bookingId);
 				try {
 					ScreenManager.getInstance().showScreen("ConfirmationScreenController",
 							"/clientSide/fxml/ConfirmationScreen.fxml", true, false, booking);
@@ -199,9 +202,9 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 				parkControl.payForBooking(parkTable, booking.getBookingId());
 				booking.setPaid(true);
 				try {
-
+					parkControl.removeBooking(Communication.bookingLock, bookingId);
 					ScreenManager.getInstance().showScreen("PaymentSystemScreenController",
-							"/clientSide/fxml/PaymentSystemScreen.fxml", true, false,
+							"/clientSide/fxml/PaymentSystemScreen.fxml", true, true,
 							new Pair<Booking, String>(booking, "online-casual"));
 				} catch (StatefulException | ScreenException e) {
 					e.printStackTrace();
@@ -209,6 +212,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 				break;
 			default:
 				entryTimeBtn.setDisable(false);
+				parkControl.revertPaymentForBooking(parkTable, booking.getBookingId());
 
 				// if the user clicked on "return" he will return to Park Entry Management
 				// Screen
@@ -308,6 +312,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		for (String table : tables) {
 			try {
 				Booking booking = parkControl.checkIfBookingExists(table, "bookingId", bookingID).get(0);
+				booking.setParkBooked(parkEmployee.getWorkingIn());
 				return booking;
 			} catch (NullPointerException e) {
 			}
@@ -342,6 +347,8 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 				showErrorAlert("No existing reservations found for the provided booking ID.");
 				bookingIDTxt.setStyle(setFieldToError());
 				isExist.set(false);
+				bookingIDTxt.setDisable(false);
+				checkBtn.setDisable(false);
 			} else { // if found
 				booking.setParkBooked(parkEmployee.getWorkingIn());
 				isExist.set(true);
@@ -352,7 +359,6 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 					new Thread(() -> {
 						final boolean lockResult = parkControl.checkIfBookingIsLock(insertedID);
 						isLockedAlready.set(lockResult);
-						System.out.println("NOW lockResult IS " + lockResult);
 
 						Platform.runLater(() -> {
 							// locking process failed
@@ -360,6 +366,8 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 								bookingIDTxt.setStyle(setFieldToError());
 								valid.set(false);
 								showErrorAlert("Oops! Something went wrong processing your request.");
+								bookingIDTxt.setDisable(false);
+								checkBtn.setDisable(false);
 							} else { // locking process succeed
 								bookingId = insertedID;
 								valid.set(true);
@@ -415,7 +423,11 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 				} else {
 					entryTimeBtn.setDisable(false);
 					exitTimeBtn.setDisable(true);
-					invoiceBtn.setDisable(false);
+					if (booking.isPaid()) {
+						invoiceBtn.setDisable(false);
+					} else {
+						invoiceBtn.setDisable(true);
+					}
 				}
 				return;
 			}
@@ -427,6 +439,8 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 				invoiceBtn.setDisable(false);
 			} else { // it's a done booking
 				statusLbl.setText("Done booking");
+				entryTimeBtn.setDisable(true);
+				exitTimeBtn.setDisable(true);
 				invoiceBtn.setDisable(false);
 			}
 		}
@@ -453,7 +467,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 			showErrorAlert("Please release the booking first in order to leave the application");
 			return;
 		}
-		
+
 		int decision = showConfirmationAlert("Are you sure you want to log out from the system?",
 				Arrays.asList("Yes", "No"));
 		switch (decision) {
@@ -511,7 +525,7 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 		entryTimeBtn.setDisable(true);
 		exitTimeBtn.setDisable(true);
 		invoiceBtn.setDisable(true);
-		
+
 		releaseBtn.setDisable(true);
 
 		// setting the application's background
@@ -529,5 +543,47 @@ public class ParkEntryManagementScreenController extends AbstractScreen {
 	 */
 	public String getScreenTitle() {
 		return parkEmployee.getWorkingIn().getParkName() + " - Park Entrance Management";
+	}
+
+	@Override
+	public void saveState() {
+		parkControl.saveBooking(booking);
+	}
+
+	@Override
+	public void restoreState() {
+		booking = parkControl.restoreBooking();
+		String parkTable = parkControl.nameOfTable(parkEmployee.getWorkingIn());
+		AtomicBoolean isSucceed = new AtomicBoolean();
+		new Thread(() -> {
+			final boolean first = parkControl.checkIfBookingIsLock(booking.getBookingId());
+			final boolean second = parkControl.revertPaymentForBooking(parkTable, booking.getBookingId());
+			
+			isSucceed.set(first && second);
+
+			Platform.runLater(() -> {
+				if (isSucceed.get()) {
+					booking.setEntryParkTime(null);
+					booking.setPaid(false);
+					// set booking labels
+					releaseBtn.setDisable(false);
+					checkBtn.setDisable(true);
+					bookingIDTxt.setDisable(true);
+					bookingIDTxt.setText(booking.getBookingId());
+					fullNameLbl.setText(booking.getFirstName() + " " + booking.getLastName());
+					dateLbl.setText(booking.getDayOfVisit() + " " + booking.getTimeOfVisit());
+					sizeLbl.setText(booking.getNumberOfVisitors() + "");
+					priceLbl.setText(booking.getFinalPrice() == -1 ? "N/A" : booking.getFinalPrice() + "$");
+					isPaidLbl.setText(booking.isPaid() ? "Yes" : "No");
+					arrivalLbl.setText(
+							booking.getEntryParkTime() == null ? "N/A" : booking.getEntryParkTime().toString());
+					leavingLbl
+							.setText(booking.getExitParkTime() == null ? "N/A" : booking.getExitParkTime().toString());
+					entryTimeBtn.setDisable(false);
+					statusLbl.setText("Active booking");
+				}
+
+			});
+		}).start();
 	}
 }
