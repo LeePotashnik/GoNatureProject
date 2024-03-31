@@ -643,6 +643,7 @@ public class ParkController {
 		switch (type) {
 		case "done":
 			insertRequest.setTables(Arrays.asList(table + Communication.doneBookings));
+			System.out.println("new booking entry time: " + newBooking.getEntryParkTime());
 			insertRequest.setColumnsAndValues(
 					Arrays.asList("bookingId", "dayOfVisit", "timeOfVisit", "dayOfBooking", "visitType",
 							"numberOfVisitors", "idNumber", "firstName", "lastName", "emailAddress", "phoneNumber",
