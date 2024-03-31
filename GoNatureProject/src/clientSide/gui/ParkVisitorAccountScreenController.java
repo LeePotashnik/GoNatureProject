@@ -34,6 +34,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
+import javafx.util.Pair;
 
 /**
  * Controls the park visitor account screen in the GoNature application,
@@ -107,7 +108,7 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 	void goTOVisitBookingScreen(ActionEvent event) {
 		try {
 			ScreenManager.getInstance().showScreen("BookingScreenController", "/clientSide/fxml/BookingScreen.fxml",
-					false, false, parkVisitor);
+					false, false, new Pair<ParkVisitor, Boolean>(parkVisitor, true));
 		} catch (ScreenException | StatefulException e) {
 			e.printStackTrace();
 		}
@@ -161,8 +162,9 @@ public class ParkVisitorAccountScreenController extends AbstractScreen {
 			if (userControl.logoutUser())
 				parkVisitor.setLoggedIn(false);
 			try {
-				ScreenManager.getInstance().showScreen("MainScreenController", "/clientSide/fxml/MainScreen.fxml", true,
-						false, null);
+				ScreenManager.getInstance().resetScreensStack();
+				ScreenManager.getInstance().showScreen("MainScreenController",
+						"/clientSide/fxml/MainScreen.fxml", false, false, null);
 			} catch (ScreenException | StatefulException e) {
 				e.printStackTrace();
 			}

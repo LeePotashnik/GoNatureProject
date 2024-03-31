@@ -259,13 +259,6 @@ public class GoNatureServer extends AbstractServer {
 		/////////////////////
 		case QUERY_REQUEST: // if this is a query request
 		{
-			try {
-				System.out.println("GOT: " + request.combineQuery());
-			} catch (CommunicationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
 			// creating a communication response to be sent later to the client side
 			response = new Communication(CommunicationType.SERVER_CLIENT_MESSAGE);
 			response.setServerMessageType(ServerMessageType.RESPONSE);

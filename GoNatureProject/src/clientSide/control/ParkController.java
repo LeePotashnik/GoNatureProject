@@ -35,6 +35,10 @@ import common.entities.Booking.VisitType;
 public class ParkController {
 	private static ParkController instance;
 	private Park park;
+	private Booking booking;
+	
+	
+
 	private Map<String, String> bookingDetails = new HashMap<>();
 
 	// emailTxt, phoneTxt, visitorsAmountTxt, visitorIDTxt, nameTxt, lastNameTxt;
@@ -76,6 +80,14 @@ public class ParkController {
 		this.park = park;
 	}
 
+	public Booking restoreBooking() {
+		return booking;
+	}
+
+	public void saveBooking(Booking booking) {
+		this.booking = booking;
+	}
+	
 	public void setBookingDetails(Map<String, String> bookingDetails) {
 		this.bookingDetails = bookingDetails;
 	}
@@ -389,8 +401,8 @@ public class ParkController {
 			countVisitors += (Integer) row[0];
 		}
 		// checking park parameters
-		int result = parkOfBooking.getMaximumOrders() - countVisitors - numberOfVisitors;
-		return result > 0;
+		int result = parkOfBooking.getMaximumVisitors() - countVisitors - numberOfVisitors;
+		return result >= 0;
 	}
 
 	/**
@@ -575,8 +587,33 @@ public class ParkController {
 		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
 		try {
 			request.setQueryType(QueryType.UPDATE);
-			request.setTables(Arrays.asList(parkTable));
+			request.setTables(Arrays.asList(parkTable+Communication.activeBookings));
 			request.setColumnsAndValues(Arrays.asList("paid"), Arrays.asList('1'));
+			request.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList(ID));
+		} catch (CommunicationException e) {
+			e.printStackTrace();
+		}
+		GoNatureClientUI.client.accept(request);
+		boolean result = request.getQueryResult();
+		if (result)
+			return true;
+		return false;
+	}
+	
+	/**
+	 * An 'UPDATE' SQL query is generated to access relevant park_bookings_table in
+	 * the database and update the 'paid' field for 1 - paid.
+	 * 
+	 * @param parkTable
+	 * @return It returns a boolean value indicating whether the update succeeded
+	 *         (true) or not(false).
+	 */
+	public boolean revertPaymentForBooking(String parkTable, String ID) {
+		Communication request = new Communication(CommunicationType.QUERY_REQUEST);
+		try {
+			request.setQueryType(QueryType.UPDATE);
+			request.setTables(Arrays.asList(parkTable+Communication.activeBookings));
+			request.setColumnsAndValues(Arrays.asList("paid","entryParkTime"), Arrays.asList('0',"(NULL)"));
 			request.setWhereConditions(Arrays.asList("bookingId"), Arrays.asList("="), Arrays.asList(ID));
 		} catch (CommunicationException e) {
 			e.printStackTrace();

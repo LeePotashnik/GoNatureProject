@@ -157,8 +157,11 @@ public class DepartmentManagerAccountScreenController extends AbstractScreen {
 		case 1: // clicked "Yes"
 			if (userControl.logoutUser())
 				departmentManager.setLoggedIn(false);
+			
 			try {
-				ScreenManager.getInstance().goToPreviousScreen(false, false);
+				ScreenManager.getInstance().resetScreensStack();
+				ScreenManager.getInstance().showScreen("MainScreenController",
+						"/clientSide/fxml/MainScreen.fxml", false, false, null);
 			} catch (ScreenException | StatefulException e) {
 				e.printStackTrace();
 			}

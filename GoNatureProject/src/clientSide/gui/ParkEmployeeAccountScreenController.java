@@ -125,8 +125,9 @@ public class ParkEmployeeAccountScreenController extends AbstractScreen {
 			if (userControl.logoutUser())
 				parkEmployee.setLoggedIn(false);
 			try {
+				ScreenManager.getInstance().resetScreensStack();
 				ScreenManager.getInstance().showScreen("MainScreenController",
-						"/clientSide/fxml/MainScreen.fxml", true, false, null);
+						"/clientSide/fxml/MainScreen.fxml", false, false, null);
 			} catch (ScreenException | StatefulException e) {
 				e.printStackTrace();
 			}

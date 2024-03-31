@@ -465,7 +465,9 @@ public class PaymentSystemScreenController extends AbstractScreen {
 			GoNatureUsersController.getInstance().logoutUser();
 
 			// cancelling the reservation
-			BookingController.getInstance().deleteBooking(booking, Communication.activeBookings);
+			if (!bookingMethod.equals("online-casual")) {
+				BookingController.getInstance().deleteBooking(booking, Communication.activeBookings);
+			}
 			if (bookingMethod.equals("casual")) {
 				ParkController.getInstance().updateCurrentCapacity(booking.getParkBooked().getParkName(),
 						booking.getNumberOfVisitors(), false);

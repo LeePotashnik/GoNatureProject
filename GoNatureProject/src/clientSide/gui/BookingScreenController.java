@@ -63,6 +63,7 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	// the user enters the screen with a visitor instance or only with an id number
 	private ParkVisitor visitor;
 	private boolean isGroupReservation; // determines if this is a regular or guided group
+	private boolean hasBookings;
 
 	// booking objects and data
 	private Booking booking;
@@ -312,20 +313,24 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	 * @param event
 	 */
 	void returnToPreviousScreen(ActionEvent event) {
-		// if the user is an individual (not a group guide) and entered from the main
-		// screen
-		if (ScreenManager.getInstance().whoIsBefore().equals("MainScreenController")) {
+		if (!hasBookings) {
 			// logging him out
 			GoNatureUsersController.getInstance().logoutUser();
+			ScreenManager.getInstance().resetScreensStack();
+			// showing the main screen
 			try {
-				ScreenManager.getInstance().goToPreviousScreen(false, false);
-			} catch (ScreenException | StatefulException e) {
+				ScreenManager.getInstance().showScreen("MainScreenController", "/clientSide/fxml/MainScreen.fxml",
+						false, false, null);
+			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
-		} else { // return to account screen
+		} else {
+			ScreenManager.getInstance().resetScreensStack();
+			// showing the account screen
 			try {
-				ScreenManager.getInstance().goToPreviousScreen(false, false);
-			} catch (ScreenException | StatefulException e) {
+				ScreenManager.getInstance().showScreen("ParkVisitorAccountScreenController",
+						"/clientSide/fxml/ParkVisitorAccountScreen.fxml", false, false, null);
+			} catch (StatefulException | ScreenException e) {
 				e.printStackTrace();
 			}
 		}
@@ -958,8 +963,11 @@ public class BookingScreenController extends AbstractScreen implements Stateful 
 	public void loadBefore(Object information) {
 		// in case the user is logged in (as a group guide) and enters this screen from
 		// his account screen
-		if (information instanceof ParkVisitor) {
-			visitor = (ParkVisitor) information;
+		if (information instanceof Pair) {
+			@SuppressWarnings("unchecked")
+			Pair<ParkVisitor, Boolean> pair = (Pair<ParkVisitor, Boolean>) information;
+			visitor = pair.getKey();
+			hasBookings = pair.getValue();
 
 			// setting the visitor's details into the text fields
 			firstNameTxt.setText(visitor.getFirstName());
