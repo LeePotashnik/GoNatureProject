@@ -527,12 +527,10 @@ public class ReportsController {
 			LocalDate to = from.plusMonths(1).minusDays(1);
 			comm.setWhereConditions(Arrays.asList("dayOfVisit", "dayOfVisit"), Arrays.asList(">=", "AND", "<="),
 					Arrays.asList(from, to));
-			// Send the query request to the server and process the returned results for
-			// charting
+			// Send the query request to the server and process the returned results for charting
 			try {
 				System.out.println(comm.combineQuery());
 			} catch (CommunicationException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			GoNatureClientUI.client.accept(comm);
@@ -551,8 +549,7 @@ public class ReportsController {
 				}
 				comm.setTables(Arrays
 						.asList(ParkController.getInstance().nameOfTable(park) + Communication.cancelledBookings));
-				// Configure the query with columns to select, and the date range
-				// for filtering.
+				// Configure the query with columns to select, and the date range for filtering.
 				comm.setSelectColumns(Arrays.asList("dayOfVisit", "cancellationReason", "numberOfVisitors"));
 				int month = Integer.parseInt(selectedMonth);
 				int year = Integer.parseInt(selectedYear);
@@ -560,8 +557,7 @@ public class ReportsController {
 				LocalDate to = from.plusMonths(1).minusDays(1);
 				comm.setWhereConditions(Arrays.asList("dayOfVisit", "dayOfVisit"), Arrays.asList(">=", "AND", "<="),
 						Arrays.asList(from, to));
-				// Send the query request to the server and process the returned results for
-				// charting
+				// Send the query request to the server and process the returned results for charting 
 				GoNatureClientUI.client.accept(comm);
 				results.addAll(comm.getResultList());
 			}
